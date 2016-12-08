@@ -338,11 +338,9 @@ Q.Container = class {
     }
     get xAnchorOffset() {
         return 0;
-        //return this.width * this.anchor.x;
     }
     get yAnchorOffset() {
         return 0;
-        //return this.height * this.anchor.y;
     }
     get vx() {
         return this.velocity.x;
@@ -819,7 +817,7 @@ Q.Sprite = class extends Q.Container {
     }
     createFromAtlasFrames(source) {
         this.frames = source;
-        this._texture = Q.Assets.cache[source[0]].source;
+        this._texture = Q.Assets.cache[source[0]];
         this.width = this._texture.frame.w;
         this.height = this._texture.frame.h;
     }
@@ -889,20 +887,20 @@ Q.Sprite = class extends Q.Container {
             maxY = y4 > maxY ? y4 : maxY;
 
             // check for children
-            if(this.children.length) {
-                let childBounds = super.getBounds();
+            // if(this.children.length) {
+            //     let childBounds = super.getBounds();
 
-                w0 = childBounds.x;
-                w1 = childBounds.x + childBounds.width;
-                h0 = childBounds.y;
-                h1 = childBounds.y + childBounds.height;
+            //     w0 = childBounds.x;
+            //     w1 = childBounds.x + childBounds.width;
+            //     h0 = childBounds.y;
+            //     h1 = childBounds.y + childBounds.height;
 
-                minX = (minX < w0) ? minX : w0;
-                minY = (minY < h0) ? minY : h0;
+            //     minX = (minX < w0) ? minX : w0;
+            //     minY = (minY < h0) ? minY : h0;
 
-                maxX = (maxX > w1) ? maxX : w1;
-                maxY = (maxY > h1) ? maxY : h1;
-            }
+            //     maxX = (maxX > w1) ? maxX : w1;
+            //     maxY = (maxY > h1) ? maxY : h1;
+            // }
 
             let bounds = this._bounds;
             bounds.x = minX;
@@ -964,22 +962,25 @@ Q.Sprite = class extends Q.Container {
             //then the frame must be a texture atlas id name.
             //In that case, get the source position from the atlas's `frame` object.
             else if (Q.Assets.cache[this.frames[frameNumber]].frame) {
-                let source = Q.Assets.cache[this.frames[frameNumber]];
-                this._texture.frame.x = source.frame.x;
-                this._texture.frame.y = source.frame.y;
-                this._texture.frame.w = source.frame.w;
-                this._texture.frame.h = source.frame.h;
-                this.width = source.frame.w;
-                this.height = source.frame.h;
+                // let source = Q.Assets.cache[this.frames[frameNumber]];
+                this._texture = Q.Assets.cache[this.frames[frameNumber]];
+                // this._texture.frame.x = source.frame.x;
+                // this._texture.frame.y = source.frame.y;
+                // this._texture.frame.w = source.frame.w;
+                // this._texture.frame.h = source.frame.h;
+                // this.width = source.frame.w;
+                // this.height = source.frame.h;
+                this.width = this._texture.frame.w;
+                this.height = this._texture.frame.h;
             }
             //c. Frames made from individual image objects.
             //If neither of the above are true, then each frame must be
             //an individual Image object
-            else {
-                this._texture = Q.Assets.cache[this.frames[frameNumber]].source;
-                this.width = this._texture.frame.w;
-                this.height = this._texture.frame.h;
-            }
+            // else {
+            //     this._texture = Q.Assets.cache[this.frames[frameNumber]];
+            //     this.width = this._texture.frame.w;
+            //     this.height = this._texture.frame.h;
+            // }
             //Set the `_currentFrame` value to the chosen frame
             this._currentFrame = frameNumber;
         } 
@@ -3018,7 +3019,7 @@ Q.Matrix = class {
     * coordinate space. (e.g. rendering)
     **/
     apply(pos, newPos) {
-        newPos = newPos || new Point();
+        newPos = newPos || new Q.Point();
 
         let x = pos.x,
             y = pos.y;
@@ -3034,7 +3035,7 @@ Q.Matrix = class {
     * coordinate space. (e.g. input)
     **/
     applyInverse(pos, newPos) {
-        newPos = newPos || new Point();
+        newPos = newPos || new Q.Point();
 
         let id = 1 / (this.a * this.d + this.c * -this.b),
             x = pos.x,

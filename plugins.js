@@ -39,16 +39,177 @@ Q.move = function(sprites) {
     }
 };
 
+Q.fourKeyController = function(s, speed, up = 38, right = 39, down = 40, left = 37) {
+    //Create a `direction` property on the sprite
+    s.direction = '';
+
+    //Create some keyboard objects
+    let leftArrow = new Q.Keyboard(left),
+        upArrow = new Q.Keyboard(up),
+        rightArrow = new Q.Keyboard(right),
+        downArrow = new Q.Keyboard(down);
+
+    //Assign key `press` and release methods
+    leftArrow.press = function() {
+        s.vx = -speed;
+        s.vy = 0;
+        s.direction = "left";
+    };
+    leftArrow.release = function() {
+        if (!rightArrow.isDown && s.vy === 0) {
+            s.vx = 0;
+        }
+    };
+    upArrow.press = function() {
+        s.vy = -speed;
+        s.vx = 0;
+        s.direction = "up";
+    };
+    upArrow.release = function() {
+        if (!downArrow.isDown && s.vx === 0) {
+            s.vy = 0;
+        }
+    };
+    rightArrow.press = function() {
+        s.vx = speed;
+        s.vy = 0;
+        s.direction = "right";
+    };
+    rightArrow.release = function() {
+        if (!leftArrow.isDown && s.vy === 0) {
+            s.vx = 0;
+        }
+    };
+    downArrow.press = function() {
+        s.vy = speed;
+        s.vx = 0;
+        s.direction = "down";
+    };
+    downArrow.release = function() {
+        if (!upArrow.isDown && s.vx === 0) {
+            s.vy = 0;
+        }
+    };
+};
+
+Q.contain = function(s, container, bounce = false, extra){
+    //Give the container x and y anchor offset values, if it doesn't
+    //have any
+    // if (container.xAnchorOffset === undefined) container.xAnchorOffset = 0;
+    // if (container.yAnchorOffset === undefined) container.yAnchorOffset = 0;
+
+    //The `collision` object is used to store which
+    //side of the containing rectangle the sprite hits
+    let collision;
+
+    //Left
+    if (s.x - s.xAnchorOffset < container.x - s.parent.gx - container.xAnchorOffset) {
+        //Bounce the sprite if `bounce` is true
+        if (bounce) s.vx *= -1;
+
+        //If the sprite has `mass`, let the mass
+        //affect the sprite's velocity
+        if(s.mass) s.vx /= s.mass;
+        s.x = container.x - s.parent.gx - container.xAnchorOffset + s.xAnchorOffset;
+        collision = "left";
+    }
+
+    //Top
+    if (s.y - s.yAnchorOffset < container.y - s.parent.gy - container.yAnchorOffset) {
+        if (bounce) s.vy *= -1;
+        if(s.mass) s.vy /= s.mass;
+        s.y = container.y - s.parent.gy - container.yAnchorOffset + s.yAnchorOffset;
+        collision = "top";
+    }
+
+    //Right
+    if (s.x - s.xAnchorOffset + s.width > container.width - container.xAnchorOffset) {
+        if (bounce) s.vx *= -1;
+        if(s.mass) s.vx /= s.mass;
+        s.x = container.width - s.width - container.xAnchorOffset + s.xAnchorOffset;
+        collision = "right";
+    }
+
+    //Bottom
+    if (s.y - s.yAnchorOffset + s.height > container.height - container.yAnchorOffset) {
+        if (bounce) s.vy *= -1;
+        if(s.mass) s.vy /= s.mass;
+        s.y = container.height - s.height - container.yAnchorOffset + s.yAnchorOffset;
+        collision = "bottom";
+    }
+
+    //The `extra` function runs if there was a collision
+    //and `extra` has been defined
+    if (collision && extra) extra(collision);
+
+    //Return the `collision` object
+    return collision;
+};
+
+Q.outsideBounds = function(s, bounds, extra){
+    let x = bounds.x,
+        y = bounds.y,
+        width = bounds.width,
+        height = bounds.height,
+
+        //The `collision` object is used to store which
+        //side of the containing rectangle the sprite hits
+        collision;
+
+    //Left
+    if (s.x < x - s.width) {
+        collision = "left";
+    }
+    //Top
+    if (s.y < y - s.height) {
+        collision = "top";
+    }
+    //Right
+    if (s.x > width) {
+        collision = "right";
+    }
+    //Bottom
+    if (s.y > height) {
+        collision = "bottom";
+    }
+
+    //The `extra` function runs if there was a collision
+    //and `extra` has been defined
+    if (collision && extra) extra(collision);
+
+    //Return the `collision` object
+    return collision;
+};
+
+function _getCenter(o, dimension, axis) {
+    if (o.anchor !== undefined) {
+        if (o.anchor[axis] !== 0) {
+            return 0;
+        } 
+        else {
+            //console.log(o.anchor[axis])
+            return dimension / 2;
+        }
+    } 
+    else {
+        return dimension; 
+    }
+}
+
 Q.distance = function (s1, s2) {
-    let dx = s2.centerX - s1.centerX,
-        dy = s2.centerY - s1.centerY;
+    let dx = (s2.x + _getCenter(s2, s2.width, "x")) 
+           - (s1.x + _getCenter(s1, s1.width, "x")),
+        dy = (s2.y + _getCenter(s2, s2.height, "y")) 
+           - (s1.y + _getCenter(s1, s1.height, "y"));
 
     return Math.sqrt(dx * dx + dy * dy);
 };
 
 Q.distanceSq = function (s1, s2) {
-    let dx = s2.centerX - s1.centerX,
-        dy = s2.centerY - s1.centerY;
+    let dx = (s2.x + _getCenter(s2, s2.width, "x")) 
+           - (s1.x + _getCenter(s1, s1.width, "x")),
+        dy = (s2.y + _getCenter(s2, s2.height, "y")) 
+           - (s1.y + _getCenter(s1, s1.height, "y"));
 
     return (dx * dx + dy * dy);
 };
@@ -58,14 +219,16 @@ Q.distanceSq = function (s1, s2) {
 
 Q.rotateAroundSprite = function(rotatingSprite, centerSprite, distance, angle) {
     rotatingSprite.x
-        = centerSprite.centerX - rotatingSprite.parent.x
-        + (distance * Math.cos(angle))
-        - rotatingSprite.halfWidth;
+      = (centerSprite.x + _getCenter(centerSprite, centerSprite.width, "x")) 
+      - rotatingSprite.parent.x
+      + (distance * Math.cos(angle))
+      - _getCenter(rotatingSprite, rotatingSprite.width, "x");
 
     rotatingSprite.y
-        = centerSprite.centerY - rotatingSprite.parent.y//centerSprite.y
-        + (distance *  Math.sin(angle))
-        - rotatingSprite.halfWidth;
+      = (centerSprite.y + _getCenter(centerSprite, centerSprite.height, "y")) 
+      - rotatingSprite.parent.y
+      + (distance * Math.sin(angle))
+      - _getCenter(rotatingSprite, rotatingSprite.height, "y");
 };
 
 //### rotateAroundPoint
@@ -96,14 +259,19 @@ box.rotation = angle(box, pointer);
 
 Q.angle = function(s1, s2) {
     return Math.atan2(
-        s2.centerY - s1.centerY,
-        s2.centerX - s1.centerX
+        //This code adapts to a shifted anchor point
+        (s2.y + _getCenter(s2, s2.height, "y")) - 
+        (s1.y + _getCenter(s1, s1.height, "y")),
+        (s2.x + _getCenter(s2, s2.width, "x")) - 
+        (s1.x + _getCenter(s1, s1.width, "x"))
     );
 };
 
 Q.followEase = function(follower, leader, speed) {
-    let dx = leader.centerX - follower.centerX,
-        dy = leader.centerY - follower.centerY,
+    let dx = (leader.x + _getCenter(leader, leader.width, "x")) - 
+             (follower.x + _getCenter(follower, follower.width, "x")),
+        dy = (leader.y + _getCenter(leader, leader.height, "y")) - 
+             (follower.y + _getCenter(follower, follower.height, "y")),
         distance = Math.sqrt(dx * dx + dy * dy);
 
     // Move the follower if it's more than 1 pixel away from the leader
@@ -115,8 +283,10 @@ Q.followEase = function(follower, leader, speed) {
 
 Q.followConstant= function(follower, leader, speed) {
     //Figure out the distance between the sprites
-    let dx = leader.centerX - follower.centerX,
-        dy = leader.centerY - follower.centerY,
+    let dx = (leader.x + _getCenter(leader, leader.width, "x")) - 
+             (follower.x + _getCenter(follower, follower.width, "x")),
+        dy = (leader.y + _getCenter(leader, leader.height, "y")) - 
+             (follower.y + _getCenter(follower, follower.height, "y")),
         distance = Math.sqrt(dx * dx + dy * dy);
 
     //Move the follower if it's more than 1 move //away from the leader
@@ -124,6 +294,570 @@ Q.followConstant= function(follower, leader, speed) {
         follower.x += (dx / distance) * speed;
         follower.y += (dy / distance) * speed;
     }
+};
+
+//Use `shoot` to create bullet sprites 
+Q.shoot = function(
+    shooter, angle, x, y, container, bulletSpeed, bulletArray, bulletSprite
+) {
+    //Make a new sprite using the user-supplied `bulletSprite` function
+    let bullet = bulletSprite();
+
+    //Set the bullet's anchor point to its center
+    bullet.anchor.set(0.5, 0.5);
+
+    //Temporarily add the bullet to the shooter
+    //so that we can position it relative to the
+    //shooter's position
+    shooter.addChild(bullet);
+    bullet.x = x;
+    bullet.y = y;
+
+    //Find the bullet's global coordinates so that we can use
+    //them to position the bullet on the new parent container
+    let tempGx = bullet.globalPosition().x,
+        tempGy = bullet.globalPosition().y;
+
+    //Add the bullet to the new parent container using
+    //the new global coordinates
+    container.addChild(bullet);
+    // Q.stage.addChild(bullet);
+    bullet.x = tempGx;
+    bullet.y = tempGy;
+
+    //Set the bullet's velocity
+    bullet.vx = Math.cos(angle) * bulletSpeed;
+    bullet.vy = Math.sin(angle) * bulletSpeed;
+
+    //Push the bullet into the `bulletArray`
+    bulletArray.push(bullet);
+}
+
+Q.emitter = function (interval, particleFunction) {
+    let emitter = {},
+    timerInterval = undefined;
+
+    emitter.playing = false;
+
+    function play() {
+        if (!emitter.playing) {
+            particleFunction();
+            timerInterval = setInterval(emitParticle.bind(this), interval);
+            emitter.playing = true;
+        }
+    }
+
+    function stop() {
+        if (emitter.playing) {
+            clearInterval(timerInterval);
+            emitter.playing = false;
+        }
+    }
+
+    function emitParticle() {
+        particleFunction();
+    }
+
+    emitter.play = play;
+    emitter.stop = stop;
+    return emitter;
+};
+
+Q.particleEffect = function (
+    x = 0, y = 0, 
+    spriteFunction = () => console.log("Sprite creation function"),
+    numberOfParticles = 20,
+    gravity = 0,
+    randomSpacing = true,
+    minAngle = 0, maxAngle = 6.28,
+    minSize = 4, maxSize = 16, 
+    minSpeed = 0.3, maxSpeed = 3,
+    minScaleSpeed = 0.01, maxScaleSpeed = 0.05,
+    minAlphaSpeed = 0.02, maxAlphaSpeed = 0.02,
+    minRotationSpeed = 0.01, maxRotationSpeed = 0.03
+) {
+    //An array to store the angles
+    let angles = [];
+
+    //A variable to store the current particle's angle
+    let angle;
+
+    //Figure out by how many radians each particle should be separated
+    let spacing = (maxAngle - minAngle) / (numberOfParticles - 1);
+
+    //Create an angle value for each particle and push that
+    //value into the `angles` array
+    for(let i = 0; i < numberOfParticles; i++) {
+        //If `randomSpacing` is `true`, give the particle any angle
+        //value between `minAngle` and `maxAngle`
+        if (randomSpacing) {
+            angle = Q.utils.randomFloat(minAngle, maxAngle);
+            angles.push(angle);
+        } 
+        //If `randomSpacing` is `false`, space each particle evenly,
+        //starting with the `minAngle` and ending with the `maxAngle`
+        else {
+            if (angle === undefined) angle = minAngle;
+            angles.push(angle);
+            angle += spacing;
+        }
+    }
+
+    //Make a particle for each angle
+    angles.forEach(angle => makeParticle(angle));
+
+    //Make the particle
+    function makeParticle(angle) {
+        //Create the particle using the supplied sprite function
+        let particle = spriteFunction();
+
+        //Display a random frame if the particle has more than 1 frame
+        if (particle.frames.length > 0) {
+            particle.gotoAndStop(Q.utils.randomInt(0, particle.frames.length - 1));
+        }
+
+        //Set a random width and height
+        let size = Q.utils.randomInt(minSize, maxSize);
+        particle.width = size;
+        particle.height = size;
+
+        //Set the particle's `anchor` to its center
+        particle.anchor.set(0.5, 0.5);
+
+        //Set the x and y position
+        particle.x = x;
+        particle.y = y;
+
+        //Set a random speed to change the scale, alpha and rotation
+        particle.scaleSpeed = Q.utils.randomFloat(minScaleSpeed, maxScaleSpeed);
+        particle.alphaSpeed = Q.utils.randomFloat(minAlphaSpeed, maxAlphaSpeed);
+        particle.rotationSpeed = Q.utils.randomFloat(minRotationSpeed, maxRotationSpeed);
+
+        //Set a random velocity at which the particle should move
+        let speed = Q.utils.randomFloat(minSpeed, maxSpeed);
+        particle.vx = speed * Math.cos(angle);
+        particle.vy = speed * Math.sin(angle);
+
+        //Add the particle to its parent container
+        //container.addChild(particle);
+
+        //The particle's `update` method is called on each frame of the
+        //game loop
+        particle.update = (dt) => {
+            //Add gravity
+            particle.vy += gravity; // * dt;
+
+            //Move the particle
+            particle.x += particle.vx; // * dt;
+            particle.y += particle.vy; // * dt;
+
+            //Change the particle's `scale`
+            if (particle.scaleX - particle.scaleSpeed > 0) {
+                particle.scaleX -= particle.scaleSpeed; // * dt;
+            }
+            if (particle.scaleY - particle.scaleSpeed > 0) {
+                particle.scaleY -= particle.scaleSpeed; // * dt;
+            }
+
+            //Change the particle's rotation
+            particle.rotation += particle.rotationSpeed; // * dt;
+
+            //Change the particle's `alpha`
+            particle.alpha -= particle.alphaSpeed; // * dt;
+
+            //Remove the particle if its `alpha` reaches zero
+            if (particle.alpha <= 0) {
+                Q.remove(particle);
+                Q.particles.splice(Q.particles.indexOf(particle), 1);
+            }
+        };
+
+        //Push the particle into the `particles` array
+        //The `particles` array needs to be updated by the game loop each
+        //frame
+        Q.particles.push(particle);
+    }
+};
+
+Q.grid = function(
+    columns = 0, rows = 0, cellWidth = 32, cellHeight = 32,
+    centerCell = false, xOffset = 0, yOffset = 0,
+    makeSprite,
+    extra
+  ){
+    //Create an empty group called `container`. This `container`
+    //group is what the function returns back to the main program.
+    //All the sprites in the grid cells will be added
+    //as children to this container
+    let container = Q.container();
+
+    //The `create` method plots the grid
+
+    let createGrid = () => {
+        //Figure out the number of cells in the grid
+        let length = columns * rows;
+
+        //Create a sprite for each cell
+        for(let i = 0; i < length; i++) {
+            //Figure out the sprite's x/y placement in the grid
+            let x = (i % columns) * cellWidth,
+                y = Math.floor(i / columns) * cellHeight;
+
+            //Use the `makeSprite` function supplied in the constructor
+            //to make a sprite for the grid cell
+            let sprite = makeSprite();
+
+            //Add the sprite to the `container`
+            container.addChild(sprite);
+
+            //Should the sprite be centered in the cell?
+
+            //No, it shouldn't be centered
+            if (!centerCell) {
+                sprite.x = x + xOffset;
+                sprite.y = y + yOffset;
+            }
+            //Yes, it should be centered
+            else {
+                sprite.x 
+                    = x + (cellWidth / 2) 
+                    - sprite.halfWidth + xOffset;
+                sprite.y 
+                    = y + (cellHeight / 2) 
+                    - sprite.halfHeight + yOffset;
+            }
+
+            //Run any optional extra code. This calls the
+            //`extra` function supplied by the constructor
+            if (extra) extra(sprite);
+        }
+    };
+
+    //Run the `createGrid` method
+    createGrid();
+    Q.stage.addChild(container);
+
+    //Return the `container` group back to the main program
+    return container;
+};
+
+Q.tilingSprite = function(width, height, source, x = 0, y = 0) {
+    //Figure out the tile's width and height
+    let tileWidth, tileHeight;
+    let src = Q.assets.cache[source];
+
+    //If the source is a texture atlas frame, use its
+    //`frame.w` and `frame.h` properties
+    // if(src.frame) {
+    tileWidth = src.frame.w;
+    tileHeight = src.frame.h;
+    // }
+    //If it's an image, use the image's 
+    //`width` and `height` properties
+    // else {
+    //     tileWidth = src.width;
+    //     tileHeight = src.height;
+    // }
+
+    //Figure out the rows and columns.
+    //The number of rows and columns should always be
+    //one greater than the total number of tiles
+    //that can fit in the rectangle. This give us one 
+    //additional row and column that we can reposition
+    //to create the infinite scroll effect
+
+    let columns, rows;
+
+    //1. Columns
+    //If the width of the rectangle is greater than the width of the tile,
+    //calculate the number of tile columns
+    if (width >= tileWidth) {
+        columns = Math.round(width / tileWidth) + 1;
+    } 
+    //If the rectangle's width is less than the width of the
+    //tile, set the columns to 2, which is the minimum
+    else {
+        columns = 2;
+    }
+
+    //2. Rows
+    //Calculate the tile rows in the same way
+    if (height >= tileHeight) {
+        rows = Math.round(height / tileHeight) + 1;
+    } 
+    else {
+        rows = 2; 
+    }
+
+    //Create a grid of sprites that's just one sprite larger
+    //than the `totalWidth` and `totalHeight`
+    let tileGrid = Q.grid(
+        columns, rows, tileWidth, tileHeight, false, 0, 0,
+        () => {
+            //Make a sprite from the supplied `source`
+            let tile = Q.sprite(source);
+            return tile;
+        }
+    );
+
+    //Declare the grid's private properties that we'll use to
+    //help scroll the tiling background
+    tileGrid._tileX = 0;
+    tileGrid._tileY = 0;
+
+    //Create an empty rectangle sprite without a fill or stoke color.
+    //Set it to the supplied `width` and `height`
+    let container = Q.rectangle(width, height, "none", "none");
+    container.x = x;
+    container.y = y;
+
+    //Set the rectangle's `mask` property to `true`. This switches on `ctx.clip()`
+    //In the rectangle sprite's `render` method.
+    container.mask = true;
+
+    //Add the tile grid to the rectangle container
+    container.addChild(tileGrid);
+
+    //Define the `tileX` and `tileY` properties on the parent container
+    //so that you can scroll the tiling background
+    Object.defineProperties(container, {
+        tileX: {
+            get () {
+                return tileGrid._tileX;
+            },
+            set (value) {
+                //Loop through all of the grid's child sprites
+                tileGrid.children.forEach(child => {
+                    //Figure out the difference between the new position
+                    //and the previous position
+                    let difference = value - tileGrid._tileX;
+
+                    //Offset the child sprite by the difference
+                    child.x += difference;
+
+                    //If the x position of the sprite exceeds the total width
+                    //of the visible columns, reposition it to just in front of the 
+                    //left edge of the container. This creates the wrapping
+                    //effect
+                    if (child.x > (columns - 1) * tileWidth) {
+                        child.x = 0 - tileWidth + difference;
+                    }
+
+                    //Use the same procedure to wrap sprites that 
+                    //exceed the left boundary
+                    if (child.x < 0 - tileWidth - difference) {
+                        child.x = (columns - 1) * tileWidth;
+                    }
+                });
+
+                //Set the private `_tileX` property to the new value
+                tileGrid._tileX = value;
+            },
+            enumerable: true, configurable: true
+        },
+        tileY: {
+            get() {
+                return tileGrid._tileY;
+            },
+            //Follow the same format to wrap sprites on the y axis
+            set(value) {
+                tileGrid.children.forEach(child => {
+                    let difference = value - tileGrid._tileY;
+                    child.y += difference;
+                    if (child.y > (rows - 1) * tileHeight) 
+                        child.y = 0 - tileHeight + difference;
+                    if (child.y < 0 - tileHeight - difference) 
+                        child.y = (rows - 1) * tileHeight;
+                });
+                tileGrid._tileY = value;
+            },
+            enumerable: true, configurable: true
+        }
+    });
+
+    //Return the rectangle container
+    return container;
+};
+
+Q.progressBar = {
+    maxWidth: 0,
+    height: 0,
+    backgroundColor: '0x808080',
+    foregroundColor: '0x00FFFF',
+    backBar: null,
+    frontBar: null,
+    percentage: null,
+    assets: null,
+    initialized: false,
+
+    //Use the `create` method to create the progress bar
+    create(canvas, assets) {
+        if (!this.initialized) {
+            //Store a reference to the `assets` object
+            this.assets = Q.Assets;
+
+            //Set the maximum width to half the width of the canvas
+            this.maxWidth = Q.canvas.width / 2;
+
+            //Build the progress bar using two rectangle sprites and
+            //one text sprite
+
+            //1. Create the background bar's gray background
+            this.backBar = Q.rectangle(this.maxWidth, 32, this.backgroundColor);
+            this.backBar.x = (Q.canvas.width / 2) - (this.maxWidth / 2);
+            this.backBar.y = (Q.canvas.height / 2) - 16;
+
+            //2. Create the blue foreground bar. This is the element of the
+            //progress bar that will increase in width as assets load
+            this.frontBar = Q.rectangle(this.maxWidth, 32, this.foregroundColor);
+            this.frontBar.x = (Q.canvas.width / 2) - (this.maxWidth / 2);
+            this.frontBar.y = (Q.canvas.height / 2) - 16;
+
+            //3. A text sprite that will display the percentage
+            //of assets that have loaded
+            this.percentage = Q.text('0%', {font:'28px sans-serif', fill: 'black'});
+            this.percentage.x = (Q.canvas.width / 2) - (this.maxWidth / 2) + 12;
+            this.percentage.y = (Q.canvas.height / 2) - 16;
+
+            //Flag the `progressBar` as having been initialized
+            this.initialized = true;
+        }
+    },
+    //Use the `update` method to update the width of the bar and 
+    //percentage loaded each frame
+    update() {
+        //Change the width of the blue `frontBar` to match the
+        //ratio of assets that have loaded. Adding `+1` to
+        //`assets.loaded` means that the loading bar will appear at 100%
+        //when the last asset is being loaded, which is reassuring for the
+        //player observing the load progress
+        let ratio = (this.assets.loaded + 1) / this.assets.toLoad;
+        this.frontBar.width = this.maxWidth * ratio;
+
+        //Display the percentage
+        this.percentage.text = `${Math.floor((ratio) * 100)} %`;
+    },
+    //Use the `remove` method to remove the progress bar when all the
+    //game assets have finished loading
+    remove() {
+        //Remove the progress bar using the universal sprite `remove`
+        //function
+        Q.remove(this.frontBar);
+        Q.remove(this.backBar);
+        Q.remove(this.percentage);
+    }
+};
+
+/*
+World camera
+------------
+The `worldCamera` method returns a `camera` object
+with `x` and `y` properties. It has
+two useful methods: `centerOver`, to center the camera over
+a sprite, and `follow` to make it follow a sprite.
+`worldCamera` arguments: worldObject, theCanvas
+The worldObject needs to have a `width` and `height` property.
+*/
+Q.worldCamera = function(world, worldWidth, worldHeight, canvas) {
+    //Define a `camera` object with helpful properties
+    let camera = {
+        width: canvas.width,
+        height: canvas.height,
+        _x: 0,
+        _y: 0,
+
+        //`x` and `y` getters/setters
+        //When you change the camera's position,
+        //they shift the position of the world in the opposite direction
+        get x() {
+            return this._x;
+        },
+        set x(value) {
+            this._x = value;
+            world.x = -this._x;
+            //world._previousX = world.x;
+        },
+        get y() {
+            return this._y;
+        },
+        set y(value) {
+            this._y = value;
+            world.y = -this._y;
+            //world._previousY = world.y;
+        },
+
+        //The center x and y position of the camera
+        get centerX() {
+            return this.x + (this.width / 2);
+        },
+        get centerY() {
+            return this.y + (this.height / 2);
+        },
+
+        //Boundary properties that define a rectangular area, half the size
+        //of the game screen. If the sprite that the camera is following
+        //is inide this area, the camera won't scroll. If the sprite
+        //crosses this boundary, the `follow` function ahead will change
+        //the camera's x and y position to scroll the game world
+        get rightInnerBoundary() {
+            return this.x + (this.width / 2) + (this.width / 4);
+        },
+        get leftInnerBoundary() {
+            return this.x + (this.width / 2) - (this.width / 4);
+        },
+        get topInnerBoundary() {
+            return this.y + (this.height / 2) - (this.height / 4);
+        },
+        get bottomInnerBoundary() {
+            return this.y + (this.height / 2) + (this.height / 4);
+        },
+
+        //The code next defines two camera 
+        //methods: `follow` and `centerOver`
+
+        //Use the `follow` method to make the camera follow a sprite
+        follow: function(sprite) {
+            //Check the sprites position in relation to the inner
+            //boundary. Move the camera to follow the sprite if the sprite 
+            //strays outside the boundary
+            if(sprite.x < this.leftInnerBoundary) {
+                this.x = sprite.x - (this.width / 4);
+            }
+            if(sprite.y < this.topInnerBoundary) {
+                this.y = sprite.y - (this.height / 4);
+            }
+            if(sprite.x + sprite.width > this.rightInnerBoundary) {
+                this.x = sprite.x + sprite.width - (this.width / 4 * 3);
+            }
+            if(sprite.y + sprite.height > this.bottomInnerBoundary) {
+                this.y = sprite.y + sprite.height - (this.height / 4 * 3);
+            }
+
+            //If the camera reaches the edge of the map, stop it from moving
+            if(this.x < 0) {
+                this.x = 0;
+            }
+            if(this.y < 0) {
+                this.y = 0;
+            }
+            if(this.x + this.width > worldWidth) {
+                this.x = worldWidth - this.width;
+            }
+            if(this.y + this.height > worldHeight) {
+                this.y = worldHeight - this.height;
+            }
+        },
+
+        //Use the `centerOver` method to center the camera over a sprite
+        centerOver: function(sprite) {
+            //Center the camera over a sprite
+            this.x = (sprite.x + sprite.halfWidth) - (this.width / 2);
+            this.y = (sprite.y + sprite.halfHeight) - (this.height / 2);
+        }
+    };
+
+    //Return the `camera` object 
+    return camera;
 };
 
 /*
@@ -1121,600 +1855,6 @@ Q.hit = function(a, b, react = false, bounce = false, global = false, extra) {
             return Q.circleRectangleCollision(a, b, bounce, global);
         }
     }
-};
-
-Q.contain = function(s, container, bounce = false, extra){
-    //Give the container x and y anchor offset values, if it doesn't
-    //have any
-    if (container.xAnchorOffset === undefined) container.xAnchorOffset = 0;
-    if (container.yAnchorOffset === undefined) container.yAnchorOffset = 0;
-
-    //The `collision` object is used to store which
-    //side of the containing rectangle the sprite hits
-    let collision;
-
-    //Left
-    if (s.x - s.xAnchorOffset < container.x - s.parent.gx - container.xAnchorOffset) {
-        //Bounce the sprite if `bounce` is true
-        if (bounce) s.vx *= -1;
-
-        //If the sprite has `mass`, let the mass
-        //affect the sprite's velocity
-        if(s.mass) s.vx /= s.mass;
-        s.x = container.x - s.parent.gx - container.xAnchorOffset + s.xAnchorOffset;
-        collision = "left";
-    }
-
-    //Top
-    if (s.y - s.yAnchorOffset < container.y - s.parent.gy - container.yAnchorOffset) {
-        if (bounce) s.vy *= -1;
-        if(s.mass) s.vy /= s.mass;
-        s.y = container.y - s.parent.gy - container.yAnchorOffset + s.yAnchorOffset;
-        collision = "top";
-    }
-
-    //Right
-    if (s.x - s.xAnchorOffset + s.width > container.width - container.xAnchorOffset) {
-        if (bounce) s.vx *= -1;
-        if(s.mass) s.vx /= s.mass;
-        s.x = container.width - s.width - container.xAnchorOffset + s.xAnchorOffset;
-        collision = "right";
-    }
-
-    //Bottom
-    if (s.y - s.yAnchorOffset + s.height > container.height - container.yAnchorOffset) {
-        if (bounce) s.vy *= -1;
-        if(s.mass) s.vy /= s.mass;
-        s.y = container.height - s.height - container.yAnchorOffset + s.yAnchorOffset;
-        collision = "bottom";
-    }
-
-    //The `extra` function runs if there was a collision
-    //and `extra` has been defined
-    if (collision && extra) extra(collision);
-
-    //Return the `collision` object
-    return collision;
-};
-
-Q.outsideBounds = function(s, bounds, extra){
-    let x = bounds.x,
-        y = bounds.y,
-        width = bounds.width,
-        height = bounds.height,
-
-        //The `collision` object is used to store which
-        //side of the containing rectangle the sprite hits
-        collision;
-
-    //Left
-    if (s.x < x - s.width) {
-        collision = "left";
-    }
-    //Top
-    if (s.y < y - s.height) {
-        collision = "top";
-    }
-    //Right
-    if (s.x > width) {
-        collision = "right";
-    }
-    //Bottom
-    if (s.y > height) {
-        collision = "bottom";
-    }
-
-    //The `extra` function runs if there was a collision
-    //and `extra` has been defined
-    if (collision && extra) extra(collision);
-
-    //Return the `collision` object
-    return collision;
-};
-
-//Use `shoot` to create bullet sprites 
-Q.shoot = function(
-    shooter, angle, x, y, container, bulletSpeed, bulletArray, bulletSprite
-) {
-    //Make a new sprite using the user-supplied `bulletSprite` function
-    let bullet = bulletSprite();
-
-    //Set the bullet's anchor point to its center
-    bullet.anchor.set(0.5, 0.5);
-
-    //Temporarily add the bullet to the shooter
-    //so that we can position it relative to the
-    //shooter's position
-    shooter.addChild(bullet);
-    bullet.x = x;
-    bullet.y = y;
-
-    //Find the bullet's global coordinates so that we can use
-    //them to position the bullet on the new parent container
-    let tempGx = bullet.globalPosition().x,
-        tempGy = bullet.globalPosition().y;
-
-    //Add the bullet to the new parent container using
-    //the new global coordinates
-    container.addChild(bullet);
-    // Q.stage.addChild(bullet);
-    bullet.x = tempGx;
-    bullet.y = tempGy;
-
-    //Set the bullet's velocity
-    bullet.vx = Math.cos(angle) * bulletSpeed;
-    bullet.vy = Math.sin(angle) * bulletSpeed;
-
-    //Push the bullet into the `bulletArray`
-    bulletArray.push(bullet);
-}
-
-Q.emitter = function (interval, particleFunction) {
-    let emitter = {},
-    timerInterval = undefined;
-
-    emitter.playing = false;
-
-    function play() {
-        if (!emitter.playing) {
-            particleFunction();
-            timerInterval = setInterval(emitParticle.bind(this), interval);
-            emitter.playing = true;
-        }
-    }
-
-    function stop() {
-        if (emitter.playing) {
-            clearInterval(timerInterval);
-            emitter.playing = false;
-        }
-    }
-
-    function emitParticle() {
-        particleFunction();
-    }
-
-    emitter.play = play;
-    emitter.stop = stop;
-    return emitter;
-};
-
-Q.particleEffect = function (
-    x = 0, y = 0, 
-    spriteFunction = () => console.log("Sprite creation function"),
-    numberOfParticles = 20,
-    gravity = 0,
-    randomSpacing = true,
-    minAngle = 0, maxAngle = 6.28,
-    minSize = 4, maxSize = 16, 
-    minSpeed = 0.3, maxSpeed = 3,
-    minScaleSpeed = 0.01, maxScaleSpeed = 0.05,
-    minAlphaSpeed = 0.02, maxAlphaSpeed = 0.02,
-    minRotationSpeed = 0.01, maxRotationSpeed = 0.03
-) {
-    //An array to store the angles
-    let angles = [];
-
-    //A variable to store the current particle's angle
-    let angle;
-
-    //Figure out by how many radians each particle should be separated
-    let spacing = (maxAngle - minAngle) / (numberOfParticles - 1);
-
-    //Create an angle value for each particle and push that
-    //value into the `angles` array
-    for(let i = 0; i < numberOfParticles; i++) {
-        //If `randomSpacing` is `true`, give the particle any angle
-        //value between `minAngle` and `maxAngle`
-        if (randomSpacing) {
-            angle = Q.utils.randomFloat(minAngle, maxAngle);
-            angles.push(angle);
-        } 
-        //If `randomSpacing` is `false`, space each particle evenly,
-        //starting with the `minAngle` and ending with the `maxAngle`
-        else {
-            if (angle === undefined) angle = minAngle;
-            angles.push(angle);
-            angle += spacing;
-        }
-    }
-
-    //Make a particle for each angle
-    angles.forEach(angle => makeParticle(angle));
-
-    //Make the particle
-    function makeParticle(angle) {
-        //Create the particle using the supplied sprite function
-        let particle = spriteFunction();
-
-        //Display a random frame if the particle has more than 1 frame
-        if (particle.frames.length > 0) {
-            particle.gotoAndStop(Q.utils.randomInt(0, particle.frames.length - 1));
-        }
-
-        //Set a random width and height
-        let size = Q.utils.randomInt(minSize, maxSize);
-        particle.width = size;
-        particle.height = size;
-
-        //Set the particle's `anchor` to its center
-        particle.anchor.set(0.5, 0.5);
-
-        //Set the x and y position
-        particle.x = x;
-        particle.y = y;
-
-        //Set a random speed to change the scale, alpha and rotation
-        particle.scaleSpeed = Q.utils.randomFloat(minScaleSpeed, maxScaleSpeed);
-        particle.alphaSpeed = Q.utils.randomFloat(minAlphaSpeed, maxAlphaSpeed);
-        particle.rotationSpeed = Q.utils.randomFloat(minRotationSpeed, maxRotationSpeed);
-
-        //Set a random velocity at which the particle should move
-        let speed = Q.utils.randomFloat(minSpeed, maxSpeed);
-        particle.vx = speed * Math.cos(angle);
-        particle.vy = speed * Math.sin(angle);
-
-        //Add the particle to its parent container
-        //container.addChild(particle);
-
-        //The particle's `update` method is called on each frame of the
-        //game loop
-        particle.update = (dt) => {
-            //Add gravity
-            particle.vy += gravity; // * dt;
-
-            //Move the particle
-            particle.x += particle.vx; // * dt;
-            particle.y += particle.vy; // * dt;
-
-            //Change the particle's `scale`
-            if (particle.scaleX - particle.scaleSpeed > 0) {
-                particle.scaleX -= particle.scaleSpeed; // * dt;
-            }
-            if (particle.scaleY - particle.scaleSpeed > 0) {
-                particle.scaleY -= particle.scaleSpeed; // * dt;
-            }
-
-            //Change the particle's rotation
-            particle.rotation += particle.rotationSpeed; // * dt;
-
-            //Change the particle's `alpha`
-            particle.alpha -= particle.alphaSpeed; // * dt;
-
-            //Remove the particle if its `alpha` reaches zero
-            if (particle.alpha <= 0) {
-                Q.remove(particle);
-                Q.particles.splice(Q.particles.indexOf(particle), 1);
-            }
-        };
-
-        //Push the particle into the `particles` array
-        //The `particles` array needs to be updated by the game loop each
-        //frame
-        Q.particles.push(particle);
-    }
-};
-
-Q.grid = function(
-    columns = 0, rows = 0, cellWidth = 32, cellHeight = 32,
-    centerCell = false, xOffset = 0, yOffset = 0,
-    makeSprite,
-    extra
-  ){
-    //Create an empty group called `container`. This `container`
-    //group is what the function returns back to the main program.
-    //All the sprites in the grid cells will be added
-    //as children to this container
-    let container = Q.container();
-
-    //The `create` method plots the grid
-
-    let createGrid = () => {
-        //Figure out the number of cells in the grid
-        let length = columns * rows;
-
-        //Create a sprite for each cell
-        for(let i = 0; i < length; i++) {
-            //Figure out the sprite's x/y placement in the grid
-            let x = (i % columns) * cellWidth,
-                y = Math.floor(i / columns) * cellHeight;
-
-            //Use the `makeSprite` function supplied in the constructor
-            //to make a sprite for the grid cell
-            let sprite = makeSprite();
-
-            //Add the sprite to the `container`
-            container.addChild(sprite);
-
-            //Should the sprite be centered in the cell?
-
-            //No, it shouldn't be centered
-            if (!centerCell) {
-                sprite.x = x + xOffset;
-                sprite.y = y + yOffset;
-            }
-            //Yes, it should be centered
-            else {
-                sprite.x 
-                    = x + (cellWidth / 2) 
-                    - sprite.halfWidth + xOffset;
-                sprite.y 
-                    = y + (cellHeight / 2) 
-                    - sprite.halfHeight + yOffset;
-            }
-
-            //Run any optional extra code. This calls the
-            //`extra` function supplied by the constructor
-            if (extra) extra(sprite);
-        }
-    };
-
-    //Run the `createGrid` method
-    createGrid();
-    Q.stage.addChild(container);
-
-    //Return the `container` group back to the main program
-    return container;
-};
-
-Q.tilingSprite = function(width, height, source, x = 0, y = 0) {
-    //Figure out the tile's width and height
-    let tileWidth, tileHeight;
-    let src = Q.assets.cache[source];
-
-    //If the source is a texture atlas frame, use its
-    //`frame.w` and `frame.h` properties
-    // if(src.frame) {
-    tileWidth = src.frame.w;
-    tileHeight = src.frame.h;
-    // }
-    //If it's an image, use the image's 
-    //`width` and `height` properties
-    // else {
-    //     tileWidth = src.width;
-    //     tileHeight = src.height;
-    // }
-
-    //Figure out the rows and columns.
-    //The number of rows and columns should always be
-    //one greater than the total number of tiles
-    //that can fit in the rectangle. This give us one 
-    //additional row and column that we can reposition
-    //to create the infinite scroll effect
-
-    let columns, rows;
-
-    //1. Columns
-    //If the width of the rectangle is greater than the width of the tile,
-    //calculate the number of tile columns
-    if (width >= tileWidth) {
-        columns = Math.round(width / tileWidth) + 1;
-    } 
-    //If the rectangle's width is less than the width of the
-    //tile, set the columns to 2, which is the minimum
-    else {
-        columns = 2;
-    }
-
-    //2. Rows
-    //Calculate the tile rows in the same way
-    if (height >= tileHeight) {
-        rows = Math.round(height / tileHeight) + 1;
-    } 
-    else {
-        rows = 2; 
-    }
-
-    //Create a grid of sprites that's just one sprite larger
-    //than the `totalWidth` and `totalHeight`
-    let tileGrid = Q.grid(
-        columns, rows, tileWidth, tileHeight, false, 0, 0,
-        () => {
-            //Make a sprite from the supplied `source`
-            let tile = Q.sprite(source);
-            return tile;
-        }
-    );
-
-    //Declare the grid's private properties that we'll use to
-    //help scroll the tiling background
-    tileGrid._tileX = 0;
-    tileGrid._tileY = 0;
-
-    //Create an empty rectangle sprite without a fill or stoke color.
-    //Set it to the supplied `width` and `height`
-    let container = Q.rectangle(width, height, "none", "none");
-    container.x = x;
-    container.y = y;
-
-    //Set the rectangle's `mask` property to `true`. This switches on `ctx.clip()`
-    //In the rectangle sprite's `render` method.
-    container.mask = true;
-
-    //Add the tile grid to the rectangle container
-    container.addChild(tileGrid);
-
-    //Define the `tileX` and `tileY` properties on the parent container
-    //so that you can scroll the tiling background
-    Object.defineProperties(container, {
-        tileX: {
-            get () {
-                return tileGrid._tileX;
-            },
-            set (value) {
-                //Loop through all of the grid's child sprites
-                tileGrid.children.forEach(child => {
-                    //Figure out the difference between the new position
-                    //and the previous position
-                    let difference = value - tileGrid._tileX;
-
-                    //Offset the child sprite by the difference
-                    child.x += difference;
-
-                    //If the x position of the sprite exceeds the total width
-                    //of the visible columns, reposition it to just in front of the 
-                    //left edge of the container. This creates the wrapping
-                    //effect
-                    if (child.x > (columns - 1) * tileWidth) {
-                        child.x = 0 - tileWidth + difference;
-                    }
-
-                    //Use the same procedure to wrap sprites that 
-                    //exceed the left boundary
-                    if (child.x < 0 - tileWidth - difference) {
-                        child.x = (columns - 1) * tileWidth;
-                    }
-                });
-
-                //Set the private `_tileX` property to the new value
-                tileGrid._tileX = value;
-            },
-            enumerable: true, configurable: true
-        },
-        tileY: {
-            get() {
-                return tileGrid._tileY;
-            },
-            //Follow the same format to wrap sprites on the y axis
-            set(value) {
-                tileGrid.children.forEach(child => {
-                    let difference = value - tileGrid._tileY;
-                    child.y += difference;
-                    if (child.y > (rows - 1) * tileHeight) 
-                        child.y = 0 - tileHeight + difference;
-                    if (child.y < 0 - tileHeight - difference) 
-                        child.y = (rows - 1) * tileHeight;
-                });
-                tileGrid._tileY = value;
-            },
-            enumerable: true, configurable: true
-        }
-    });
-
-    //Return the rectangle container
-    return container;
-};
-
-Q.progressBar = {
-    maxWidth: 0,
-    height: 0,
-    backgroundColor: '0x808080',
-    foregroundColor: '0x00FFFF',
-    backBar: null,
-    frontBar: null,
-    percentage: null,
-    assets: null,
-    initialized: false,
-
-    //Use the `create` method to create the progress bar
-    create(canvas, assets) {
-        if (!this.initialized) {
-            //Store a reference to the `assets` object
-            this.assets = Q.Assets;
-
-            //Set the maximum width to half the width of the canvas
-            this.maxWidth = Q.canvas.width / 2;
-
-            //Build the progress bar using two rectangle sprites and
-            //one text sprite
-
-            //1. Create the background bar's gray background
-            this.backBar = Q.rectangle(this.maxWidth, 32, this.backgroundColor);
-            this.backBar.x = (Q.canvas.width / 2) - (this.maxWidth / 2);
-            this.backBar.y = (Q.canvas.height / 2) - 16;
-
-            //2. Create the blue foreground bar. This is the element of the
-            //progress bar that will increase in width as assets load
-            this.frontBar = Q.rectangle(this.maxWidth, 32, this.foregroundColor);
-            this.frontBar.x = (Q.canvas.width / 2) - (this.maxWidth / 2);
-            this.frontBar.y = (Q.canvas.height / 2) - 16;
-
-            //3. A text sprite that will display the percentage
-            //of assets that have loaded
-            this.percentage = Q.text('0%', {font:'28px sans-serif', fill: 'black'});
-            this.percentage.x = (Q.canvas.width / 2) - (this.maxWidth / 2) + 12;
-            this.percentage.y = (Q.canvas.height / 2) - 16;
-
-            //Flag the `progressBar` as having been initialized
-            this.initialized = true;
-        }
-    },
-    //Use the `update` method to update the width of the bar and 
-    //percentage loaded each frame
-    update() {
-        //Change the width of the blue `frontBar` to match the
-        //ratio of assets that have loaded. Adding `+1` to
-        //`assets.loaded` means that the loading bar will appear at 100%
-        //when the last asset is being loaded, which is reassuring for the
-        //player observing the load progress
-        let ratio = (this.assets.loaded + 1) / this.assets.toLoad;
-        this.frontBar.width = this.maxWidth * ratio;
-
-        //Display the percentage
-        this.percentage.text = `${Math.floor((ratio) * 100)} %`;
-    },
-    //Use the `remove` method to remove the progress bar when all the
-    //game assets have finished loading
-    remove() {
-        //Remove the progress bar using the universal sprite `remove`
-        //function
-        Q.remove(this.frontBar);
-        Q.remove(this.backBar);
-        Q.remove(this.percentage);
-    }
-};
-
-Q.fourKeyController = function(s, speed, up, right, down, left) {
-    //Create a `direction` property on the sprite
-    s.direction = '';
-
-    //Create some keyboard objects
-    let leftArrow = new Q.Keyboard(left),
-        upArrow = new Q.Keyboard(up),
-        rightArrow = new Q.Keyboard(right),
-        downArrow = new Q.Keyboard(down);
-
-    //Assign key `press` and release methods
-    leftArrow.press = function() {
-        s.vx = -speed;
-        s.vy = 0;
-        s.direction = "left";
-    };
-    leftArrow.release = function() {
-        if (!rightArrow.isDown && s.vy === 0) {
-            s.vx = 0;
-        }
-    };
-    upArrow.press = function() {
-        s.vy = -speed;
-        s.vx = 0;
-        s.direction = "up";
-    };
-    upArrow.release = function() {
-        if (!downArrow.isDown && s.vx === 0) {
-            s.vy = 0;
-        }
-    };
-    rightArrow.press = function() {
-        s.vx = speed;
-        s.vy = 0;
-        s.direction = "right";
-    };
-    rightArrow.release = function() {
-        if (!leftArrow.isDown && s.vy === 0) {
-            s.vx = 0;
-        }
-    };
-    downArrow.press = function() {
-        s.vy = speed;
-        s.vx = 0;
-        s.direction = "down";
-    };
-    downArrow.release = function() {
-        if (!upArrow.isDown && s.vx === 0) {
-            s.vy = 0;
-        }
-    };
 };
 
 /**
