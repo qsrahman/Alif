@@ -9,11 +9,11 @@ function setup() {
     
     //Game.pointer.visible = false;
 
-    box = Game.rectangle(32, 32, 0x00FFFF, 0xFFFFFF, 4, 52, 42);
+    box = Game.rectangle(32, 32, "cyan", "white", 4, 52, 42);
     box.anchor.set(0.5, 0.5);
     box.rotation = 0.5;
 
-    ball = Game.circle(42, 0xDDA0DD, 0xB0E0E6, 8, 20, 110);
+    ball = Game.circle(42, "Plum", "PowderBlue", 8, 20, 110);
 
     message = Game.text("Tap the circle!", {font:"14px puzzler", fill:"white"});
     message.x = 30;
@@ -52,14 +52,14 @@ function setup() {
 
     ball.interactive = true;
     ball.press = () => {
-        let colors = ['0xFFD700', '0xE6E6FA', '0xDC143C', '0x8FBC8F'];
-        ball.texture.fillStyle = colors[Game.utils.randomInt(0, 3)];
+        let colors = ["Gold", "Lavender", "Crimson", "DarkSeaGreen"];
+        ball.fillStyle = colors[Game.utils.randomInt(0, 3)];
         ball.strokeStyle = colors[Game.utils.randomInt(0, 3)];
 
         Game.sound("assets/bounce.wav").play();
     };
 
-    line = Game.line(0xFFFF00, 4, 162, 52, 220, 94);
+    line = Game.line("Yellow", 4, 162, 52, 220, 94);
     line.angleA = 0;
     line.angleB = 0;
 

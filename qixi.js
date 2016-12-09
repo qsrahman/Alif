@@ -29,8 +29,13 @@ Q.create = function(width, height, setup, assetsToLoad, callback) {
     
     //stage will be the parent of all objects
     Q.stage = new Q.Container();
-    Q.stage.width = Q.canvas.width;
-    Q.stage.height = Q.canvas.height;
+    // Q.stage.width = Q.canvas.width;
+    // Q.stage.height = Q.canvas.height;
+    Q.stage.parent = {
+        worldTransform: new Q.Matrix(),
+        worldAlpha: 1, 
+        children: []
+    };
 
     //initialize mouse pointer
     Q.pointer = new Pointer(Q.renderer.canvas);
@@ -193,6 +198,8 @@ Q.Renderer = class {
 
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+        container.updateTransform();
+
         container.children.forEach(child => {
             renderChild(child);
         });
@@ -298,12 +305,12 @@ Q.Container = class {
         this.position.y = value;
     }
     get gx() {
-        return this.globalPosition.x;
-        //return this.getGlobalPosition().x;
+        // return this.globalPosition.x;
+        return this.getGlobalPosition().x;
     }
     get gy() {
-        return this.globalPosition.y;
-        //return this.getGlobalPosition().y;
+        // return this.globalPosition.y;
+        return this.getGlobalPosition().y;
     }
     get width() {
         return this.scale.x * this.getLocalBounds().width;
@@ -584,7 +591,7 @@ Q.Container = class {
         this.worldTransform.copy(matrixCache);
         this._currentBounds = null;
 
-        return this.getBounds();
+        return this.getBounds(Q.Matrix.IDENTITY);
     }
     toGlobal(position) {
         this.updateTransform();
@@ -684,7 +691,8 @@ Q.Sprite = class extends Q.Container {
         return Math.abs(this.scale.x) * this._texture.frame.w;
     }
     set width(value) {
-        let sign = value ? (value < 0 ? -1 : 1) : 0;
+        let sign = Q.utils.sign(this.scale.x) || 1;
+        // let sign = value ? (value < 0 ? -1 : 1) : 0;
         this.scale.x = sign * value / this._texture.frame.w;
         this._width = value;
     }
@@ -692,7 +700,8 @@ Q.Sprite = class extends Q.Container {
         return Math.abs(this.scale.y) * this._texture.frame.h;
     }
     set height(value) {
-        let sign = value ? (value < 0 ? -1 : 1) : 0;
+        let sign = Q.utils.sign(this.scale.y) || 1;
+        // let sign = value ? (value < 0 ? -1 : 1) : 0;
         this.scale.y = sign * value / this._texture.frame.h;
         this._height = value;
     }
@@ -714,6 +723,8 @@ Q.Sprite = class extends Q.Container {
         return this._texture
     }
     set texture(source) {
+        //If the source contains an `getContext` sub-property, this must
+        //be a canvas object. Use that sub-image to make the sprite.
         if(source.getContext) {
             this._texture = {
                 source: source,
@@ -734,7 +745,7 @@ Q.Sprite = class extends Q.Container {
         else if (source.image && source.data) {
             this.createFromTilesetFrames(source);
         }
-        //Is the source is an array? If so, what kind of array?
+        //Is the source an array? If so, what kind of array?
         else if (source instanceof Array) {
             if (source[0] && Q.Assets.cache[source[0]].source) {
                 //The source is an array of frames on a texture atlas tileset
@@ -874,20 +885,20 @@ Q.Sprite = class extends Q.Container {
             maxY = y4 > maxY ? y4 : maxY;
 
             // check for children
-            // if(this.children.length) {
-            //     let childBounds = super.getBounds();
+            if(this.children.length) {
+                let childBounds = super.getBounds();
 
-            //     w0 = childBounds.x;
-            //     w1 = childBounds.x + childBounds.width;
-            //     h0 = childBounds.y;
-            //     h1 = childBounds.y + childBounds.height;
+                w0 = childBounds.x;
+                w1 = childBounds.x + childBounds.width;
+                h0 = childBounds.y;
+                h1 = childBounds.y + childBounds.height;
 
-            //     minX = (minX < w0) ? minX : w0;
-            //     minY = (minY < h0) ? minY : h0;
+                minX = (minX < w0) ? minX : w0;
+                minY = (minY < h0) ? minY : h0;
 
-            //     maxX = (maxX > w1) ? maxX : w1;
-            //     maxY = (maxY > h1) ? maxY : h1;
-            // }
+                maxX = (maxX > w1) ? maxX : w1;
+                maxY = (maxY > h1) ? maxY : h1;
+            }
 
             let bounds = this._bounds;
             bounds.x = minX;
@@ -923,31 +934,15 @@ Q.Sprite = class extends Q.Container {
                 this._texture.frame.x = this.frames[frameNumber][0];
                 this._texture.frame.y = this.frames[frameNumber][1];
             }
-
             //b. Frames made from texture atlas frames.
             //If each frame isn't an array, and it has a sub-object called `frame`,
             //then the frame must be a texture atlas id name.
             //In that case, get the source position from the atlas's `frame` object.
-            else {//if (Q.Assets.cache[this.frames[frameNumber]].frame) {
-                // let source = Q.Assets.cache[this.frames[frameNumber]];
+            else {
                 this._texture = Q.Assets.cache[this.frames[frameNumber]];
-                // this._texture.frame.x = source.frame.x;
-                // this._texture.frame.y = source.frame.y;
-                // this._texture.frame.w = source.frame.w;
-                // this._texture.frame.h = source.frame.h;
-                // this.width = source.frame.w;
-                // this.height = source.frame.h;
                 this.width = this._texture.frame.w;
                 this.height = this._texture.frame.h;
             }
-            //c. Frames made from individual image objects.
-            //If neither of the above are true, then each frame must be
-            //an individual Image object
-            // else {
-            //     this._texture = Q.Assets.cache[this.frames[frameNumber]];
-            //     this.width = this._texture.frame.w;
-            //     this.height = this._texture.frame.h;
-            // }
             //Set the `_currentFrame` value to the chosen frame
             this._currentFrame = frameNumber;
         } 
@@ -1916,141 +1911,6 @@ Q.graphics = function() {
     return sprite;
 };
 
-Q.rectangle = function(
-    width = 32, 
-    height = 32,  
-    fillStyle = 0xFF3300, 
-    strokeStyle = 0x0033CC, 
-    lineWidth = 0,
-    x = 0, 
-    y = 0 
-) {
-    //Draw the rectangle
-    let rectangle = new Q.Graphics();
-    rectangle.beginFill(fillStyle);
-
-    if (lineWidth > 0) {
-        rectangle.lineStyle(lineWidth, strokeStyle, 1);
-    }
-    rectangle.drawRect(0, 0, width, height);
-    rectangle.endFill();
-
-    //Generate a texture from the rectangle
-    let texture = rectangle.generateTexture();
-
-    //Use the texture to create a sprite
-    let sprite = Q.sprite(texture, x, y);
-
-    //Return the sprite
-    return sprite;
-};
-
-Q.circle = function(
-    diameter = 32, 
-    fillStyle = 0xFF3300, 
-    strokeStyle = 0x0033CC, 
-    lineWidth = 0,
-    x = 0, 
-    y = 0 
-) {
-    //Draw the circle
-    let circle = new Q.Graphics();
-    circle.beginFill(fillStyle);
-
-    if (lineWidth > 0) {
-        circle.lineStyle(lineWidth, strokeStyle, 1);
-    }
-    circle.drawCircle(0, 0, diameter / 2);
-    circle.endFill();
-
-    //Generate a texture from the rectangle
-    let texture = circle.generateTexture();
-
-    //Use the texture to create a sprite
-    let sprite = Q.sprite(texture, x, y);
-    sprite.circular = true;
-
-    //Return the sprite
-    return sprite;
-};
-
-Q.line = function(
-    strokeStyle = 0x000000, 
-    lineWidth = 1, 
-    ax = 0, 
-    ay = 0, 
-    bx = 32, 
-    by = 32
-) {
-    //Create the line object
-    let line = Q.graphics();
-
-    //Add properties
-    line._ax = ax;
-    line._ay = ay;
-    line._bx = bx;
-    line._by = by;
-    line.strokeStyle = strokeStyle;
-    line.lineWidth = lineWidth;
-
-    //A helper function that draws the line
-    line.draw = () => {
-        line.clear();
-        line.lineStyle(lineWidth, strokeStyle, 1);
-        line.moveTo(line._ax, line._ay);
-        line.lineTo(line._bx, line._by);
-    };
-    line.draw();
-
-    //Define getters and setters that redefine the line's start and 
-    //end points and re-draws it if they change
-    Object.defineProperties(line, {
-        "ax": {
-            get() {
-                return this._ax;
-            },
-            set(value) {
-                this._ax = value;
-                this.draw();
-            }, 
-            enumerable: true, configurable: true
-        },
-        "ay": {
-            get() {
-                return this._ay;
-            },
-            set(value) {
-                this._ay = value;
-                this.draw();
-            }, 
-            enumerable: true, configurable: true
-        },
-        "bx": {
-            get() {
-                return this._bx;
-            },
-            set(value) {
-                this._bx = value;
-                this.draw();
-            }, 
-            enumerable: true, configurable: true
-        },
-        "by": {
-            get() {
-                return this._by;
-            },
-            set(value) {
-                this._by = value;
-                this.draw();
-            }, 
-            enumerable: true, configurable: true
-        }
-    });
-
-    //Return the line
-    return line;
-};
-
 class Pointer {
     constructor(element, scale = 1) {
         this._x = 0,
@@ -2116,10 +1976,10 @@ class Pointer {
         return this._y / this.scale;
     }
     get width() {
-        return 0;
+        return 1;
     }
     get height() {
-        return 0;
+        return 1;
     }
     get centerX() {
         return this.x;
@@ -2237,10 +2097,7 @@ class Pointer {
         if (this.release) this.release();
         event.preventDefault();
     }
-
-    //`hitTestSprite` figures out if the pointer is touching a sprite
     hitTestSprite(sprite) {
-
         //The `hit` variable will become `true` if the pointer is
         //touching the sprite and remain `false` if it isn't
         let hit = false;
@@ -2965,7 +2822,7 @@ Q.Matrix = class {
         return this;
     }
     clone() {
-        let matrix = new Matrix();
+        let matrix = new Q.Matrix();
         
         matrix.a = this.a;
         matrix.b = this.b;

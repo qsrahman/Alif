@@ -135,6 +135,58 @@ Q.utils = {
     // Converts a color as an [R, G, B] array to a hex number
     rgb2hex: function (rgb) {
         return ((rgb[0]*255 << 16) + (rgb[1]*255 << 8) + rgb[2]*255);
+    },
+
+    /* Color conversion */
+    //From: http://stackoverflow.com/questions/1573053/javascript-function-to-convert-color-names-to-hex-codes
+    //Utilities to convert HTML color string names to hexadecimal codes
+
+    colorToRGBA(color) {
+        // Returns the color as an array of [r, g, b, a] -- all range from 0 - 255
+        // color must be a valid canvas fillStyle. This will cover most anything
+        // you'd want to use.
+        // Examples:
+        // colorToRGBA('red')  # [255, 0, 0, 255]
+        // colorToRGBA('#f00') # [255, 0, 0, 255]
+        let cvs, ctx;
+
+        cvs = document.createElement('canvas');
+        cvs.height = 1;
+        cvs.width = 1;
+        ctx = cvs.getContext('2d');
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, 1, 1);
+        
+        let data = ctx.getImageData(0, 0, 1, 1).data; 
+        
+        return data;
+    },
+
+    byteToHex(num) {
+        // Turns a number (0-255) into a 2-character hex number (00-ff)
+        return ('0'+num.toString(16)).slice(-2);
+    },
+
+    colorToHex(color) {
+        // Convert any CSS color to a hex representation
+        // Examples:
+        // colorToHex('red')            # '#ff0000'
+        // colorToHex('rgb(255, 0, 0)') # '#ff0000'
+        let rgba, hex;
+
+        rgba = Q.utils.colorToRGBA(color);
+
+        hex = [0,1,2].map(
+            idx => Q.utils.byteToHex(rgba[idx])
+        ).join('');
+
+        return "0x" + hex;
+    },
+
+    //A function to find out if the user entered a number (a hex color
+    //code) or a string (an HTML color string)
+    color(value) {
+        return !isNaN(value) ? value : Q.utils.colorToHex(value);
     }
 };
 }).call(this, Game);

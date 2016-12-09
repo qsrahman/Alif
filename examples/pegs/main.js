@@ -4,7 +4,7 @@ let ball, pegs, message, boundry;
 
 function setup() {
     // setup code here
-    Game.backgroundColor = 'black';
+    Game.renderer.backgroundColor = 'black';
 
     ball = Game.circle(Game.utils.randomInt(16, 64), '0xFF0000');
     ball.x = Game.utils.randomInt(0, Game.canvas.width - ball.diameter);
@@ -37,6 +37,7 @@ function setup() {
         width: Game.canvas.width,
         height: Game.canvas.height
     };
+    console.log(Game.stage.getBounds());
 
     Game.state = play;
 }
@@ -47,7 +48,7 @@ function play() {
     ball.x += ball.vx;
     ball.y += ball.vy;
 
-    let stageCollision = Game.contain(ball, boundry, true);
+    let stageCollision = Game.contain(ball, Game.stage, true);
     if(stageCollision === 'bottom') {
         ball.frictionX = 0.96;
     }
