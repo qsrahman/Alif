@@ -37,7 +37,6 @@ function setup() {
         width: Game.canvas.width,
         height: Game.canvas.height
     };
-    console.log(Game.stage.getBounds());
 
     Game.state = play;
 }
@@ -48,7 +47,7 @@ function play() {
     ball.x += ball.vx;
     ball.y += ball.vy;
 
-    let stageCollision = Game.contain(ball, Game.stage, true);
+    let stageCollision = Game.contain(ball, boundry, true);
     if(stageCollision === 'bottom') {
         ball.frictionX = 0.96;
     }
