@@ -68,7 +68,8 @@ Q.start = function() {
         Q.setup();
     }
     // Start the game loop.
-    loopId = requestAnimationFrame(gameLoop);
+    // loopId = requestAnimationFrame(gameLoop);
+    requestAnimationFrame(gameLoop);
 };
 
 function update(dt = 1) {
@@ -110,12 +111,13 @@ function update(dt = 1) {
 let then = null,
     dt = 0,
     step = 1/Q._FPS,
-    fRate = 1 / 1000,
-    loopId = null;
+    fRate = 1 / 1000;
+    // loopId = null;
 
 //game loop
 function gameLoop(now) {
-    loopId = requestAnimationFrame(gameLoop);
+    // loopId = requestAnimationFrame(gameLoop);
+    requestAnimationFrame(gameLoop);
 
     dt += Math.min(1, (now - (then || now)) * fRate);
 
@@ -131,21 +133,29 @@ function gameLoop(now) {
 }
 
 Q.resume = function() {
-    if(!loopId) {
-        then = null;
-        dt = 0;
-        Q.paused = false;
-        loopId = requestAnimationFrame(gameLoop);
-    }
+    Q.paused = false;
 };
 
 Q.pause = function() {
-    if(loopId) {
-        window.cancelAnimationFrame(loopId);
-    }
-    loopId = null;
     Q.paused = true;
 };
+
+// Q.resume = function() {
+//     if(!loopId) {
+//         then = null;
+//         dt = 0;
+//         Q.paused = false;
+//         loopId = requestAnimationFrame(gameLoop);
+//     }
+// };
+
+// Q.pause = function() {
+//     if(loopId) {
+//         window.cancelAnimationFrame(loopId);
+//     }
+//     loopId = null;
+//     Q.paused = true;
+// };
 
 Object.defineProperties(Q, {
     FPS: {
@@ -198,7 +208,7 @@ Q.Renderer = class {
 
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        container.updateTransform();
+        // container.updateTransform();
 
         container.children.forEach(child => {
             renderChild(child);
