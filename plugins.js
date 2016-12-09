@@ -4,6 +4,87 @@
 
 var Q = Q || {};
 
+//Center and scale the game engine inside the HTML page 
+Q.scaleToWindow = function(backgroundColor = '#2C3539') {
+    let scaleX, scaleY, scale, center;
+
+    //1. Scale the canvas to the correct size
+    //Figure out the scale amount on each axis
+    scaleX = window.innerWidth / Q.canvas.width;
+    scaleY = window.innerHeight / Q.canvas.height;
+
+    //Scale the canvas based on whichever value is less: `scaleX` or `scaleY`
+    scale = Math.min(scaleX, scaleY);
+    Q.canvas.style.transformOrigin = '0 0';
+    Q.canvas.style.transform = 'scale(' + scale + ')';
+
+    //2. Center the canvas.
+    //Decide whether to center the canvas vertically or horizontally.
+    //Wide canvases should be centered vertically, and 
+    //square or tall canvases should be centered horizontally
+
+    if (Q.canvas.width > Q.canvas.height) {
+        if (Q.canvas.width * scale < window.innerWidth) {
+            center = "horizontally";
+        } 
+        else { 
+            center = "vertically";
+        }
+    } 
+    else {
+        if (Q.canvas.height * scale < window.innerHeight) {
+            center = "vertically";
+        } 
+        else { 
+            center = "horizontally";
+        }
+    }
+
+    let margin;
+    //Center horizontally (for square or tall canvases)
+    if (center === 'horizontally') {
+        margin = (window.innerWidth - Q.canvas.width * scale) / 2;
+        Q.canvas.style.marginLeft = margin + 'px';
+        Q.canvas.style.marginRight = margin + 'px';
+    }
+
+    //Center vertically (for wide canvases) 
+    if (center === 'vertically') {
+        margin = (window.innerHeight - Q.canvas.height * scale) / 2;
+        Q.canvas.style.marginTop = margin + 'px';
+        Q.canvas.style.marginBottom = margin + 'px';
+    }
+
+    //3. Remove any padding from the canvas and set the canvas
+    //display style to 'block'
+    Q.canvas.style.paddingLeft = 0;
+    Q.canvas.style.paddingRight = 0;
+    Q.canvas.style.paddingTop = 0;
+    Q.canvas.style.paddingBottom = 0;
+    Q.canvas.style.display = 'block';
+
+    //4. Set the color of the HTML body background
+    document.body.style.backgroundColor = backgroundColor;
+
+    //5. Set the game engine and pointer to the correct scale. 
+    //This is important for correct hit testing between the pointer and sprites
+    Q.pointer.scale = scale;
+    Q.scale = scale;
+
+    //Fix some quirkiness in scaling for Safari
+    let ua = navigator.userAgent.toLowerCase();
+    if (ua.indexOf("safari") !== -1) {
+      if (ua.indexOf("chrome") > -1) {
+        // Chrome
+      } 
+      else {
+        // Safari
+        Q.canvas.style.maxHeight = "100%";
+        Q.canvas.style.minHeight = "100%";
+      }
+    }
+};
+
 /*
 Wait
 ----
@@ -26,15 +107,15 @@ Q.wait = function(duration = 0) {
 
 //Move a sprite or an array of sprites by adding its
 //velocity to its position
-Q.move = function(sprites) {
+Q.move = function(sprites, dt = 1) {
     if (!(sprites instanceof Array)) {
-        sprites.x += sprites.vx;
-        sprites.y += sprites.vy;
+        sprites.x += sprites.vx * dt;
+        sprites.y += sprites.vy * dt;
     } 
     else {
         sprites.forEach(sprite => {
-            sprite.x += sprite.vx;
-            sprite.y += sprite.vy;
+            sprite.x += sprite.vx * dt;
+            sprite.y += sprite.vy * dt;
         });
     }
 };
@@ -95,8 +176,8 @@ Q.fourKeyController = function(s, speed, up = 38, right = 39, down = 40, left = 
 Q.contain = function(s, container, bounce = false, extra){
     //Give the container x and y anchor offset values, if it doesn't
     //have any
-    // if (container.xAnchorOffset === undefined) container.xAnchorOffset = 0;
-    // if (container.yAnchorOffset === undefined) container.yAnchorOffset = 0;
+    if (container.xAnchorOffset === undefined) container.xAnchorOffset = 0;
+    if (container.yAnchorOffset === undefined) container.yAnchorOffset = 0;
 
     //The `collision` object is used to store which
     //side of the containing rectangle the sprite hits
@@ -315,8 +396,8 @@ Q.shoot = function(
 
     //Find the bullet's global coordinates so that we can use
     //them to position the bullet on the new parent container
-    let tempGx = bullet.globalPosition().x,
-        tempGy = bullet.globalPosition().y;
+    let tempGx = bullet.getGlobalPosition().x,
+        tempGy = bullet.getGlobalPosition().y;
 
     //Add the bullet to the new parent container using
     //the new global coordinates
@@ -974,9 +1055,9 @@ Q.circleCollision = function(c1, c2, bounce = true, global = false) {
 
     if(global) {
         //Use global coordinates
-        dx = (c2.gx + c2.radius - c2.xAnchorOffset) - 
+        vx = (c2.gx + c2.radius - c2.xAnchorOffset) - 
              (c1.gx + c1.radius - c1.xAnchorOffset);
-        dy = (c2.gy + c2.radius - c2.yAnchorOffset) - 
+        vy = (c2.gy + c2.radius - c2.yAnchorOffset) - 
              (c1.gy + c1.radius - c1.yAnchorOffset);
     } 
     else {
@@ -1066,9 +1147,9 @@ Q.movingCircleCollision = function(c1, c2, global = false) {
     //Calculate the vector between the circles’ center points
     if(global) {
         //Use global coordinates
-        dx = (c2.gx + c2.radius - c2.xAnchorOffset) - 
+        s.vx = (c2.gx + c2.radius - c2.xAnchorOffset) - 
              (c1.gx + c1.radius - c1.xAnchorOffset);
-        dy = (c2.gy + c2.radius - c2.yAnchorOffset) - 
+        s.vy = (c2.gy + c2.radius - c2.yAnchorOffset) - 
              (c1.gy + c1.radius - c1.yAnchorOffset);
     } 
     else {
@@ -1757,8 +1838,8 @@ Q.hit = function(a, b, react = false, bounce = false, global = false, extra) {
         //Are `a` and `b` both sprites?
         //(We have to check again if this function was called from
         //`spriteVsArray`)
-        // let aIsASprite = a.parent !== undefined,
-        //     bIsASprite = b.parent !== undefined;
+        let aIsASprite = a.parent !== undefined,
+            bIsASprite = b.parent !== undefined;
 
         if (aIsASprite && bIsASprite) {
             //Yes, but what kind of sprites?
@@ -2170,6 +2251,17 @@ Q.TWEEN.Easing = {
         InOut( k ) {
             if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k * k * k;
             return 0.5 * ( ( k -= 2 ) * k * k * k * k + 2 );
+        }
+    },
+    SmoothStep: {
+        Simple(k) {
+            return k * k * (3 - 2 * k);
+        },
+        Squared(k) {
+            return Math.pow((k * k * (3 - 2 * k)), 2);
+        },
+        Cubed(k) {
+            return Math.pow((k * k * (3 - 2 * k)), 3);
         }
     },
     Sinusoidal: {
