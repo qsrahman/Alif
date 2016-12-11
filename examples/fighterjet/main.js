@@ -13,7 +13,7 @@ function setup() {
     movie.position.set(400, 300);
     movie.anchor.set(0.5, 0.5);
     // movie.pivot.set(50, 50);
-    movie.animationSpeed = 0.6;
+    movie.animationSpeed = 0.5;
     movie.play();
 
     Game.stage.addChild(movie);
@@ -28,6 +28,6 @@ function play(dt) {
 
 window.onload = function() {
     Game.create(800, 600, setup, ['fighter.json']);
-    Game.renderer.backgroundColor = 0xffffff;
+    Game.renderer.backgroundColor = 'lightblue';
     Game.start();
 };

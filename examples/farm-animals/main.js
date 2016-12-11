@@ -1,6 +1,6 @@
 'use strict';
 
-let chicken, horse, sheep, pig, arrow;
+let chicken, horse, sheep, pig, leftArrow, rightArrow;
 
 function setup() {
 
@@ -31,9 +31,11 @@ function setup() {
         297, 200
     );
     pig = Game.sprite(pigFrames);
-    
-    arrow = Game.sprite('assets/arrow.png');
 
+    rightArrow = Game.sprite('assets/arrow.png');    
+    leftArrow = Game.sprite('assets/arrow.png');
+    leftArrow.scale.x = -1;
+    leftArrow.x = 300;
     Game.state = play;
 }
 

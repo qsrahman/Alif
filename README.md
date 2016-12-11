@@ -10,3 +10,6 @@ Qixi
 Examples:
 ==
 - [BoxJump](https://cdn.rawgit.com/qsrahman/qixi/dev/examples/boxjump/index.html)
+- [Alien Armada](https://cdn.rawgit.com/qsrahman/qixi/dev/examples/alienArmada/index.html)
+- [Treasure Hunter](https://cdn.rawgit.com/qsrahman/qixi/dev/examples/treasureHunter/index.html)
+- [Marbles](https://cdn.rawgit.com/qsrahman/qixi/dev/examples/marbles/index.html)

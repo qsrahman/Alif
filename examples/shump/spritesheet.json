@@ -1,0 +1,208 @@
+{ 
+    "frames": {
+        "bolt_gold.png": {
+            "frame": {"x":591,"y":390,"w":19,"h":30},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":19,"h":30},
+            "sourceSize": {"w":19,"h":30}
+        },
+        "laserRed16.png": {
+            "frame": {"x":576,"y":390,"w":13,"h":54},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":13,"h":54},
+            "sourceSize": {"w":13,"h":54}
+        },
+        "meteorBrown_big1.png": {
+            "frame": {"x":482,"y":494,"w":101,"h":84},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":101,"h":84},
+            "sourceSize": {"w":101,"h":84}
+        },
+        "meteorBrown_med1.png": {
+            "frame": {"x":566,"y":699,"w":43,"h":43},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":43,"h":43},
+            "sourceSize": {"w":43,"h":43}
+        },
+        "meteorBrown_med3.png": {
+            "frame": {"x":566,"y":657,"w":45,"h":40},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":45,"h":40},
+            "sourceSize": {"w":45,"h":40}
+        },
+        "meteorBrown_small1.png": {
+            "frame": {"x":585,"y":522,"w":28,"h":28},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":28,"h":28},
+            "sourceSize": {"w":28,"h":28}
+        },
+        "meteorBrown_small2.png": {
+            "frame": {"x":585,"y":494,"w":29,"h":26},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":29,"h":26},
+            "sourceSize": {"w":29,"h":26}
+        },
+        "meteorBrown_tiny1.png": {
+            "frame": {"x":591,"y":422,"w":18,"h":18},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":18,"h":18},
+            "sourceSize": {"w":18,"h":18}
+        },
+        "playerShip1_orange.png": {
+            "frame": {"x":482,"y":580,"w":99,"h":75},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":99,"h":75},
+            "sourceSize": {"w":99,"h":75}
+        },
+        "regularExplosion00.png": {
+            "frame": {"x":2,"y":288,"w":192,"h":192},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":192,"h":192},
+            "sourceSize": {"w":192,"h":192}
+        },
+        "regularExplosion01.png": {
+            "frame": {"x":156,"y":482,"w":152,"h":150},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":152,"h":150},
+            "sourceSize": {"w":152,"h":150}
+        },
+        "regularExplosion02.png": {
+            "frame": {"x":482,"y":657,"w":82,"h":91},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":82,"h":91},
+            "sourceSize": {"w":82,"h":91}
+        },
+        "regularExplosion03.png": {
+            "frame": {"x":482,"y":390,"w":92,"h":102},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":92,"h":102},
+            "sourceSize": {"w":92,"h":102}
+        },
+        "regularExplosion04.png": {
+            "frame": {"x":482,"y":138,"w":120,"h":124},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":120,"h":124},
+            "sourceSize": {"w":120,"h":124}
+        },
+        "regularExplosion05.png": {
+            "frame": {"x":482,"y":2,"w":133,"h":134},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":133,"h":134},
+            "sourceSize": {"w":133,"h":134}
+        },
+        "regularExplosion06.png": {
+            "frame": {"x":142,"y":787,"w":138,"h":140},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":138,"h":140},
+            "sourceSize": {"w":138,"h":140}
+        },
+        "regularExplosion07.png": {
+            "frame": {"x":304,"y":634,"w":143,"h":144},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":143,"h":144},
+            "sourceSize": {"w":143,"h":144}
+        },
+        "regularExplosion08.png": {
+            "frame": {"x":2,"y":634,"w":149,"h":151},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":149,"h":151},
+            "sourceSize": {"w":149,"h":151}
+        },
+        "shield_gold.png": {
+            "frame": {"x":576,"y":446,"w":30,"h":30},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":30,"h":30},
+            "sourceSize": {"w":30,"h":30}
+        },
+        "sonicExplosion00.png": {
+            "frame": {"x":288,"y":2,"w":192,"h":192},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":192,"h":192},
+            "sourceSize": {"w":192,"h":192}
+        },
+        "sonicExplosion01.png": {
+            "frame": {"x":2,"y":482,"w":152,"h":150},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":152,"h":150},
+            "sourceSize": {"w":152,"h":150}
+        },
+        "sonicExplosion02.png": {
+            "frame": {"x":196,"y":288,"w":190,"h":190},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":190,"h":190},
+            "sourceSize": {"w":190,"h":190}
+        },
+        "sonicExplosion03.png": {
+            "frame": {"x":2,"y":2,"w":284,"h":284},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":284,"h":284},
+            "sourceSize": {"w":284,"h":284}
+        },
+        "sonicExplosion04.png": {
+            "frame": {"x":482,"y":264,"w":120,"h":124},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":120,"h":124},
+            "sourceSize": {"w":120,"h":124}
+        },
+        "sonicExplosion05.png": {
+            "frame": {"x":282,"y":787,"w":133,"h":134},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":133,"h":134},
+            "sourceSize": {"w":133,"h":134}
+        },
+        "sonicExplosion06.png": {
+            "frame": {"x":2,"y":787,"w":138,"h":140},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":138,"h":140},
+            "sourceSize": {"w":138,"h":140}
+        },
+        "sonicExplosion07.png": {
+            "frame": {"x":310,"y":482,"w":143,"h":144},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":143,"h":144},
+            "sourceSize": {"w":143,"h":144}
+        },
+        "sonicExplosion08.png": {
+            "frame": {"x":153,"y":634,"w":149,"h":151},
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": {"x":0,"y":0,"w":149,"h":151},
+            "sourceSize": {"w":149,"h":151}
+        }
+    },
+    "meta": {
+        "app": "http://www.mokgames.com/texturepacker/",
+        "version": "1.0",
+        "image": "spritesheet.png",
+        "format": "RGBA8888",
+        "size": {"w":1024,"h":1024},
+        "scale": 1
+    }
+}

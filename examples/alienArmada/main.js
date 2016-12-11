@@ -173,11 +173,11 @@ function end() {
 window.onload = function() {
     Game.create(480, 320, setup,
         [
+            'assets/alienArmada.json',
+            'assets/emulogic.ttf',
             'assets/shoot.mp3',
             'assets/music.mp3',
-            'assets/explosion.mp3',
-            'assets/alienArmada.json',
-            'assets/emulogic.ttf'
+            'assets/explosion.mp3'
         ]
     );
     Game.start();
