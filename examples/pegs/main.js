@@ -6,7 +6,7 @@ function setup() {
     // setup code here
     Game.renderer.backgroundColor = 'black';
 
-    ball = Game.circle(Game.utils.randomInt(16, 64), '0xFF0000');
+    ball = Game.circle(Game.utils.randomInt(16, 32), '0xFF0000');
     ball.x = Game.utils.randomInt(0, Game.canvas.width - ball.diameter);
     ball.y = 0;
     ball.vx = Game.utils.randomInt(-12, 12);

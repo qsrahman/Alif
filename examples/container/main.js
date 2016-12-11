@@ -33,6 +33,11 @@ function setup() {
     container.pivot.x = 80 + 26 * 0.5;
     container.pivot.y = 80 + 37 * 0.5;
 
+    console.log(container.localBounds);
+    console.log(container.globalBounds);
+    console.log(container.gx);
+    console.log(container.gy);
+
     Game.state = play;
 }
 

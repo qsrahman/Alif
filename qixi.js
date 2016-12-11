@@ -29,8 +29,8 @@ Q.create = function(width, height, setup, assetsToLoad, callback) {
     
     //stage will be the parent of all objects
     Q.stage = new Q.Container();
-    // Q.stage.width = Q.canvas.width;
-    // Q.stage.height = Q.canvas.height;
+    Q.stage.width = Q.canvas.width;
+    Q.stage.height = Q.canvas.height;
     Q.stage.parent = {
         worldTransform: new Q.Matrix(),
         worldAlpha: 1, 
@@ -68,27 +68,28 @@ Q.start = function() {
         Q.setup();
     }
     // Start the game loop.
-    // loopId = requestAnimationFrame(gameLoop);
     requestAnimationFrame(gameLoop);
 };
 
 function update(dt = 1) {
     //update all interactive objects
-    if (Q.buttons.length > 0) {
+    let len = Q.buttons.length;
+    if (len > 0) {
         Q.pointer.cursor = 'auto';
-        Q.buttons.forEach(button => {
-            button.update(Q.pointer, Q.renderer.canvas);
-            if (button.state === 'over' || button.state === 'down') {
-                if(button.parent !== null) {
+        for(let i = 0; i < len; i++) {
+            Q.buttons[i].update(Q.pointer, Q.renderer.canvas);
+            if (Q.buttons[i].state === 'over' || Q.buttons[i].state === 'down') {
+                if(Q.buttons[i].parent !== null) {
                     Q.pointer.cursor = 'pointer';
                 }
             }
-        });
+        }
     }
 
     //update all particles
-    if (Q.particles.length > 0) {
-        for(let i = Q.particles.length - 1; i >= 0; i--) {
+    len = Q.particles.length
+    if (len > 0) {
+        for(let i = len - 1; i >= 0; i--) {
             Q.particles[i].update(dt);
         }
     }
@@ -112,11 +113,9 @@ let then = null,
     dt = 0,
     step = 1/Q._FPS,
     fRate = 1 / 1000;
-    // loopId = null;
 
 //game loop
 function gameLoop(now) {
-    // loopId = requestAnimationFrame(gameLoop);
     requestAnimationFrame(gameLoop);
 
     dt += Math.min(1, (now - (then || now)) * fRate);
@@ -139,23 +138,6 @@ Q.resume = function() {
 Q.pause = function() {
     Q.paused = true;
 };
-
-// Q.resume = function() {
-//     if(!loopId) {
-//         then = null;
-//         dt = 0;
-//         Q.paused = false;
-//         loopId = requestAnimationFrame(gameLoop);
-//     }
-// };
-
-// Q.pause = function() {
-//     if(loopId) {
-//         window.cancelAnimationFrame(loopId);
-//     }
-//     loopId = null;
-//     Q.paused = true;
-// };
 
 Object.defineProperties(Q, {
     FPS: {
@@ -185,6 +167,7 @@ Q.Renderer = class {
             document.body.appendChild(this.canvas);
         }
         this.canvas.ctx = this.canvas.getContext("2d");
+
         this.resize(width, height);
     }
     set backgroundColor(color) {
@@ -205,32 +188,34 @@ Q.Renderer = class {
 
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 0;
 
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         // container.updateTransform();
+        // container.worldTransform.setTransform(ctx);
 
-        container.children.forEach(child => {
-            renderChild(child);
-        });
+        for (let i = 0, j = container.children.length; i < j; ++i) {
+            renderChild(container.children[i]);
+        }
 
         function renderChild(child) {
-            if (child.visible) {
-                child.updateTransform();
+            child.updateTransform();
 
-                ctx.globalAlpha = child.worldAlpha;
+            if (!child.visible || child.worldAlpha <= 0) return;
 
-                child.worldTransform.setTransform(ctx);
+            ctx.globalAlpha = child.worldAlpha;
 
-                if (child.blendMode) 
-                    ctx.globalCompositeOperation = child.blendMode;
+            child.worldTransform.setTransform(ctx);
 
-                if (child.render) child.render(ctx);
+            if (child.blendMode) 
+                ctx.globalCompositeOperation = child.blendMode;
 
-                if (child.children && child.children.length > 0) {
-                    child.children.forEach(c => {
-                        renderChild(c);
-                    });
+            if (child.render) child.render(ctx);
+
+            if (child.children && child.children.length > 0) {
+                for (let i = 0, j = child.children.length; i < j; ++i) {
+                    renderChild(child.children[i]);
                 }
             }
         }
@@ -369,10 +354,24 @@ Q.Container = class {
         this.velocity.y = value;
     }
     get localBounds() {
-        return this.getLocalBounds();
+        // return this.getLocalBounds();
+        return {
+            x: 0,
+            y: 0,
+            width: this.width,
+            height: this.height
+        };
     }
     get globalBounds() {
-        return this.getBounds();
+        // return this.getBounds();
+        return {
+            x: this.gx,
+            y: this.gy,
+            width: this.gx + this.width,
+            height: this.gy + this.height
+            // width: this.width,
+            // height: this.height
+        };
     }
     get layer() {
         return this._layer;
@@ -504,7 +503,7 @@ Q.Container = class {
         this.children[index2] = child;
     }
     updateTransform() {
-        if(this.parent) {
+        // if(this.parent) {
             if(this.rotation !== this._rotationCache) {
                 this._rotationCache = this.rotation;
                 this._sr = Math.sin(this.rotation);
@@ -539,7 +538,7 @@ Q.Container = class {
             this.globalPosition.set(wt.tx, wt.ty);
 
             this._currentBounds = null;
-        }
+        // }
     }
     getBounds() {
         if(!this._currentBounds) {
@@ -590,32 +589,47 @@ Q.Container = class {
         return this._currentBounds;
     }
     getLocalBounds() {
-        let matrixCache = this.worldTransform.clone();
+        let matrixCache = this.worldTransform;
 
         this.worldTransform = Q.Matrix.IDENTITY;
 
-        this.children.forEach(child => {
-            child.updateTransform();
-        });
+        for (var i = 0, j = this.children.length; i < j; ++i) {
+            this.children[i].updateTransform();
+        }
 
-        this.worldTransform.copy(matrixCache);
+        this.worldTransform = matrixCache;
         this._currentBounds = null;
 
         return this.getBounds(Q.Matrix.IDENTITY);
     }
     toGlobal(position) {
-        this.updateTransform();
+        if(!this.parent) {
+            this.parent = _tempParent;
+            this.updateTransform();
+            this.parent = null;
+        }
+        else {
+            this.updateTransform();
+        }
+
         return this.worldTransform.apply(position);
     }
     toLocal(position, from, point) {
         if(from) {
             position = from.toGlobal(position);
         }
-        this.updateTransform();
+        if(!this.parent) {
+            this.parent = _tempParent;
+            this.updateTransform();
+            this.parent = null;
+        }
+        else {
+            this.updateTransform();
+        }
         return this.worldTransform.applyInverse(position, point);
     }
     getGlobalPosition() {
-        let point = new Q.Point();
+        let point = Q.Point._tempPoint;
 
         if(this.parent) {
             this.updateTransform();
@@ -838,10 +852,10 @@ Q.Sprite = class extends Q.Container {
     }
     getBounds(matrix) {
         if(!this._currentBounds) {
-            let width = this.width,
-                height = this.height,
-            // let width = this._texture.frame.w,
-            //     height = this._texture.frame.h,
+            // let width = this.width,
+            //     height = this.height,
+            let width = this._texture.frame.w,
+                height = this._texture.frame.h,
 
                 w0 = width * (1 - this.anchor.x),
                 w1 = width * -this.anchor.x,
@@ -922,15 +936,15 @@ Q.Sprite = class extends Q.Container {
         return this._currentBounds;
     }
     getLocalBounds() {
-        // this._bounds.x = -this._texture.frame.w * this.anchor.x;
-        // this._bounds.y = -this._texture.frame.h * this.anchor.y;
-        // this._bounds.width = this._texture.frame.w;
-        // this._bounds.height = this._texture.frame.h;
+        this._bounds.x = -this._texture.frame.w * this.anchor.x;
+        this._bounds.y = -this._texture.frame.h * this.anchor.y;
+        this._bounds.width = this._texture.frame.w;
+        this._bounds.height = this._texture.frame.h;
 
-        this._bounds.x = -this.width * this.anchor.x;
-        this._bounds.y = -this.height * this.anchor.y;
-        this._bounds.width = this.width;
-        this._bounds.height = this.height;
+        // this._bounds.x = -this.width * this.anchor.x;
+        // this._bounds.y = -this.height * this.anchor.y;
+        // this._bounds.width = this.width;
+        // this._bounds.height = this.height;
 
         return this._bounds;
     }
@@ -970,11 +984,9 @@ Q.Sprite = class extends Q.Container {
             this._texture.frame.h,
             this.anchor.x * -this._texture.frame.w,
             this.anchor.y * -this._texture.frame.h,
-            // this.width,
-            // this.height
             this._texture.frame.w,
             this._texture.frame.h
-    );
+        );
     }
 };
 
@@ -1371,13 +1383,13 @@ Q.Text = class extends Q.Sprite {
         this.texture = this.canvas;
         this.dirty = false;
     }
-    updateTransform() {
-        if(this.dirty) {
-            this.updateText();
-        }
+    // updateTransform() {
+    //     if(this.dirty) {
+    //         this.updateText();
+    //     }
 
-        super.updateTransform();
-    }
+    //     super.updateTransform();
+    // }
     determineFontProperties(fontStyle) {
         let properties = Q.Text.fontPropertiesCache[fontStyle];
 
@@ -1519,6 +1531,12 @@ Q.Text = class extends Q.Sprite {
 
         return super.getBounds(matrix);
     }
+    render(context) {
+        if(this.dirty) {
+            this.updateText();
+        }
+        super.render(context);
+    }
 };
 Q.Text.fontPropertiesCache = {};
 Q.Text.fontPropertiesCanvas = document.createElement('canvas');
@@ -1551,14 +1569,14 @@ Q.Graphics = class extends Q.Container {
         if (!this.currentPath.points.length) this.graphicsData.pop();
 
         this.lineWidth = lineWidth;
-        this.lineColor = color;
+        this.lineColor = Q.utils.color(color);
         this.lineAlpha = alpha;
 
         this.currentPath = {
             lineWidth: this.lineWidth, 
             lineColor: this.lineColor, 
             lineAlpha: this.lineAlpha,
-            fillColor: this.fillColor, 
+            fillColor: Q.utils.color(this.fillColor), //this.fillColor, 
             fillAlpha: this.fillAlpha, 
             fill: this.filling, 
             points: [], 
@@ -1594,7 +1612,7 @@ Q.Graphics = class extends Q.Container {
     }
     beginFill(color = 0, alpha = 1) {
         this.filling = true;
-        this.fillColor = color;
+        this.fillColor = Q.utils.color(color);
         this.fillAlpha = alpha;
         return this;
     }
@@ -1684,53 +1702,60 @@ Q.Graphics = class extends Q.Container {
         let minX = Infinity,
             maxX = -Infinity,
             minY = Infinity,
-            maxY = -Infinity,
+            maxY = -Infinity;
 
-            points, x, y, w, h;
+        if(this.graphicsData.length) {
+            let points, x, y, w, h;
+            for (let i = 0; i < this.graphicsData.length; i++) {
+                let data = this.graphicsData[i],
+                    type = data.type,
+                    lineWidth = data.lineWidth;
 
-        for (let i = 0; i < this.graphicsData.length; i++) {
-            let data = this.graphicsData[i],
-                type = data.type,
-                lineWidth = data.lineWidth;
+                points = data.points;
 
-            points = data.points;
+                if(type === Q.Graphics.RECT) {
+                    x = points[0] - lineWidth/2;
+                    y = points[1] - lineWidth/2;
+                    w = points[2] + lineWidth;
+                    h = points[3] + lineWidth;
 
-            if(type === Q.Graphics.RECT) {
-                x = points[0] - lineWidth/2;
-                y = points[1] - lineWidth/2;
-                w = points[2] + lineWidth;
-                h = points[3] + lineWidth;
+                    minX = x < minX ? x : minX;
+                    maxX = x + w > maxX ? x + w : maxX;
 
-                minX = x < minX ? x : minX;
-                maxX = x + w > maxX ? x + w : maxX;
+                    minY = y < minY ? x : minY;
+                    maxY = y + h > maxY ? y + h : maxY;
+                }
+                else if(type === Q.Graphics.CIRC || type === Q.Graphics.ELIP) {
+                    x = points[0];
+                    y = points[1];
+                    w = points[2] + lineWidth/2;
+                    h = points[3] + lineWidth/2;
 
-                minY = y < minY ? x : minY;
-                maxY = y + h > maxY ? y + h : maxY;
-            }
-            else if(type === Q.Graphics.CIRC || type === Q.Graphics.ELIP) {
-                x = points[0];
-                y = points[1];
-                w = points[2] + lineWidth/2;
-                h = points[3] + lineWidth/2;
+                    minX = x - w < minX ? x - w : minX;
+                    maxX = x + w > maxX ? x + w : maxX;
 
-                minX = x - w < minX ? x - w : minX;
-                maxX = x + w > maxX ? x + w : maxX;
+                    minY = y - h < minY ? y - h : minY;
+                    maxY = y + h > maxY ? y + h : maxY;
+                }
+                else {
+                    // POLY
+                    for (let j = 0; j < points.length; j+=2) {
+                        x = points[j];
+                        y = points[j+1];
+                        minX = x-lineWidth < minX ? x-lineWidth : minX;
+                        maxX = x+lineWidth > maxX ? x+lineWidth : maxX;
 
-                minY = y - h < minY ? y - h : minY;
-                maxY = y + h > maxY ? y + h : maxY;
-            }
-            else {
-                // POLY
-                for (let j = 0; j < points.length; j+=2) {
-                    x = points[j];
-                    y = points[j+1];
-                    minX = x-lineWidth < minX ? x-lineWidth : minX;
-                    maxX = x+lineWidth > maxX ? x+lineWidth : maxX;
-
-                    minY = y-lineWidth < minY ? y-lineWidth : minY;
-                    maxY = y+lineWidth > maxY ? y+lineWidth : maxY;
+                        minY = y-lineWidth < minY ? y-lineWidth : minY;
+                        maxY = y+lineWidth > maxY ? y+lineWidth : maxY;
+                    }
                 }
             }
+        }
+        else {
+            minX = 0;
+            maxX = 0;
+            minY = 0;
+            maxY = 0;            
         }
 
         let padding = this.boundsPadding;
@@ -1806,7 +1831,7 @@ Q.Graphics = class extends Q.Container {
     render(context) {
         let color = '',
             worldAlpha = this.worldAlpha;
-
+        
         for (let i = 0; i < this.graphicsData.length; i++) {
             let data = this.graphicsData[i],
                 points = data.points;
@@ -2799,6 +2824,7 @@ Q.Point = class {
         return new Q.Point(this.x, this.y);
     }
 };
+Q.Point._tempPoint = new Q.Point();
 
 Q.Rectangle = class {
     constructor(x = 0, y = 0, width = 0, height = 0) {
@@ -2859,7 +2885,7 @@ Q.Matrix = class {
     * coordinate space. (e.g. rendering)
     **/
     apply(pos, newPos) {
-        newPos = newPos || new Q.Point();
+        newPos = newPos || Q.Point._tempPoint;
 
         let x = pos.x,
             y = pos.y;
@@ -2875,7 +2901,7 @@ Q.Matrix = class {
     * coordinate space. (e.g. input)
     **/
     applyInverse(pos, newPos) {
-        newPos = newPos || new Q.Point();
+        newPos = newPos || Q.Point._tempPoint;
 
         let id = 1 / (this.a * this.d + this.c * -this.b),
             x = pos.x,
@@ -2984,6 +3010,12 @@ Q.Matrix = class {
 
 Q.Matrix.IDENTITY = new Q.Matrix();
 Q.Matrix.TEMP_MATRIX = new Q.Matrix();
+
+let _tempParent = {
+    worldTransform: new Q.Matrix(),
+    worldAlpha: 1, 
+    children: []
+};
 
 function boot() {
     let vendors = ['ms', 'webkit', 'moz', 'o'];

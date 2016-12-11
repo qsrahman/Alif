@@ -943,8 +943,6 @@ Q.grid = function(
     //Run the `createGrid` method
     createGrid();
 
-    Q.stage.addChild(container);
-
     //Return the `container` group back to the main program
     return container;
 };

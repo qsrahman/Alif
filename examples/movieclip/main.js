@@ -26,13 +26,13 @@ function setup() {
 }
 
 function play(dt) {
-    explosions.forEach(ex => {
-        ex.update();
+    explosions.forEach(explosion => {
+        explosion.update();
     });
 }
 
 window.onload = function() {
     Game.create(800, 600, setup, ['SpriteSheet.json']);
-    Game.renderer.backgroundColor = 0xffffff;
+    Game.renderer.backgroundColor = 'black';
     Game.start();
 };
