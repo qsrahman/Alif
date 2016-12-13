@@ -504,6 +504,8 @@ Q.contain = function(s, container, bounce = false, extra){
     //have any
     if (container.xAnchorOffset === undefined) container.xAnchorOffset = 0;
     if (container.yAnchorOffset === undefined) container.yAnchorOffset = 0;
+    if (s.parent.gx === undefined) s.parent.gx = 0;
+    if (s.parent.gy === undefined) s.parent.gy = 0;
 
     //The `collision` object is used to store which
     //side of the containing rectangle the sprite hits
@@ -2291,7 +2293,8 @@ Q.TWEEN = (function() {
             if(_tweens.length === 0) return false;
 
             let i = 0;
-            // time = (time !== undefined) ? time : window.performance.now();
+            time = (time !== undefined) ? time : window.performance.now();
+
             while(i < _tweens.length) {
                 if(_tweens[i].update(time)) {
                     i++;
@@ -2312,58 +2315,52 @@ Q.TWEEN.Tween = class {
         this._valuesEnd = {};
         this._valuesStartRepeat = {};
         this._duration = 1000;
-        this._repeatCount = 0;
-        this._repeats = 0;
+        this._repeat = 0;
         this._yoyo = false;
         this._isPlaying = false;
         this._reversed = false;
         this._delayTime = 0;
-        this._delayRepeat = false
         this._startTime = null;
-        this._originalStartTime = null
         this._easingFunction = Q.TWEEN.Easing.Linear.None;
         this._interpolationFunction = Q.TWEEN.Interpolation.Linear;
-        this._chainedTweens = [];
+        this._chainetimeweens = [];
         this._onStartCallback = null;
         this._onStartCallbackFired = false;
         this._onUpdateCallback = null;
         this._onCompleteCallback = null;
-        this._onRepeatCallback = null;
         this._onStopCallback = null;
-        this._currentTime = 0;
 
         // Set all starting values present on the target object
-        for (var field in object) {
+        for (let field in object) {
             this._valuesStart[field] = parseFloat(object[field], 10);
         }
     }
-    to(properties, duration) {
-        if (duration !== undefined ) {
-            this._duration = duration;
-        }
+    to(properties, duration = 1000) {
+        this._duration = duration;
         this._valuesEnd = properties;
         return this;
     }
-    start() {
+    start(time) {
         Q.TWEEN.add(this);
 
         this._isPlaying = true;
         this._onStartCallbackFired = false;
 
-        this._startTime = this._delayTime;
-        this._originalStartTime = this._startTime;
+        this._startTime = (time !== undefined) ? time : window.performance.now();
+        this._startTime += this._delayTime;
 
-        for (var property in this._valuesEnd) {
+        for (let property in this._valuesEnd) {
             // check if an Array was provided as property value
             if (this._valuesEnd[property] instanceof Array) {
                 if (this._valuesEnd[property].length === 0) {
                     continue;
                 }
                 // create a local copy of the Array with the start value at the front
-                this._valuesEnd[property] = [this._object[property]].concat(this._valuesEnd[ property]);
+                this._valuesEnd[property] = [this._object[property]].concat(this._valuesEnd[property]);
             }
+            //if(this._valuesStart[property] === undefined) continue;
             this._valuesStart[property] = this._object[property];
-            if( (this._valuesStart[ property] instanceof Array) === false) {
+            if((this._valuesStart[property] instanceof Array) === false) {
                 // Ensures we're using numbers, not strings
                 this._valuesStart[property] *= 1.0;
             }
@@ -2380,117 +2377,111 @@ Q.TWEEN.Tween = class {
         if (this._onStopCallback !== null) {
            this._onStopCallback.call(this._object);
         }
-        this.stopChainedTweens();
+        this.stopChainetimeweens();
         return this;
     }
-    stopChainedTweens() {
-        for (var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++) {
-            this._chainedTweens[ i ].stop();
+    stopChainetimeweens() {
+        for (let i = 0, numChainetimeweens = this._chainetimeweens.length; i < numChainetimeweens; i++) {
+            this._chainetimeweens[i].stop();
         }
     }
-    delay(amount, repeat) {
+    delay(amount) {
         this._delayTime = amount;
-        this._delayRepeat = !!repeat;
         return this;
     }
-    repeat(times) {
-        if(typeof times === 'undefined') times = Infinity;
-        this._repeatCount = times;
+    repeat(times = Infinity) {
+        this._repeat = times;
         return this;
     }
     yoyo(yoyo) {
         this._yoyo = yoyo;
         return this;
     }
-    easing(easing) {
+    easing (easing) {
         this._easingFunction = easing;
         return this;
     }
-    interpolation(interpolation) {
+    interpolation (interpolation) {
         this._interpolationFunction = interpolation;
         return this;
     }
-    chain() {
-        this._chainedTweens = arguments;
+    chain () {
+        this._chainetimeweens = arguments;
         return this;
     }
-    onStart(callback) {
+    onStart (callback) {
         this._onStartCallback = callback;
         return this;
     }
-    onUpdate(callback) {
+    onUpdate (callback) {
         this._onUpdateCallback = callback;
         return this;
     }
-    onComplete(xallback) {
+    onComplete (callback) {
         this._onCompleteCallback = callback;
-        return this;
-    }
-    onRepeat(callback) {
-        this._onRepeatCallback = callback;
         return this;
     }
     onStop(callback) {
         this._onStopCallback = callback;
         return this;
     }
-    update(dt) {
-        var property;
+    update (time) {
+        let property, elapsed, value;
 
-        this._currentTime += dt * 1000;
+        if(time < this._startTime) return true;
 
-        if (this._currentTime < this._startTime) {
-            return true;
-        }
-        if ( this._onStartCallbackFired === false ) {
-            if ( this._onStartCallback !== null ) {
-                this._onStartCallback.call( this._object );
+        if (this._onStartCallbackFired === false) {
+            if (this._onStartCallback !== null) {
+                this._onStartCallback.call(this._object);
             }
             this._onStartCallbackFired = true;
         }
-        var elapsed = (this._currentTime - this._startTime) / this._duration;
+        elapsed = (time - this._startTime) / this._duration;
         elapsed = elapsed > 1 ? 1 : elapsed;
 
-        var value = this._easingFunction( elapsed );
+        value = this._easingFunction(elapsed);
 
         for (property in this._valuesEnd) {
-            var start = this._valuesStart[ property ] || 0;
-            var end = this._valuesEnd[ property ];
+            //if(this._valuesStart[property] === undefined) continue;
 
-            if ( end instanceof Array ) {
-                this._object[ property ] = this._interpolationFunction( end, value );
+            let start = this._valuesStart[property] || 0;
+            let end = this._valuesEnd[property];
+
+            if (end instanceof Array) {
+                this._object[property] = this._interpolationFunction(end, value);
             }
             else {
                 // Parses relative end values with start as base (e.g.: +10, -3)
-                if ( typeof(end) === "string" ) {
-                    end = start + parseFloat(end, 10);
+                if (typeof(end) === "string") {
+                    if(end.charAt(0) === '+' || end.charAt(0) === '-')
+                        end = start + parseFloat(end, 10);
+                    else
+                        end = parseFloat(end, 10);
                 }
                 // protect against non numeric properties.
-                if ( typeof(end) === "number" ) {
-                    this._object[ property ] = start + ( end - start ) * value;
+                if (typeof(end) === "number") {
+                    this._object[property] = start + (end - start) * value;
                 }
             }
         }
-        if ( this._onUpdateCallback !== null ) {
-            this._onUpdateCallback.call( this._object, value );
+        if (this._onUpdateCallback !== null) {
+            this._onUpdateCallback.call(this._object, value);
         }
 
-        if ( elapsed == 1 ) {
-            if ( this._repeatCount > 0 ) {
-                if( isFinite( this._repeatCount ) ) {
-                    this._repeatCount--;
+        if (elapsed == 1) {
+            if (this._repeat > 0) {
+                if(isFinite(this._repeat)) {
+                    this._repeat--;
                 }
-                this._repeats += 1;
-
                 // reassign starting values, restart by making startTime = now
-                for( property in this._valuesStartRepeat ) {
-                    if ( typeof( this._valuesEnd[ property ] ) === "string" ) {
-                        this._valuesStartRepeat[ property ] = this._valuesStartRepeat[ property ] + parseFloat(this._valuesEnd[ property ], 10);
+                for(property in this._valuesStartRepeat) {
+                    if (typeof(this._valuesEnd[ property]) === "string") {
+                        this._valuesStartRepeat[property] = this._valuesStartRepeat[property] + parseFloat(this._valuesEnd[property], 10);
                     }
 
                     if (this._yoyo) {
-                        var tmp = this._valuesStartRepeat[ property ];
-                        this._valuesStartRepeat[ property ] = this._valuesEnd[ property ];
+                        let tmp = this._valuesStartRepeat[property];
+                        this._valuesStartRepeat[property] = this._valuesEnd[property];
                         this._valuesEnd[ property ] = tmp;
                     }
 
@@ -2500,22 +2491,17 @@ Q.TWEEN.Tween = class {
                 if (this._yoyo) {
                     this._reversed = !this._reversed;
                 }
-                if (!this._delayRepeat) this._delayTime = 0;
-                this._startTime = this._originalStartTime + this._repeats * (this._duration + this._delayTime);
+                this._startTime = time + this._delayTime;
 
-                if (this._onRepeatCallback !== null) {
-                    this._onRepeatCallback.call(this.object);
-                }
-
-                return true;
+               return true;
             }
             else {
-                if ( this._onCompleteCallback !== null ) {
+                if (this._onCompleteCallback !== null) {
                     this._onCompleteCallback.call(this._object);
                 }
 
-                for ( var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++ ) {
-                    this._chainedTweens[ i ].start();
+                for (let i = 0, numChainetimeweens = this._chainetimeweens.length; i < numChainetimeweens; i++) {
+                    this._chainetimeweens[i].start(this._startTime + this._duration);
                 }
                 return false;
             }
@@ -2535,11 +2521,11 @@ Q.TWEEN.Easing = {
             return k * k;
         },
         Out(k) {
-            return k * ( 2 - k );
+            return k * (2 - k);
         },
         InOut(k) {
-            if ( ( k *= 2 ) < 1 ) return 0.5 * k * k;
-            return - 0.5 * ( --k * ( k - 2 ) - 1 );
+            if ((k *= 2) < 1) return 0.5 * k * k;
+            return -0.5 * (--k * (k - 2) - 1);
         }
     },
     Cubic: {
@@ -2559,23 +2545,23 @@ Q.TWEEN.Easing = {
             return k * k * k * k;
         },
         Out(k) {
-            return 1 - ( --k * k * k * k );
+            return 1 - (--k * k * k * k);
         },
         InOut(k) {
-            if ( ( k *= 2 ) < 1) return 0.5 * k * k * k * k;
-            return - 0.5 * ( ( k -= 2 ) * k * k * k - 2 );
+            if ((k *= 2) < 1) return 0.5 * k * k * k * k;
+            return - 0.5 * ((k -= 2) * k * k * k - 2);
         }
     },
     Quintic: {
-        In( k ) {
+        In(k) {
             return k * k * k * k * k;
         },
-        Out( k ) {
+        Out(k) {
             return --k * k * k * k * k + 1;
         },
-        InOut( k ) {
-            if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k * k * k;
-            return 0.5 * ( ( k -= 2 ) * k * k * k * k + 2 );
+        InOut(k) {
+            if ((k *= 2) < 1) return 0.5 * k * k * k * k * k;
+            return 0.5 * ((k -= 2) * k * k * k * k + 2);
         }
     },
     SmoothStep: {
@@ -2590,155 +2576,156 @@ Q.TWEEN.Easing = {
         }
     },
     Sinusoidal: {
-        In( k ) {
-            return 1 - Math.cos( k * Math.PI / 2 );
+        In(k) {
+            return 1 - Math.cos(k * Math.PI / 2);
         },
-        Out( k ) {
-            return Math.sin( k * Math.PI / 2 );
+        Out(k) {
+            return Math.sin(k * Math.PI / 2);
         },
-        InOut( k ) {
-            return 0.5 * ( 1 - Math.cos( Math.PI * k ) );
+        InOut(k) {
+            return 0.5 * (1 - Math.cos(Math.PI * k));
         }
     },
     Exponential: {
-        In( k ) {
-            return k === 0 ? 0 : Math.pow( 1024, k - 1 );
+        In(k) {
+            return k === 0 ? 0 : Math.pow(1024, k - 1);
         },
-        Out( k ) {
-            return k === 1 ? 1 : 1 - Math.pow( 2, - 10 * k );
+        Out(k) {
+            return k === 1 ? 1 : 1 - Math.pow(2, - 10 * k);
         },
-        InOut( k ) {
-            if ( k === 0 ) return 0;
-            if ( k === 1 ) return 1;
-            if ( ( k *= 2 ) < 1 ) return 0.5 * Math.pow( 1024, k - 1 );
-            return 0.5 * ( - Math.pow( 2, - 10 * ( k - 1 ) ) + 2 );
+        InOut(k) {
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if ((k *= 2) < 1) return 0.5 * Math.pow(1024, k - 1);
+            return 0.5 * (- Math.pow(2, - 10 * (k - 1)) + 2);
         }
     },
     Circular: {
-        In( k ) {
-            return 1 - Math.sqrt( 1 - k * k );
+        In(k) {
+            return 1 - Math.sqrt(1 - k * k);
         },
-        Out( k ) {
-            return Math.sqrt( 1 - ( --k * k ) );
+        Out(k) {
+            return Math.sqrt(1 - (--k * k));
         },
-        InOut( k ) {
-            if ( ( k *= 2 ) < 1) return - 0.5 * ( Math.sqrt( 1 - k * k) - 1);
-            return 0.5 * ( Math.sqrt( 1 - ( k -= 2) * k) + 1);
+        InOut(k) {
+            if ((k *= 2) < 1) return - 0.5 * (Math.sqrt(1 - k * k) - 1);
+            return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
         }
     },
     Elastic: {
-        In( k ) {
+        In(k) {
             let s, a = 0.1, p = 0.4;
-            if ( k === 0 ) return 0;
-            if ( k === 1 ) return 1;
-            if ( !a || a < 1 ) { a = 1; s = p / 4; }
-            else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
-            return - ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if (!a || a < 1) { a = 1; s = p / 4; }
+            else s = p * Math.asin(1 / a) / (2 * Math.PI);
+            return - (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
         },
-        Out( k ) {
+        Out(k) {
             let s, a = 0.1, p = 0.4;
-            if ( k === 0 ) return 0;
-            if ( k === 1 ) return 1;
-            if ( !a || a < 1 ) { a = 1; s = p / 4; }
-            else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
-            return ( a * Math.pow( 2, - 10 * k) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) + 1 );
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if (!a || a < 1) { a = 1; s = p / 4; }
+            else s = p * Math.asin(1 / a) / (2 * Math.PI);
+            return (a * Math.pow(2, - 10 * k) * Math.sin((k - s) * (2 * Math.PI) / p) + 1);
         },
-        InOut( k ) {
+        InOut(k) {
             let s, a = 0.1, p = 0.4;
-            if ( k === 0 ) return 0;
-            if ( k === 1 ) return 1;
-            if ( !a || a < 1 ) { a = 1; s = p / 4; }
-            else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
-            if ( ( k *= 2 ) < 1 ) return - 0.5 * ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
-            return a * Math.pow( 2, -10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) * 0.5 + 1;
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if (!a || a < 1) { a = 1; s = p / 4; }
+            else s = p * Math.asin(1 / a) / (2 * Math.PI);
+            if ((k *= 2) < 1) return - 0.5 * (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
+            return a * Math.pow(2, -10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
         }
     },
     Back: {
-        In( k ) {
+        In(k) {
             let s = 1.70158;
-            return k * k * ( ( s + 1 ) * k - s );
+            return k * k * ((s + 1) * k - s);
         },
-        Out( k ) {
+        Out(k) {
             let s = 1.70158;
-            return --k * k * ( ( s + 1 ) * k + s ) + 1;
+            return --k * k * ((s + 1) * k + s) + 1;
         },
-        InOut( k ) {
+        InOut(k) {
             let s = 1.70158 * 1.525;
-            if ( ( k *= 2 ) < 1 ) return 0.5 * ( k * k * ( ( s + 1 ) * k - s ) );
-            return 0.5 * ( ( k -= 2 ) * k * ( ( s + 1 ) * k + s ) + 2 );
+            if ((k *= 2) < 1) return 0.5 * (k * k * ((s + 1) * k - s));
+            return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
         }
     },
     Bounce: {
-        In( k ) {
-            return 1 - Q.TWEEN.Easing.Bounce.Out( 1 - k );
+        In(k) {
+            return 1 - Q.TWEEN.Easing.Bounce.Out(1 - k);
         },
-        Out( k ) {
-            if ( k < ( 1 / 2.75 ) ) {
+        Out(k) {
+            if (k < (1 / 2.75)) {
                 return 7.5625 * k * k;
-            } else if ( k < ( 2 / 2.75 ) ) {
-                return 7.5625 * ( k -= ( 1.5 / 2.75 ) ) * k + 0.75;
-            } else if ( k < ( 2.5 / 2.75 ) ) {
-                return 7.5625 * ( k -= ( 2.25 / 2.75 ) ) * k + 0.9375;
+            } else if (k < (2 / 2.75)) {
+                return 7.5625 * (k -= (1.5 / 2.75)) * k + 0.75;
+            } else if (k < (2.5 / 2.75)) {
+                return 7.5625 * (k -= (2.25 / 2.75)) * k + 0.9375;
             } else {
-                return 7.5625 * ( k -= ( 2.625 / 2.75 ) ) * k + 0.984375;
+                return 7.5625 * (k -= (2.625 / 2.75)) * k + 0.984375;
             }
         },
-        InOut( k ) {
-            if ( k < 0.5 ) return Q.TWEEN.Easing.Bounce.In( k * 2 ) * 0.5;
-            return Q.TWEEN.Easing.Bounce.Out( k * 2 - 1 ) * 0.5 + 0.5;
+        InOut(k) {
+            if (k < 0.5) return Q.TWEEN.Easing.Bounce.In(k * 2) * 0.5;
+            return Q.TWEEN.Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
         }
     }
 };
 
 Q.TWEEN.Interpolation = {
-    Linear( v, k ) {
-        let m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Q.TWEEN.Interpolation.Utils.Linear;
+    Linear(v, k) {
+        let m = v.length - 1, f = m * k, i = Math.floor(f), fn = Q.TWEEN.Interpolation.Utils.Linear;
 
-        if ( k < 0 ) return fn( v[ 0 ], v[ 1 ], f );
-        if ( k > 1 ) return fn( v[ m ], v[ m - 1 ], m - f );
-        return fn( v[ i ], v[ i + 1 > m ? m : i + 1 ], f - i );
+        if (k < 0) return fn(v[ 0 ], v[ 1 ], f);
+        if (k > 1) return fn(v[ m ], v[ m - 1 ], m - f);
+        return fn(v[ i ], v[ i + 1 > m ? m : i + 1 ], f - i);
     },
-    Bezier( v, k ) {
+    Bezier(v, k) {
         let b = 0, n = v.length - 1, pw = Math.pow, bn = Q.TWEEN.Interpolation.Utils.Bernstein, i;
 
-        for ( i = 0; i <= n; i++ ) {
-            b += pw( 1 - k, n - i ) * pw( k, i ) * v[ i ] * bn( n, i );
+        for (i = 0; i <= n; i++) {
+            b += pw(1 - k, n - i) * pw(k, i) * v[ i ] * bn(n, i);
         }
         return b;
     },
-    CatmullRom( v, k ) {
-        let m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Q.TWEEN.Interpolation.Utils.CatmullRom;
+    CatmullRom(v, k) {
+        let m = v.length - 1, f = m * k, i = Math.floor(f), fn = Q.TWEEN.Interpolation.Utils.CatmullRom;
 
-        if ( v[ 0 ] === v[ m ] ) {
-            if ( k < 0 ) i = Math.floor( f = m * ( 1 + k ) );
-            return fn( v[ ( i - 1 + m ) % m ], v[ i ], v[ ( i + 1 ) % m ], v[ ( i + 2 ) % m ], f - i );
+        if (v[ 0 ] === v[ m ]) {
+            if (k < 0) i = Math.floor(f = m * (1 + k));
+            return fn(v[ (i - 1 + m) % m ], v[ i ], v[ (i + 1) % m ], v[ (i + 2) % m ], f - i);
         } else {
-            if ( k < 0 ) return v[ 0 ] - ( fn( v[ 0 ], v[ 0 ], v[ 1 ], v[ 1 ], -f ) - v[ 0 ] );
-            if ( k > 1 ) return v[ m ] - ( fn( v[ m ], v[ m ], v[ m - 1 ], v[ m - 1 ], f - m ) - v[ m ] );
-            return fn( v[ i ? i - 1 : 0 ], v[ i ], v[ m < i + 1 ? m : i + 1 ], v[ m < i + 2 ? m : i + 2 ], f - i );
+            if (k < 0) return v[ 0 ] - (fn(v[ 0 ], v[ 0 ], v[ 1 ], v[ 1 ], -f) - v[ 0 ]);
+            if (k > 1) return v[ m ] - (fn(v[ m ], v[ m ], v[ m - 1 ], v[ m - 1 ], f - m) - v[ m ]);
+            return fn(v[ i ? i - 1 : 0 ], v[ i ], v[ m < i + 1 ? m : i + 1 ], v[ m < i + 2 ? m : i + 2 ], f - i);
         }
     },
     Utils: {
-        Linear( p0, p1, t ) {
-            return ( p1 - p0 ) * t + p0;
+        Linear(p0, p1, t) {
+            return (p1 - p0) * t + p0;
         },
-        Bernstein( n , i ) {
+        Bernstein(n , i) {
             let fc = Q.TWEEN.Interpolation.Utils.Factorial;
-            return fc( n ) / fc( i ) / fc( n - i );
+            return fc(n) / fc(i) / fc(n - i);
         },
         Factorial: (function () {
             let a = [ 1 ];
-            return function ( n ) {
+            return function (n) {
                 let s = 1, i;
-                if ( a[ n ] ) return a[ n ];
-                for ( i = n; i > 1; i-- ) s *= i;
+                if (a[ n ]) return a[ n ];
+                for (i = n; i > 1; i--) s *= i;
                 return a[ n ] = s;
             };
         })(),
-        CatmullRom( p0, p1, p2, p3, t ) {
-            let v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
-            return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
+        CatmullRom(p0, p1, p2, p3, t) {
+            let v0 = (p2 - p0) * 0.5, v1 = (p3 - p1) * 0.5, t2 = t * t, t3 = t * t2;
+            return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (- 3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1;
         }
     }
 };
+
 }).call(this, Game);

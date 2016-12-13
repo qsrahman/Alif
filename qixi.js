@@ -29,13 +29,14 @@ Q.create = function(width, height, setup, assetsToLoad, callback) {
     
     //stage will be the parent of all objects
     Q.stage = new Q.Container();
-    Q.stage.width = Q.canvas.width;
-    Q.stage.height = Q.canvas.height;
-    Q.stage.parent = {
-        worldTransform: new Q.Matrix(),
-        worldAlpha: 1, 
-        children: []
-    };
+    // Q.stage.width = Q.canvas.width;
+    // Q.stage.height = Q.canvas.height;
+    Q.stage._stage = true;
+    // Q.stage.parent = {
+    //     worldTransform: new Q.Matrix(),
+    //     worldAlpha: 1, 
+    //     children: []
+    // };
 
     //initialize mouse pointer
     Q.pointer = new Pointer(Q.renderer.canvas);
@@ -96,7 +97,7 @@ function update(dt = 1) {
 
     //update tweens
     if(Q.TWEEN)
-        Q.TWEEN.update(dt);
+        Q.TWEEN.update();
 
     //update drag and drop objects
     if (Q.dragAndDrop) {
@@ -111,14 +112,14 @@ function update(dt = 1) {
 
 let then = null,
     dt = 0,
-    step = 1/Q._FPS,
-    fRate = 1 / 1000;
+    step = 1/Q._FPS,    // 0.0167 seconds = 16.67 ms
+    ms2sec = 1 / 1000;   // 0.001 seconds = 1 ms
 
-//game loop
+//game loop, now is ms
 function gameLoop(now) {
     requestAnimationFrame(gameLoop);
 
-    dt += Math.min(1, (now - (then || now)) * fRate);
+    dt += Math.min(1, (now - (then || now)) * ms2sec);
 
     then = now;
 
@@ -128,7 +129,7 @@ function gameLoop(now) {
         update(step);
     }
     // render all sprites on the stage.
-    Q.renderer.render(Q.stage);
+    Q.renderer.render(Q.stage);    
 }
 
 Q.resume = function() {
@@ -188,7 +189,7 @@ Q.Renderer = class {
 
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 0;
+        ctx.globalCompositeOperation = 'source-over';
 
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -369,8 +370,6 @@ Q.Container = class {
             y: this.gy,
             width: this.gx + this.width,
             height: this.gy + this.height
-            // width: this.width,
-            // height: this.height
         };
     }
     get layer() {
@@ -716,7 +715,6 @@ Q.Sprite = class extends Q.Container {
     }
     set width(value) {
         let sign = Q.utils.sign(this.scale.x) || 1;
-        // let sign = value ? (value < 0 ? -1 : 1) : 0;
         this.scale.x = sign * value / this._texture.frame.w;
         this._width = value;
     }
@@ -725,7 +723,6 @@ Q.Sprite = class extends Q.Container {
     }
     set height(value) {
         let sign = Q.utils.sign(this.scale.y) || 1;
-        // let sign = value ? (value < 0 ? -1 : 1) : 0;
         this.scale.y = sign * value / this._texture.frame.h;
         this._height = value;
     }
@@ -852,8 +849,6 @@ Q.Sprite = class extends Q.Container {
     }
     getBounds(matrix) {
         if(!this._currentBounds) {
-            // let width = this.width,
-            //     height = this.height,
             let width = this._texture.frame.w,
                 height = this._texture.frame.h,
 
@@ -940,11 +935,6 @@ Q.Sprite = class extends Q.Container {
         this._bounds.y = -this._texture.frame.h * this.anchor.y;
         this._bounds.width = this._texture.frame.w;
         this._bounds.height = this._texture.frame.h;
-
-        // this._bounds.x = -this.width * this.anchor.x;
-        // this._bounds.y = -this.height * this.anchor.y;
-        // this._bounds.width = this.width;
-        // this._bounds.height = this.height;
 
         return this._bounds;
     }
@@ -2816,7 +2806,7 @@ Q.Point = class {
     constructor(x = 0, y = 0) {
         this.set(x, y);
     }
-    set(x, y) {
+    set(x, y = x) {
         this.x = x;
         this.y = y;
     }
@@ -3029,6 +3019,7 @@ function boot() {
 
 boot();
 
-// root.PIXI = Q;
 root.Game = Q;
+return Q;
+
 }).call(this);

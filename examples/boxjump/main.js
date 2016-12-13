@@ -58,7 +58,7 @@ class Player extends Game.Sprite {
             this.vy = this.jumpForce;
             this.canJump = false;
             jumpSound.play();
-            new Game.TWEEN.Tween(player).to({rotation: this.rotation + Math.PI}, 700).start();
+            new Game.TWEEN.Tween(player).to({rotation: this.rotation + Math.PI}, 600).start();
         }
 
         this.x += this.vx * dt;
