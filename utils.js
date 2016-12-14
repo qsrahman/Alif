@@ -1,8 +1,7 @@
 // Copyright 2016 Qazi Sami ur Rahman and other contributors
 // some small handy functions
-'use strict';
-
 (function(Q) {
+'use strict';
 
 var Q = Q || {};
 
@@ -23,58 +22,11 @@ Q.utils = {
         return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
     },
 
-    distance(p0, p1) {
-        let dx = p1.x - p0.x,
-            dy = p1.y - p0.y;
-
-        return Math.sqrt(dx * dx + dy * dy);
-    },
-    distanceSq(p0, p1) {
-        let dx = p1.x - p0.x,
-            dy = p1.y - p0.y;
-
-        return (dx * dx + dy * dy);
-    },
-
-    distanceXY(x0, y0, x1, y1) {
-        let dx = x1 - x0,
-            dy = y1 - y0;
-
-        return Math.sqrt(dx * dx + dy * dy);
-    },
-
-    circleCollision(c0, c1) {
-        return Q.utils.distance(c0, c1) <= c0.radius + c1.radius;
-    },
-
-    circlePointCollision(x, y, circle) {
-        return Q.utils.distanceXY(x, y, circle.x, circle.y) < circle.radius;
-    },
-
-    pointInRect(x, y, rect) {
-        return Q.utils.inRange(x, rect.x, rect.x + rect.width) &&
-               Q.utils.inRange(y, rect.y, rect.y + rect.height);
-    },
-
-    inRange(value, min, max) {
-        return value >= Math.min(min, max) && value <= Math.max(min, max);
-    },
-
-    rangeIntersect(min0, max0, min1, max1) {
-        return Math.max(min0, max0) >= Math.min(min1, max1) && 
-               Math.min(min0, max0) <= Math.max(min1, max1);
-    },
-
-    rectIntersect(r0, r1) {
-        return Q.utils.rangeIntersect(r0.x, r0.x + r0.width, r1.x, r1.x + r1.width) &&
-               Q.utils.rangeIntersect(r0.y, r0.y + r0.height, r1.y, r1.y + r1.height);
-    },
-
-    degToRads(degrees) {
+    degToRad(degrees) {
         return degrees / 180 * Math.PI;
     },
 
-    radsToDeg(radians) {
+    radToDeg(radians) {
         return radians * 180 / Math.PI;
     },
 
@@ -112,7 +64,13 @@ Q.utils = {
     },
 
     sign(n) {
-        return n ? (n < 0 ? -1 : 1) : 0;
+        n = +n;     // convert to a number
+        
+        if (n === 0 || isNaN(n)) {
+            return Number(n);
+        }
+
+        return n > 0 ? 1 : -1;
     },
 
     hex2rgb(hex, out) {

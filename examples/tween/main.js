@@ -11,7 +11,7 @@ function setup() {
     msg.y = -40;
 
     tween = new Game.TWEEN.Tween(box)
-        .to({x: 500, y: 200, rotation: 6.2}, 2000)
+        .to({x: 540, y: 200, rotation: 6.3}, 2000)
         .delay(1000)
         .easing(Game.TWEEN.Easing.Elastic.InOut);
         // .repeat()

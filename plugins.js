@@ -1,6 +1,5 @@
-'use strict';
-
 (function(Q) {
+'use strict';
 
 var Q = Q || {};
 
@@ -742,6 +741,138 @@ Q.shoot = function(
     bulletArray.push(bullet);
 }
 
+Q.MovieClip = class extends Q.Sprite {
+    constructor(textures, x, y) {
+        super(textures[0], x, y);
+        
+        this.textures = textures;
+        this.animationSpeed = 1;
+        this.playing = false;
+        this.loop = true;
+        this.onComplete = null;
+    }
+    stop() {
+        this.playing = false;
+        return this;
+    }
+    play() {
+        this.playing = true;
+        return this;
+    }
+    gotoAndPlay(frameNumber) {
+        this.play();
+        this.currentFrame = frameNumber;
+        return this;
+    }
+    gotoAndStop(frameNumber) {
+        this.stop();
+        this.currentFrame = frameNumber;
+        let round = (this.currentFrame + 0.5) | 0;
+        this.texture = this.textures[round % this.textures.length];
+        return this;
+    }
+    update(dt) {
+        if(this.playing) {
+            this.currentFrame += this.animationSpeed; // * dt;
+            let round = (this.currentFrame + 0.5) | 0;
+            this.currentFrame = this.currentFrame % this.textures.length;
+            if(this.loop || round < this.textures.length) {
+                this.texture = this.textures[round % this.textures.length];
+            }
+            else if(round >= this.textures.length) {
+                this.gotoAndStop(this.textures.length - 1);
+                if (this.onComplete) this.onComplete();
+            }
+        }
+        return this;
+    }
+};
+
+Q.movieClip = function(source, x, y) {
+    //Create the sprite
+    let sprite = new Q.MovieClip(source, x, y);
+
+    //Add the sprite to the stage
+    Q.stage.addChild(sprite);
+
+    //Return the sprite to the main program
+    return sprite;
+};
+
+Q.TilingSprite = class extends Q.Sprite {
+    constructor(source, width, height, x, y) {
+        super(source, x, y);
+
+        this.width = width;
+        this.height = height;
+
+        this.tileScale = new Q.Point(1, 1);
+        this.tilePosition = new Q.Point(0, 0);
+    }
+    get tileX() {
+        return this.tilePosition.x;
+    }
+    set tileX(value) {
+        this.tilePosition.x = value;
+    }
+    get tileY() {
+        return this.tilePosition.y;
+    }
+    set tileY(value) {
+        this.tilePosition.y = value;
+    }
+    get tileScaleX() {
+        return this.tileScale.x;
+    }
+    set tileScaleX(value) {
+        this.tileScale.x = value;
+    }
+    get tileScaleY() {
+        return this.tileScale.y;
+    }
+    set tileScaleY(value) {
+        this.tileScale.y = value;
+    }
+    render(context) {
+        context.globalAlpha = this.worldAlpha;
+
+        this.worldTransform.setTransform(context);
+
+        if(!this.__tilePattern) {
+            this.__tilePattern = context.createPattern(this.texture.source, 'repeat');
+        }
+
+        context.beginPath();
+
+        context.scale(this.tileScale.x, this.tileScale.y);
+        context.translate(this.tilePosition.x, this.tilePosition.y);
+
+        context.fillStyle = this.__tilePattern;
+        context.fillRect(
+            -this.tilePosition.x, 
+            -this.tilePosition.y, 
+            this.width / this.tileScale.x, 
+            this.height / this.tileScale.y
+        );
+
+        context.scale(1/this.tileScale.x, 1/this.tileScale.y);
+        context.translate(-this.tilePosition.x, -this.tilePosition.y);
+
+        context.closePath();
+    }
+};
+
+Q.tilingSprite = function(source, width, height, x, y) {
+    //Create the sprite
+    let sprite = new Q.TilingSprite(source, width, height, x, y);
+
+    //Add the sprite to the stage
+    Q.stage.addChild(sprite);
+
+    //Return the sprite to the main program
+    return sprite;
+};
+
 Q.emitter = function (interval, particleFunction) {
     let emitter = {},
     timerInterval = undefined;
@@ -946,144 +1077,6 @@ Q.grid = function(
     createGrid();
 
     //Return the `container` group back to the main program
-    return container;
-};
-
-Q.tilingSprite = function(width, height, source, x = 0, y = 0) {
-    //Figure out the tile's width and height
-    let tileWidth, tileHeight;
-    let src = Q.assets.cache[source];
-
-    //If the source is a texture atlas frame, use its
-    //`frame.w` and `frame.h` properties
-    // if(src.frame) {
-    tileWidth = src.frame.w;
-    tileHeight = src.frame.h;
-    // }
-    //If it's an image, use the image's 
-    //`width` and `height` properties
-    // else {
-    //     tileWidth = src.width;
-    //     tileHeight = src.height;
-    // }
-
-    //Figure out the rows and columns.
-    //The number of rows and columns should always be
-    //one greater than the total number of tiles
-    //that can fit in the rectangle. This give us one 
-    //additional row and column that we can reposition
-    //to create the infinite scroll effect
-
-    let columns, rows;
-
-    //1. Columns
-    //If the width of the rectangle is greater than the width of the tile,
-    //calculate the number of tile columns
-    if (width >= tileWidth) {
-        columns = Math.round(width / tileWidth) + 1;
-    } 
-    //If the rectangle's width is less than the width of the
-    //tile, set the columns to 2, which is the minimum
-    else {
-        columns = 2;
-    }
-
-    //2. Rows
-    //Calculate the tile rows in the same way
-    if (height >= tileHeight) {
-        rows = Math.round(height / tileHeight) + 1;
-    } 
-    else {
-        rows = 2; 
-    }
-
-    //Create a grid of sprites that's just one sprite larger
-    //than the `totalWidth` and `totalHeight`
-    let tileGrid = Q.grid(
-        columns, rows, tileWidth, tileHeight, false, 0, 0,
-        () => {
-            //Make a sprite from the supplied `source`
-            let tile = Q.sprite(source);
-            return tile;
-        }
-    );
-
-    //Declare the grid's private properties that we'll use to
-    //help scroll the tiling background
-    tileGrid._tileX = 0;
-    tileGrid._tileY = 0;
-
-    //Create an empty rectangle sprite without a fill or stoke color.
-    //Set it to the supplied `width` and `height`
-    let container = Q.rectangle(width, height, "none", "none");
-    container.x = x;
-    container.y = y;
-
-    //Set the rectangle's `mask` property to `true`. This switches on `ctx.clip()`
-    //In the rectangle sprite's `render` method.
-    container.mask = true;
-
-    //Add the tile grid to the rectangle container
-    container.addChild(tileGrid);
-
-    //Define the `tileX` and `tileY` properties on the parent container
-    //so that you can scroll the tiling background
-    Object.defineProperties(container, {
-        tileX: {
-            get () {
-                return tileGrid._tileX;
-            },
-            set (value) {
-                //Loop through all of the grid's child sprites
-                tileGrid.children.forEach(child => {
-                    //Figure out the difference between the new position
-                    //and the previous position
-                    let difference = value - tileGrid._tileX;
-
-                    //Offset the child sprite by the difference
-                    child.x += difference;
-
-                    //If the x position of the sprite exceeds the total width
-                    //of the visible columns, reposition it to just in front of the 
-                    //left edge of the container. This creates the wrapping
-                    //effect
-                    if (child.x > (columns - 1) * tileWidth) {
-                        child.x = 0 - tileWidth + difference;
-                    }
-
-                    //Use the same procedure to wrap sprites that 
-                    //exceed the left boundary
-                    if (child.x < 0 - tileWidth - difference) {
-                        child.x = (columns - 1) * tileWidth;
-                    }
-                });
-
-                //Set the private `_tileX` property to the new value
-                tileGrid._tileX = value;
-            },
-            enumerable: true, configurable: true
-        },
-        tileY: {
-            get() {
-                return tileGrid._tileY;
-            },
-            //Follow the same format to wrap sprites on the y axis
-            set(value) {
-                tileGrid.children.forEach(child => {
-                    let difference = value - tileGrid._tileY;
-                    child.y += difference;
-                    if (child.y > (rows - 1) * tileHeight) 
-                        child.y = 0 - tileHeight + difference;
-                    if (child.y < 0 - tileHeight - difference) 
-                        child.y = (rows - 1) * tileHeight;
-                });
-                tileGrid._tileY = value;
-            },
-            enumerable: true, configurable: true
-        }
-    });
-
-    //Return the rectangle container
     return container;
 };
 
@@ -1794,10 +1787,6 @@ Q.hitTestRectangle = function(r1, r2, global = false) {
 
   Q.hitTestCircleRectangle = function(c1, r1, global = false) {
 
-    //Add collision properties
-    if (!r1._bumpPropertiesAdded) this.addCollisionProperties(r1); 
-    if (!c1._bumpPropertiesAdded) this.addCollisionProperties(c1); 
-
     let region, collision, c1x, c1y, r1x, r1y;
 
     //Use either global or local coordinates
@@ -1939,10 +1928,6 @@ Q.hitTestCirclePoint = function(c1, point, global = false) {
   Q.circleRectangleCollision = function(
     c1, r1, bounce = false, global = false
   ) {
-
-    //Add collision properties
-    if (!r1._bumpPropertiesAdded) this.addCollisionProperties(r1); 
-    if (!c1._bumpPropertiesAdded) this.addCollisionProperties(c1); 
 
     let region, collision, c1x, c1y, r1x, r1y;
 
@@ -2271,6 +2256,7 @@ Q.hit = function(a, b, react = false, bounce = false, global = false, extra) {
  */
 Q.TWEEN = (function() {
     let _tweens = [];
+
     return {
         REVISION: '14',
         getAll() {

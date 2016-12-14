@@ -29,14 +29,13 @@ Q.create = function(width, height, setup, assetsToLoad, callback) {
     
     //stage will be the parent of all objects
     Q.stage = new Q.Container();
-    // Q.stage.width = Q.canvas.width;
-    // Q.stage.height = Q.canvas.height;
-    Q.stage._stage = true;
     // Q.stage.parent = {
     //     worldTransform: new Q.Matrix(),
     //     worldAlpha: 1, 
     //     children: []
     // };
+
+    // Q.add = new Q.Factory(Q.stage);
 
     //initialize mouse pointer
     Q.pointer = new Pointer(Q.renderer.canvas);
@@ -110,7 +109,7 @@ function update(dt = 1) {
     }
 }
 
-let then = null,
+let then = window.performance.now(),
     dt = 0,
     step = 1/Q._FPS,    // 0.0167 seconds = 16.67 ms
     ms2sec = 1 / 1000;   // 0.001 seconds = 1 ms
@@ -119,7 +118,9 @@ let then = null,
 function gameLoop(now) {
     requestAnimationFrame(gameLoop);
 
-    dt += Math.min(1, (now - (then || now)) * ms2sec);
+    // duration capped at 1.0 seconds
+    // dt += Math.min(1, (now - (then || now)) * ms2sec);
+    dt += Math.min(1, (now - then) * ms2sec);
 
     then = now;
 
@@ -128,8 +129,9 @@ function gameLoop(now) {
         // Run the code for each frame.
         update(step);
     }
+
     // render all sprites on the stage.
-    Q.renderer.render(Q.stage);    
+    Q.renderer.render(Q.stage, dt);    
 }
 
 Q.resume = function() {
@@ -147,8 +149,8 @@ Object.defineProperties(Q, {
         },
         set: function(value) {
             dt = 0;
-            then = null;
-            step = 1 / this._FPS;
+            then = window.performance.now();
+            step = 1 / value;
             this._FPS = value;
        },
         enumerable: true, configurable: true
@@ -184,7 +186,7 @@ Q.Renderer = class {
         this.canvas.setAttribute('width', width);
         this.canvas.setAttribute('height', height);
     }
-    render(container) {
+    render(container, dt) {
         let ctx = this.canvas.ctx;
 
         ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -502,42 +504,40 @@ Q.Container = class {
         this.children[index2] = child;
     }
     updateTransform() {
-        // if(this.parent) {
-            if(this.rotation !== this._rotationCache) {
-                this._rotationCache = this.rotation;
-                this._sr = Math.sin(this.rotation);
-                this._cr = Math.cos(this.rotation);
-            }
+        if(this.rotation !== this._rotationCache) {
+            this._rotationCache = this.rotation;
+            this._sr = Math.sin(this.rotation);
+            this._cr = Math.cos(this.rotation);
+        }
 
-            let pt = this.parent.worldTransform,
-                wt = this.worldTransform,
+        let pt = this.parent.worldTransform,
+            wt = this.worldTransform,
 
-                // get the matrix values of the displayobject
-                a = this._cr * this.scale.x,
-                b = this._sr * this.scale.x,
-                c = -this._sr * this.scale.y,
-                d = this._cr * this.scale.y,
-                tx = this.position.x,
-                ty = this.position.y;
+            // get the matrix values of the displayobject
+            a = this._cr * this.scale.x,
+            b = this._sr * this.scale.x,
+            c = -this._sr * this.scale.y,
+            d = this._cr * this.scale.y,
+            tx = this.position.x,
+            ty = this.position.y;
 
-            if(this.pivot.x || this.pivot.y) {
-                tx -= this.pivot.x * a + this.pivot.y * c;
-                ty -= this.pivot.x * b + this.pivot.y * d;
-            }
+        if(this.pivot.x || this.pivot.y) {
+            tx -= this.pivot.x * a + this.pivot.y * c;
+            ty -= this.pivot.x * b + this.pivot.y * d;
+        }
 
-            // concat the parent matrix with the objects transform.
-            wt.a = a * pt.a + b * pt.c;
-            wt.b = a * pt.b + b * pt.d;
-            wt.c = c * pt.a + d * pt.c;
-            wt.d = c * pt.b + d * pt.d;
-            wt.tx = tx * pt.a + ty * pt.c + pt.tx;
-            wt.ty = tx * pt.b + ty * pt.d + pt.ty;
+        // concat the parent matrix with the objects transform.
+        wt.a = a * pt.a + b * pt.c;
+        wt.b = a * pt.b + b * pt.d;
+        wt.c = c * pt.a + d * pt.c;
+        wt.d = c * pt.b + d * pt.d;
+        wt.tx = tx * pt.a + ty * pt.c + pt.tx;
+        wt.ty = tx * pt.b + ty * pt.d + pt.ty;
 
-            this.worldAlpha = this.alpha * this.parent.worldAlpha;
-            this.globalPosition.set(wt.tx, wt.ty);
+        this.worldAlpha = this.alpha * this.parent.worldAlpha;
+        this.globalPosition.set(wt.tx, wt.ty);
 
-            this._currentBounds = null;
-        // }
+        this._currentBounds = null;
     }
     getBounds() {
         if(!this._currentBounds) {
@@ -1099,53 +1099,6 @@ let Animation = {
             this.numberOfFrames = 0;
             clearInterval(this.timerInterval);
         }
-    }
-};
-
-Q.MovieClip = class extends Q.Sprite {
-    constructor(textures, x, y) {
-        super(textures[0], x, y);
-        
-        this.textures = textures;
-        this.animationSpeed = 1;
-        this.playing = false;
-        this.loop = true;
-        this.onComplete = null;
-    }
-    stop() {
-        this.playing = false;
-        return this;
-    }
-    play() {
-        this.playing = true;
-        return this;
-    }
-    gotoAndPlay(frameNumber) {
-        this.play();
-        this.currentFrame = frameNumber;
-        return this;
-    }
-    gotoAndStop(frameNumber) {
-        this.stop();
-        this.currentFrame = frameNumber;
-        let round = (this.currentFrame + 0.5) | 0;
-        this.texture = this.textures[round % this.textures.length];
-        return this;
-    }
-    update(dt) {
-        if(this.playing) {
-            this.currentFrame += this.animationSpeed; // * dt;
-            let round = (this.currentFrame + 0.5) | 0;
-            this.currentFrame = this.currentFrame % this.textures.length;
-            if(this.loop || round < this.textures.length) {
-                this.texture = this.textures[round % this.textures.length];
-            }
-            else if(round >= this.textures.length) {
-                this.gotoAndStop(this.textures.length - 1);
-                if (this.onComplete) this.onComplete();
-            }
-        }
-        return this;
     }
 };
 
@@ -3020,6 +2973,8 @@ function boot() {
 boot();
 
 root.Game = Q;
+root.QIXI = Q;
+
 return Q;
 
 }).call(this);
