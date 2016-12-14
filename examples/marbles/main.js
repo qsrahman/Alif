@@ -1,11 +1,11 @@
 'use strict';
 
-let sling, marbles, capturedMarble;
+let sling, marbles, capturedMarble, hitSound;
 
 function setup() {
     let frames = Game.filmstrip('marbles.png', 32, 32);
 
-    marbles = Game.grid(
+    marbles = Game.add.grid(
         //Set the grid's properties
         5, 5, 128, 128, 
         true, 0, 0,
@@ -31,11 +31,13 @@ function setup() {
 
     //Create the "sling" which is a line that will connect
     //the pointer to the marbles
-    sling = Game.line("Yellow", 4);
+    sling = Game.add.line("Yellow", 4);
     sling.visible = false;
 
     //A variable to store the captured marble
     capturedMarble = null;
+
+    hitSound = Game.add.sound('ballhit.mp3');
 
     //Change the state to `play`
     Game.state = play;
@@ -101,11 +103,11 @@ function play(dt) {
 
     //Make each circle in the `marbles.children` array
     //bounce off another circle in the same array
-    Game.multipleCircleCollision(marbles.children);
+    // Game.multipleCircleCollision(marbles.children);
 
     //You can alternatively check for for multiple circle collisions
     //the good old fashioned way, like this:
-/*
+
     for (let i = 0; i < marbles.children.length; i++) {
         //The first marble to use in the collision check 
         let c1 = marbles.children[i];
@@ -115,10 +117,11 @@ function play(dt) {
             //Check for a collision and bounce the marbles apart if
             //they collide. Use an optional mass property on the sprite
             //to affect the bounciness of each marble
-            Game.movingCircleCollision(c1, c2);
+            if(Game.movingCircleCollision(c1, c2)) {
+                hitSound.play();
+            }
         }
     }
-*/
 }
 
 // called before setup
@@ -129,7 +132,8 @@ function load(dt) {
 window.onload = function() {
     Game.create(512, 512, setup,
         [
-            'marbles.png'
+            'marbles.png',
+            'ballhit.mp3'
         ],
         load
     );

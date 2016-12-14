@@ -3,10 +3,10 @@
 let tank, message, bullets = [];
 
 function setup() {
-    tank = Game.rectangle(32, 32, '0x808080', '0x000000', 2);
+    tank = Game.add.rectangle(32, 32, '0x808080', '0x000000', 2);
     tank.anchor.set(0.5, 0.5);
 
-    let turret = Game.line('0xFF0000', 4, 0, 0, 32, 0);
+    let turret = Game.add.line('0xFF0000', 4, 0, 0, 32, 0);
     tank.addChild(turret);
     turret.x = 0;
     turret.y = 0;
@@ -42,11 +42,11 @@ function setup() {
             Game.stage,
             7,
             bullets,
-            () => Game.circle(8, '0xFF0000')
+            () => Game.add.circle(8, '0xFF0000')
         );
     };
 
-    message = Game.text('', {font:'12px Arial', fill: 'black'}, 8, 8);
+    message = Game.add.text('', {font:'12px Arial', fill: 'black'}, 8, 8);
 
     Game.state = play;
 }

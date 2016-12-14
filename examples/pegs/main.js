@@ -6,7 +6,7 @@ function setup() {
     // setup code here
     Game.renderer.backgroundColor = 'black';
 
-    ball = Game.circle(Game.utils.randomInt(16, 32), '0xFF0000');
+    ball = Game.add.circle(Game.utils.randomInt(16, 32), '0xFF0000');
     ball.x = Game.utils.randomInt(0, Game.canvas.width - ball.diameter);
     ball.y = 0;
     ball.vx = Game.utils.randomInt(-12, 12);
@@ -16,7 +16,7 @@ function setup() {
     ball.frictionY = 0;
     ball.mass = 0.75 + (ball.diameter / 32);
 
-    pegs = Game.grid(
+    pegs = Game.add.grid(
         5, 4, 96, 96,
         true, 0, 0,
         () => {
@@ -24,7 +24,7 @@ function setup() {
                 "0xFFABAB", "0xFFDAAB", "0xDDFFAB", "0xABE4FF", "0xD9ABFF"
             ];
             let fillStyle = colors[Game.utils.randomInt(0, 4)];
-            let peg = Game.circle(Game.utils.randomInt(16, 64), fillStyle);
+            let peg = Game.add.circle(Game.utils.randomInt(16, 64), fillStyle);
 
             return peg;
         }

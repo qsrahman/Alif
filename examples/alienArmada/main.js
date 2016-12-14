@@ -15,20 +15,20 @@ let cannon,
     gameOverMessage;
 
 function setup() {
-    let background = Game.sprite('background.png');
+    let background = Game.add.sprite('background.png');
 
-    cannon = Game.sprite('cannon.png');
+    cannon = Game.add.sprite('cannon.png');
     cannon.x = Game.canvas.width/2 - cannon.width/2;
     cannon.y = Game.canvas.height - 40;
 
-    scoreDisplay = Game.text('0', {font: '20px emulogic', fill:'#00FF00'}, 400, 10);
-    music = Game.sound('assets/music.mp3');
+    scoreDisplay = Game.add.text('0', {font: '20px emulogic', fill:'#00FF00'}, 400, 10);
+    music = Game.add.sound('assets/music.mp3');
     music.play();
     
-    shootSound = Game.sound('assets/shoot.mp3');
+    shootSound = Game.add.sound('assets/shoot.mp3');
     shootSound.pan = -0.5;
 
-    explosionSound = Game.sound('assets/explosion.mp3');
+    explosionSound = Game.add.sound('assets/explosion.mp3');
     explosionSound.pan = 0.5;
 
     Game.leftKey.press = () => {
@@ -65,7 +65,7 @@ function setup() {
             //A function that returns the sprite that should
             //be used to make each bullet
             () => {
-                return Game.sprite('bullet.png');
+                return Game.add.sprite('bullet.png');
             }
         );
         shootSound.play();
@@ -84,7 +84,7 @@ function play(dt) {
 
     if(alienTimer === alienFrequency) {
         let alienFrames = ['alien.png', 'explosion.png'];
-        let alien = Game.sprite(alienFrames);
+        let alien = Game.add.sprite(alienFrames);
         alien.states = {
             normal: 0,
             destroyed: 1
@@ -155,7 +155,7 @@ function reset() {
 function end() {
     Game.pause();
 
-    gameOverMessage = Game.text('', {font:'20px emulogic', fill:'#00FF00'}, 90, 120);
+    gameOverMessage = Game.add.text('', {font:'20px emulogic', fill:'#00FF00'}, 90, 120);
     music.volume = 0.5;
     
     if (winner === 'player') {

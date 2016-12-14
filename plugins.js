@@ -1,6 +1,5 @@
-'use strict';
-
 (function(Q) {
+'use strict';
 
 var Q = Q || {};
 
@@ -105,332 +104,6 @@ Q.wait = function(duration = 0) {
     });
 };
 
-Q.rectangle = function(
-    width = 32, 
-    height = 32,  
-    fillStyle = 0xFF3300, 
-    strokeStyle = 0x0033CC, 
-    lineWidth = 0,
-    x = 0, 
-    y = 0 
-) {
-    let o = new Q.Graphics();
-    o._sprite = undefined;
-    o._width = width;
-    o._height = height;
-    o._fillStyle = Q.utils.color(fillStyle);
-    o._strokeStyle = Q.utils.color(strokeStyle);
-    o._lineWidth = lineWidth;
-
-    //Draw the rectangle
-    let draw = (width, height, fillStyle, strokeStyle, lineWidth) => {
-        o.clear();
-        o.beginFill(fillStyle);
-        if (lineWidth > 0) {
-            o.lineStyle(lineWidth, strokeStyle, 1);
-        }
-        o.drawRect(0, 0, width, height);
-        o.endFill();
-    };
-
-    //Draw the line and capture the sprite that the `draw` function
-    //returns
-    draw(o._width, o._height, o._fillStyle, o._strokeStyle, o._lineWidth);
-
-    //Generate a texture from the rectangle
-    let texture = o.generateTexture();
-
-    //Use the texture to create a sprite
-    let sprite = new Q.Sprite(texture);
-
-    //Position the sprite
-    sprite.x = x;
-    sprite.y = y;
-
-    //Add getters and setters to the sprite
-    Object.defineProperties(sprite, {
-        "fillStyle": {
-            get() {
-                return o._fillStyle;
-            },
-            set(value) {
-                o._fillStyle = Q.utils.color(value);
-
-                //Draw the new rectangle 
-                draw(o._width, o._height, o._fillStyle, o._strokeStyle, o._lineWidth, o._x, o._y);
-
-                //Generate a new texture and set it as the sprite's texture
-                let texture = o.generateTexture();
-                o._sprite.texture = texture;
-            }, 
-            enumerable: true, configurable: true
-        },
-        "strokeStyle": {
-            get() {
-                return o._strokeStyle;
-            },
-            set(value) {
-                o._strokeStyle = Q.utils.color(value);
-
-                //Draw the new rectangle 
-                draw(o._width, o._height, o._fillStyle, o._strokeStyle, o._lineWidth, o._x, o._y);
-
-                //Generate a new texture and set it as the sprite's texture
-                let texture = o.generateTexture();
-                o._sprite.texture = texture;
-            }, 
-            enumerable: true, configurable: true
-        },
-        "lineWidth": {
-            get() {
-                return o._lineWidth;
-            },
-            set(value) {
-                o._lineWidth = value;
-
-                //Draw the new rectangle 
-                draw(o._width, o._height, o._fillStyle, o._strokeStyle, o._lineWidth, o._x, o._y);
-
-                //Generate a new texture and set it as the sprite's texture
-                let texture = o.generateTexture();
-                o._sprite.texture = texture;
-            }, 
-            enumerable: true, configurable: true
-        }
-    });
-
-    //Get a local reference to the sprite so that we can 
-    //change the rectangle properties later using the getters/setters
-    o._sprite = sprite;
-
-    Q.stage.addChild(sprite);
-
-    //Return the sprite
-    return sprite;
-};
-
-Q.circle = function(
-    diameter = 32, 
-    fillStyle = 0xFF3300, 
-    strokeStyle = 0x0033CC, 
-    lineWidth = 0,
-    x = 0, 
-    y = 0 
-) {
-    let o = new Q.Graphics();
-    o._sprite = undefined;
-    o._diameter = diameter;
-    o._fillStyle = Q.utils.color(fillStyle);
-    o._strokeStyle = Q.utils.color(strokeStyle);
-    o._lineWidth = lineWidth;
-
-    //Draw the rectangle
-    let draw = (diameter, fillStyle, strokeStyle, lineWidth) => {
-        o.clear();
-        o.beginFill(fillStyle);
-        if (lineWidth > 0) {
-            o.lineStyle(lineWidth, strokeStyle, 1);
-        }
-        o.drawCircle(0, 0, diameter / 2);
-        o.endFill();
-    };
-
-    //Draw the line and capture the sprite that the `draw` function
-    //returns
-    draw(o._diameter, o._fillStyle, o._strokeStyle, o._lineWidth);
-
-    //Generate a texture from the rectangle
-    let texture = o.generateTexture();
-
-    //Use the texture to create a sprite
-    let sprite = new Q.Sprite(texture);
-
-    //Position the sprite
-    sprite.x = x;
-    sprite.y = y;
-
-    //Add getters and setters to the sprite
-    Object.defineProperties(sprite, {
-        "fillStyle": {
-            get() {
-                return o._fillStyle;
-            },
-            set(value) {
-                o._fillStyle = Q.utils.color(value);
-
-                //Draw the new rectangle 
-                draw(o._diameter, o._fillStyle, o._strokeStyle, o._lineWidth);
-
-                //Generate a new texture and set it as the sprite's texture
-                let texture = o.generateTexture();
-                o._sprite.texture = texture;
-            }, 
-            enumerable: true, configurable: true
-        },
-        "strokeStyle": {
-            get() {
-                return o._strokeStyle;
-            },
-            set(value) {
-                o._strokeStyle = Q.utils.color(value);
-
-                //Draw the new rectangle 
-                draw(o._diameter, o._fillStyle, o._strokeStyle, o._lineWidth);
-
-                //Generate a new texture and set it as the sprite's texture
-                let texture = o.generateTexture();
-                o._sprite.texture = texture;
-            }, 
-            enumerable: true, configurable: true
-        },
-        "diameter": {
-            get() {
-                return o._diameter;
-            },
-            set(value) {
-                o._lineWidth = 10;
-
-                //Draw the cirlce
-                draw(o._diameter, o._fillStyle, o._strokeStyle, o._lineWidth);
-
-                //Generate a new texture and set it as the sprite's texture
-                let texture = o.generateTexture();
-                o._sprite.texture = texture;
-            }, 
-            enumerable: true, configurable: true
-        },
-        "radius": {
-            get() {
-                return o._diameter / 2;
-            },
-            set(value) {
-                //Draw the cirlce
-                draw(value * 2, o._fillStyle, o._strokeStyle, o._lineWidth);
-
-                //Generate a new texture and set it as the sprite's texture
-                let texture = o.generateTexture();
-                o._sprite.texture = texture;
-            }, 
-            enumerable: true, configurable: true
-        },
-    });
-
-    //Get a local reference to the sprite so that we can 
-    //change the rectangle properties later using the getters/setters
-    o._sprite = sprite;
-
-    sprite.circular = true;
-    Q.stage.addChild(sprite);
-
-    //Return the sprite
-    return sprite;
-};
-
-Q.line = function(
-    strokeStyle = 0x000000, 
-    lineWidth = 1, 
-    ax = 0, 
-    ay = 0, 
-    bx = 32, 
-    by = 32
-) {
-    //Create the line object
-    let o = new Q.Graphics();
-
-    //Private properties
-    o._strokeStyle = Q.utils.color(strokeStyle);
-    o._width = lineWidth;
-    o._ax = ax;
-    o._ay = ay;
-    o._bx = bx;
-    o._by = by;
-
-    //A helper function that draws the line
-    let draw = (strokeStyle, lineWidth, ax, ay, bx, by) => {
-        o.clear();
-        o.lineStyle(lineWidth, strokeStyle, 1);
-        o.moveTo(ax, ay);
-        o.lineTo(bx, by);
-    };
-
-    //Draw the line
-    draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
-
-    //Define getters and setters that redefine the line's start and 
-    //end points and re-draws it if they change
-    Object.defineProperties(o, {
-        "ax": {
-            get() {
-                return o._ax;
-            },
-            set(value) {
-                o._ax = value;
-                draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
-            }, 
-            enumerable: true, configurable: true
-        },
-        "ay": {
-            get() {
-                return o._ay;
-            },
-            set(value) {
-                o._ay = value;
-                draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
-            }, 
-            enumerable: true, configurable: true
-        },
-        "bx": {
-            get() {
-                return o._bx;
-            },
-            set(value) {
-                o._bx = value;
-                draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
-            }, 
-            enumerable: true, configurable: true
-        },
-        "by": {
-            get() {
-                return o._by;
-            },
-            set(value) {
-                o._by = value;
-                draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
-            }, 
-            enumerable: true, configurable: true
-        },
-        "strokeStyle": {
-            get() {
-                return o._strokeStyle;
-            },
-            set(value) {
-                o._strokeStyle = self.color(value);
-
-                //Draw the line
-                draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
-            }, 
-            enumerable: true, configurable: true
-        },
-        "width": {
-            get() {
-                return o._width;
-            },
-            set(value) {
-                o._width = value;
-
-                //Draw the line
-                draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
-            }, 
-            enumerable: true, configurable: true
-        }
-    });
-
-    Q.stage.addChild(o);
-
-    //Return the line
-    return o;
-};
-
 //Move a sprite or an array of sprites by adding its
 //velocity to its position
 Q.move = function(sprites, dt = 1) {
@@ -504,6 +177,8 @@ Q.contain = function(s, container, bounce = false, extra){
     //have any
     if (container.xAnchorOffset === undefined) container.xAnchorOffset = 0;
     if (container.yAnchorOffset === undefined) container.yAnchorOffset = 0;
+    if (s.parent.gx === undefined) s.parent.gx = 0;
+    if (s.parent.gy === undefined) s.parent.gy = 0;
 
     //The `collision` object is used to store which
     //side of the containing rectangle the sprite hits
@@ -703,6 +378,116 @@ Q.followConstant= function(follower, leader, speed) {
     }
 };
 
+Q.TilingSprite = class extends Q.Sprite {
+    constructor(source, width, height, x, y) {
+        super(source, x, y);
+
+        this.width = width;
+        this.height = height;
+
+        this.tileScale = new Q.Point(1, 1);
+        this.tilePosition = new Q.Point(0, 0);
+    }
+    get tileX() {
+        return this.tilePosition.x;
+    }
+    set tileX(value) {
+        this.tilePosition.x = value;
+    }
+    get tileY() {
+        return this.tilePosition.y;
+    }
+    set tileY(value) {
+        this.tilePosition.y = value;
+    }
+    get tileScaleX() {
+        return this.tileScale.x;
+    }
+    set tileScaleX(value) {
+        this.tileScale.x = value;
+    }
+    get tileScaleY() {
+        return this.tileScale.y;
+    }
+    set tileScaleY(value) {
+        this.tileScale.y = value;
+    }
+    render(context) {
+        context.globalAlpha = this.worldAlpha;
+
+        this.worldTransform.setTransform(context);
+
+        if(!this.__tilePattern) {
+            this.__tilePattern = context.createPattern(this.texture.source, 'repeat');
+        }
+
+        context.beginPath();
+
+        context.scale(this.tileScale.x, this.tileScale.y);
+        context.translate(this.tilePosition.x, this.tilePosition.y);
+
+        context.fillStyle = this.__tilePattern;
+        context.fillRect(
+            -this.tilePosition.x, 
+            -this.tilePosition.y, 
+            this.width / this.tileScale.x, 
+            this.height / this.tileScale.y
+        );
+
+        context.scale(1/this.tileScale.x, 1/this.tileScale.y);
+        context.translate(-this.tilePosition.x, -this.tilePosition.y);
+
+        context.closePath();
+    }
+};
+
+Q.MovieClip = class extends Q.Sprite {
+    constructor(textures, x, y) {
+        super(textures[0], x, y);
+        
+        this.textures = textures;
+        this.animationSpeed = 1;
+        this.playing = false;
+        this.loop = true;
+        this.onComplete = null;
+    }
+    stop() {
+        this.playing = false;
+        return this;
+    }
+    play() {
+        this.playing = true;
+        return this;
+    }
+    gotoAndPlay(frameNumber) {
+        this.play();
+        this.currentFrame = frameNumber;
+        return this;
+    }
+    gotoAndStop(frameNumber) {
+        this.stop();
+        this.currentFrame = frameNumber;
+        let round = (this.currentFrame + 0.5) | 0;
+        this.texture = this.textures[round % this.textures.length];
+        return this;
+    }
+    update(dt) {
+        if(this.playing) {
+            this.currentFrame += this.animationSpeed; // * dt;
+            let round = (this.currentFrame + 0.5) | 0;
+            this.currentFrame = this.currentFrame % this.textures.length;
+            if(this.loop || round < this.textures.length) {
+                this.texture = this.textures[round % this.textures.length];
+            }
+            else if(round >= this.textures.length) {
+                this.gotoAndStop(this.textures.length - 1);
+                if (this.onComplete) this.onComplete();
+            }
+        }
+        return this;
+    }
+};
+
 //Use `shoot` to create bullet sprites 
 Q.shoot = function(
     shooter, angle, x, y, container, bulletSpeed, bulletArray, bulletSprite
@@ -740,7 +525,7 @@ Q.shoot = function(
     bulletArray.push(bullet);
 }
 
-Q.emitter = function (interval, particleFunction) {
+Q.Factory.prototype.emitter = function (interval, particleFunction) {
     let emitter = {},
     timerInterval = undefined;
 
@@ -770,7 +555,7 @@ Q.emitter = function (interval, particleFunction) {
     return emitter;
 };
 
-Q.particleEffect = function (
+Q.Factory.prototype.particleEffect = function(
     x = 0, y = 0, 
     spriteFunction = () => console.log("Sprite creation function"),
     numberOfParticles = 20,
@@ -886,7 +671,7 @@ Q.particleEffect = function (
     }
 };
 
-Q.grid = function(
+Q.Factory.prototype.grid = function(
     columns = 0, rows = 0, cellWidth = 32, cellHeight = 32,
     centerCell = false, xOffset = 0, yOffset = 0,
     makeSprite,
@@ -896,7 +681,7 @@ Q.grid = function(
     //group is what the function returns back to the main program.
     //All the sprites in the grid cells will be added
     //as children to this container
-    let container = Q.container();
+    let container = Q.add.container();
 
     //The `create` method plots the grid
 
@@ -944,144 +729,6 @@ Q.grid = function(
     createGrid();
 
     //Return the `container` group back to the main program
-    return container;
-};
-
-Q.tilingSprite = function(width, height, source, x = 0, y = 0) {
-    //Figure out the tile's width and height
-    let tileWidth, tileHeight;
-    let src = Q.assets.cache[source];
-
-    //If the source is a texture atlas frame, use its
-    //`frame.w` and `frame.h` properties
-    // if(src.frame) {
-    tileWidth = src.frame.w;
-    tileHeight = src.frame.h;
-    // }
-    //If it's an image, use the image's 
-    //`width` and `height` properties
-    // else {
-    //     tileWidth = src.width;
-    //     tileHeight = src.height;
-    // }
-
-    //Figure out the rows and columns.
-    //The number of rows and columns should always be
-    //one greater than the total number of tiles
-    //that can fit in the rectangle. This give us one 
-    //additional row and column that we can reposition
-    //to create the infinite scroll effect
-
-    let columns, rows;
-
-    //1. Columns
-    //If the width of the rectangle is greater than the width of the tile,
-    //calculate the number of tile columns
-    if (width >= tileWidth) {
-        columns = Math.round(width / tileWidth) + 1;
-    } 
-    //If the rectangle's width is less than the width of the
-    //tile, set the columns to 2, which is the minimum
-    else {
-        columns = 2;
-    }
-
-    //2. Rows
-    //Calculate the tile rows in the same way
-    if (height >= tileHeight) {
-        rows = Math.round(height / tileHeight) + 1;
-    } 
-    else {
-        rows = 2; 
-    }
-
-    //Create a grid of sprites that's just one sprite larger
-    //than the `totalWidth` and `totalHeight`
-    let tileGrid = Q.grid(
-        columns, rows, tileWidth, tileHeight, false, 0, 0,
-        () => {
-            //Make a sprite from the supplied `source`
-            let tile = Q.sprite(source);
-            return tile;
-        }
-    );
-
-    //Declare the grid's private properties that we'll use to
-    //help scroll the tiling background
-    tileGrid._tileX = 0;
-    tileGrid._tileY = 0;
-
-    //Create an empty rectangle sprite without a fill or stoke color.
-    //Set it to the supplied `width` and `height`
-    let container = Q.rectangle(width, height, "none", "none");
-    container.x = x;
-    container.y = y;
-
-    //Set the rectangle's `mask` property to `true`. This switches on `ctx.clip()`
-    //In the rectangle sprite's `render` method.
-    container.mask = true;
-
-    //Add the tile grid to the rectangle container
-    container.addChild(tileGrid);
-
-    //Define the `tileX` and `tileY` properties on the parent container
-    //so that you can scroll the tiling background
-    Object.defineProperties(container, {
-        tileX: {
-            get () {
-                return tileGrid._tileX;
-            },
-            set (value) {
-                //Loop through all of the grid's child sprites
-                tileGrid.children.forEach(child => {
-                    //Figure out the difference between the new position
-                    //and the previous position
-                    let difference = value - tileGrid._tileX;
-
-                    //Offset the child sprite by the difference
-                    child.x += difference;
-
-                    //If the x position of the sprite exceeds the total width
-                    //of the visible columns, reposition it to just in front of the 
-                    //left edge of the container. This creates the wrapping
-                    //effect
-                    if (child.x > (columns - 1) * tileWidth) {
-                        child.x = 0 - tileWidth + difference;
-                    }
-
-                    //Use the same procedure to wrap sprites that 
-                    //exceed the left boundary
-                    if (child.x < 0 - tileWidth - difference) {
-                        child.x = (columns - 1) * tileWidth;
-                    }
-                });
-
-                //Set the private `_tileX` property to the new value
-                tileGrid._tileX = value;
-            },
-            enumerable: true, configurable: true
-        },
-        tileY: {
-            get() {
-                return tileGrid._tileY;
-            },
-            //Follow the same format to wrap sprites on the y axis
-            set(value) {
-                tileGrid.children.forEach(child => {
-                    let difference = value - tileGrid._tileY;
-                    child.y += difference;
-                    if (child.y > (rows - 1) * tileHeight) 
-                        child.y = 0 - tileHeight + difference;
-                    if (child.y < 0 - tileHeight - difference) 
-                        child.y = (rows - 1) * tileHeight;
-                });
-                tileGrid._tileY = value;
-            },
-            enumerable: true, configurable: true
-        }
-    });
-
-    //Return the rectangle container
     return container;
 };
 
@@ -1164,7 +811,7 @@ a sprite, and `follow` to make it follow a sprite.
 `worldCamera` arguments: worldObject, theCanvas
 The worldObject needs to have a `width` and `height` property.
 */
-Q.worldCamera = function(world, worldWidth, worldHeight, canvas) {
+Q.Factory.prototype.worldCamera = function(world, worldWidth, worldHeight, canvas) {
     //Define a `camera` object with helpful properties
     let camera = {
         width: canvas.width,
@@ -1792,10 +1439,6 @@ Q.hitTestRectangle = function(r1, r2, global = false) {
 
   Q.hitTestCircleRectangle = function(c1, r1, global = false) {
 
-    //Add collision properties
-    if (!r1._bumpPropertiesAdded) this.addCollisionProperties(r1); 
-    if (!c1._bumpPropertiesAdded) this.addCollisionProperties(c1); 
-
     let region, collision, c1x, c1y, r1x, r1y;
 
     //Use either global or local coordinates
@@ -1937,10 +1580,6 @@ Q.hitTestCirclePoint = function(c1, point, global = false) {
   Q.circleRectangleCollision = function(
     c1, r1, bounce = false, global = false
   ) {
-
-    //Add collision properties
-    if (!r1._bumpPropertiesAdded) this.addCollisionProperties(r1); 
-    if (!c1._bumpPropertiesAdded) this.addCollisionProperties(c1); 
 
     let region, collision, c1x, c1y, r1x, r1y;
 
@@ -2269,6 +1908,7 @@ Q.hit = function(a, b, react = false, bounce = false, global = false, extra) {
  */
 Q.TWEEN = (function() {
     let _tweens = [];
+
     return {
         REVISION: '14',
         getAll() {
@@ -2291,7 +1931,8 @@ Q.TWEEN = (function() {
             if(_tweens.length === 0) return false;
 
             let i = 0;
-            // time = (time !== undefined) ? time : window.performance.now();
+            time = (time !== undefined) ? time : window.performance.now();
+
             while(i < _tweens.length) {
                 if(_tweens[i].update(time)) {
                     i++;
@@ -2312,58 +1953,52 @@ Q.TWEEN.Tween = class {
         this._valuesEnd = {};
         this._valuesStartRepeat = {};
         this._duration = 1000;
-        this._repeatCount = 0;
-        this._repeats = 0;
+        this._repeat = 0;
         this._yoyo = false;
         this._isPlaying = false;
         this._reversed = false;
         this._delayTime = 0;
-        this._delayRepeat = false
         this._startTime = null;
-        this._originalStartTime = null
         this._easingFunction = Q.TWEEN.Easing.Linear.None;
         this._interpolationFunction = Q.TWEEN.Interpolation.Linear;
-        this._chainedTweens = [];
+        this._chainetimeweens = [];
         this._onStartCallback = null;
         this._onStartCallbackFired = false;
         this._onUpdateCallback = null;
         this._onCompleteCallback = null;
-        this._onRepeatCallback = null;
         this._onStopCallback = null;
-        this._currentTime = 0;
 
         // Set all starting values present on the target object
-        for (var field in object) {
+        for (let field in object) {
             this._valuesStart[field] = parseFloat(object[field], 10);
         }
     }
-    to(properties, duration) {
-        if (duration !== undefined ) {
-            this._duration = duration;
-        }
+    to(properties, duration = 1000) {
+        this._duration = duration;
         this._valuesEnd = properties;
         return this;
     }
-    start() {
+    start(time) {
         Q.TWEEN.add(this);
 
         this._isPlaying = true;
         this._onStartCallbackFired = false;
 
-        this._startTime = this._delayTime;
-        this._originalStartTime = this._startTime;
+        this._startTime = (time !== undefined) ? time : window.performance.now();
+        this._startTime += this._delayTime;
 
-        for (var property in this._valuesEnd) {
+        for (let property in this._valuesEnd) {
             // check if an Array was provided as property value
             if (this._valuesEnd[property] instanceof Array) {
                 if (this._valuesEnd[property].length === 0) {
                     continue;
                 }
                 // create a local copy of the Array with the start value at the front
-                this._valuesEnd[property] = [this._object[property]].concat(this._valuesEnd[ property]);
+                this._valuesEnd[property] = [this._object[property]].concat(this._valuesEnd[property]);
             }
+            //if(this._valuesStart[property] === undefined) continue;
             this._valuesStart[property] = this._object[property];
-            if( (this._valuesStart[ property] instanceof Array) === false) {
+            if((this._valuesStart[property] instanceof Array) === false) {
                 // Ensures we're using numbers, not strings
                 this._valuesStart[property] *= 1.0;
             }
@@ -2380,117 +2015,111 @@ Q.TWEEN.Tween = class {
         if (this._onStopCallback !== null) {
            this._onStopCallback.call(this._object);
         }
-        this.stopChainedTweens();
+        this.stopChainetimeweens();
         return this;
     }
-    stopChainedTweens() {
-        for (var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++) {
-            this._chainedTweens[ i ].stop();
+    stopChainetimeweens() {
+        for (let i = 0, numChainetimeweens = this._chainetimeweens.length; i < numChainetimeweens; i++) {
+            this._chainetimeweens[i].stop();
         }
     }
-    delay(amount, repeat) {
+    delay(amount) {
         this._delayTime = amount;
-        this._delayRepeat = !!repeat;
         return this;
     }
-    repeat(times) {
-        if(typeof times === 'undefined') times = Infinity;
-        this._repeatCount = times;
+    repeat(times = Infinity) {
+        this._repeat = times;
         return this;
     }
     yoyo(yoyo) {
         this._yoyo = yoyo;
         return this;
     }
-    easing(easing) {
+    easing (easing) {
         this._easingFunction = easing;
         return this;
     }
-    interpolation(interpolation) {
+    interpolation (interpolation) {
         this._interpolationFunction = interpolation;
         return this;
     }
-    chain() {
-        this._chainedTweens = arguments;
+    chain () {
+        this._chainetimeweens = arguments;
         return this;
     }
-    onStart(callback) {
+    onStart (callback) {
         this._onStartCallback = callback;
         return this;
     }
-    onUpdate(callback) {
+    onUpdate (callback) {
         this._onUpdateCallback = callback;
         return this;
     }
-    onComplete(xallback) {
+    onComplete (callback) {
         this._onCompleteCallback = callback;
-        return this;
-    }
-    onRepeat(callback) {
-        this._onRepeatCallback = callback;
         return this;
     }
     onStop(callback) {
         this._onStopCallback = callback;
         return this;
     }
-    update(dt) {
-        var property;
+    update (time) {
+        let property, elapsed, value;
 
-        this._currentTime += dt * 1000;
+        if(time < this._startTime) return true;
 
-        if (this._currentTime < this._startTime) {
-            return true;
-        }
-        if ( this._onStartCallbackFired === false ) {
-            if ( this._onStartCallback !== null ) {
-                this._onStartCallback.call( this._object );
+        if (this._onStartCallbackFired === false) {
+            if (this._onStartCallback !== null) {
+                this._onStartCallback.call(this._object);
             }
             this._onStartCallbackFired = true;
         }
-        var elapsed = (this._currentTime - this._startTime) / this._duration;
+        elapsed = (time - this._startTime) / this._duration;
         elapsed = elapsed > 1 ? 1 : elapsed;
 
-        var value = this._easingFunction( elapsed );
+        value = this._easingFunction(elapsed);
 
         for (property in this._valuesEnd) {
-            var start = this._valuesStart[ property ] || 0;
-            var end = this._valuesEnd[ property ];
+            //if(this._valuesStart[property] === undefined) continue;
 
-            if ( end instanceof Array ) {
-                this._object[ property ] = this._interpolationFunction( end, value );
+            let start = this._valuesStart[property] || 0;
+            let end = this._valuesEnd[property];
+
+            if (end instanceof Array) {
+                this._object[property] = this._interpolationFunction(end, value);
             }
             else {
                 // Parses relative end values with start as base (e.g.: +10, -3)
-                if ( typeof(end) === "string" ) {
-                    end = start + parseFloat(end, 10);
+                if (typeof(end) === "string") {
+                    if(end.charAt(0) === '+' || end.charAt(0) === '-')
+                        end = start + parseFloat(end, 10);
+                    else
+                        end = parseFloat(end, 10);
                 }
                 // protect against non numeric properties.
-                if ( typeof(end) === "number" ) {
-                    this._object[ property ] = start + ( end - start ) * value;
+                if (typeof(end) === "number") {
+                    this._object[property] = start + (end - start) * value;
                 }
             }
         }
-        if ( this._onUpdateCallback !== null ) {
-            this._onUpdateCallback.call( this._object, value );
+        if (this._onUpdateCallback !== null) {
+            this._onUpdateCallback.call(this._object, value);
         }
 
-        if ( elapsed == 1 ) {
-            if ( this._repeatCount > 0 ) {
-                if( isFinite( this._repeatCount ) ) {
-                    this._repeatCount--;
+        if (elapsed == 1) {
+            if (this._repeat > 0) {
+                if(isFinite(this._repeat)) {
+                    this._repeat--;
                 }
-                this._repeats += 1;
-
                 // reassign starting values, restart by making startTime = now
-                for( property in this._valuesStartRepeat ) {
-                    if ( typeof( this._valuesEnd[ property ] ) === "string" ) {
-                        this._valuesStartRepeat[ property ] = this._valuesStartRepeat[ property ] + parseFloat(this._valuesEnd[ property ], 10);
+                for(property in this._valuesStartRepeat) {
+                    if (typeof(this._valuesEnd[ property]) === "string") {
+                        this._valuesStartRepeat[property] = this._valuesStartRepeat[property] + parseFloat(this._valuesEnd[property], 10);
                     }
 
                     if (this._yoyo) {
-                        var tmp = this._valuesStartRepeat[ property ];
-                        this._valuesStartRepeat[ property ] = this._valuesEnd[ property ];
+                        let tmp = this._valuesStartRepeat[property];
+                        this._valuesStartRepeat[property] = this._valuesEnd[property];
                         this._valuesEnd[ property ] = tmp;
                     }
 
@@ -2500,22 +2129,17 @@ Q.TWEEN.Tween = class {
                 if (this._yoyo) {
                     this._reversed = !this._reversed;
                 }
-                if (!this._delayRepeat) this._delayTime = 0;
-                this._startTime = this._originalStartTime + this._repeats * (this._duration + this._delayTime);
+                this._startTime = time + this._delayTime;
 
-                if (this._onRepeatCallback !== null) {
-                    this._onRepeatCallback.call(this.object);
-                }
-
-                return true;
+               return true;
             }
             else {
-                if ( this._onCompleteCallback !== null ) {
+                if (this._onCompleteCallback !== null) {
                     this._onCompleteCallback.call(this._object);
                 }
 
-                for ( var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++ ) {
-                    this._chainedTweens[ i ].start();
+                for (let i = 0, numChainetimeweens = this._chainetimeweens.length; i < numChainetimeweens; i++) {
+                    this._chainetimeweens[i].start(this._startTime + this._duration);
                 }
                 return false;
             }
@@ -2535,11 +2159,11 @@ Q.TWEEN.Easing = {
             return k * k;
         },
         Out(k) {
-            return k * ( 2 - k );
+            return k * (2 - k);
         },
         InOut(k) {
-            if ( ( k *= 2 ) < 1 ) return 0.5 * k * k;
-            return - 0.5 * ( --k * ( k - 2 ) - 1 );
+            if ((k *= 2) < 1) return 0.5 * k * k;
+            return -0.5 * (--k * (k - 2) - 1);
         }
     },
     Cubic: {
@@ -2559,23 +2183,23 @@ Q.TWEEN.Easing = {
             return k * k * k * k;
         },
         Out(k) {
-            return 1 - ( --k * k * k * k );
+            return 1 - (--k * k * k * k);
         },
         InOut(k) {
-            if ( ( k *= 2 ) < 1) return 0.5 * k * k * k * k;
-            return - 0.5 * ( ( k -= 2 ) * k * k * k - 2 );
+            if ((k *= 2) < 1) return 0.5 * k * k * k * k;
+            return - 0.5 * ((k -= 2) * k * k * k - 2);
         }
     },
     Quintic: {
-        In( k ) {
+        In(k) {
             return k * k * k * k * k;
         },
-        Out( k ) {
+        Out(k) {
             return --k * k * k * k * k + 1;
         },
-        InOut( k ) {
-            if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k * k * k;
-            return 0.5 * ( ( k -= 2 ) * k * k * k * k + 2 );
+        InOut(k) {
+            if ((k *= 2) < 1) return 0.5 * k * k * k * k * k;
+            return 0.5 * ((k -= 2) * k * k * k * k + 2);
         }
     },
     SmoothStep: {
@@ -2590,155 +2214,156 @@ Q.TWEEN.Easing = {
         }
     },
     Sinusoidal: {
-        In( k ) {
-            return 1 - Math.cos( k * Math.PI / 2 );
+        In(k) {
+            return 1 - Math.cos(k * Math.PI / 2);
         },
-        Out( k ) {
-            return Math.sin( k * Math.PI / 2 );
+        Out(k) {
+            return Math.sin(k * Math.PI / 2);
         },
-        InOut( k ) {
-            return 0.5 * ( 1 - Math.cos( Math.PI * k ) );
+        InOut(k) {
+            return 0.5 * (1 - Math.cos(Math.PI * k));
         }
     },
     Exponential: {
-        In( k ) {
-            return k === 0 ? 0 : Math.pow( 1024, k - 1 );
+        In(k) {
+            return k === 0 ? 0 : Math.pow(1024, k - 1);
         },
-        Out( k ) {
-            return k === 1 ? 1 : 1 - Math.pow( 2, - 10 * k );
+        Out(k) {
+            return k === 1 ? 1 : 1 - Math.pow(2, - 10 * k);
         },
-        InOut( k ) {
-            if ( k === 0 ) return 0;
-            if ( k === 1 ) return 1;
-            if ( ( k *= 2 ) < 1 ) return 0.5 * Math.pow( 1024, k - 1 );
-            return 0.5 * ( - Math.pow( 2, - 10 * ( k - 1 ) ) + 2 );
+        InOut(k) {
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if ((k *= 2) < 1) return 0.5 * Math.pow(1024, k - 1);
+            return 0.5 * (- Math.pow(2, - 10 * (k - 1)) + 2);
         }
     },
     Circular: {
-        In( k ) {
-            return 1 - Math.sqrt( 1 - k * k );
+        In(k) {
+            return 1 - Math.sqrt(1 - k * k);
         },
-        Out( k ) {
-            return Math.sqrt( 1 - ( --k * k ) );
+        Out(k) {
+            return Math.sqrt(1 - (--k * k));
         },
-        InOut( k ) {
-            if ( ( k *= 2 ) < 1) return - 0.5 * ( Math.sqrt( 1 - k * k) - 1);
-            return 0.5 * ( Math.sqrt( 1 - ( k -= 2) * k) + 1);
+        InOut(k) {
+            if ((k *= 2) < 1) return - 0.5 * (Math.sqrt(1 - k * k) - 1);
+            return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
         }
     },
     Elastic: {
-        In( k ) {
+        In(k) {
             let s, a = 0.1, p = 0.4;
-            if ( k === 0 ) return 0;
-            if ( k === 1 ) return 1;
-            if ( !a || a < 1 ) { a = 1; s = p / 4; }
-            else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
-            return - ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if (!a || a < 1) { a = 1; s = p / 4; }
+            else s = p * Math.asin(1 / a) / (2 * Math.PI);
+            return - (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
         },
-        Out( k ) {
+        Out(k) {
             let s, a = 0.1, p = 0.4;
-            if ( k === 0 ) return 0;
-            if ( k === 1 ) return 1;
-            if ( !a || a < 1 ) { a = 1; s = p / 4; }
-            else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
-            return ( a * Math.pow( 2, - 10 * k) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) + 1 );
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if (!a || a < 1) { a = 1; s = p / 4; }
+            else s = p * Math.asin(1 / a) / (2 * Math.PI);
+            return (a * Math.pow(2, - 10 * k) * Math.sin((k - s) * (2 * Math.PI) / p) + 1);
         },
-        InOut( k ) {
+        InOut(k) {
             let s, a = 0.1, p = 0.4;
-            if ( k === 0 ) return 0;
-            if ( k === 1 ) return 1;
-            if ( !a || a < 1 ) { a = 1; s = p / 4; }
-            else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
-            if ( ( k *= 2 ) < 1 ) return - 0.5 * ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
-            return a * Math.pow( 2, -10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) * 0.5 + 1;
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if (!a || a < 1) { a = 1; s = p / 4; }
+            else s = p * Math.asin(1 / a) / (2 * Math.PI);
+            if ((k *= 2) < 1) return - 0.5 * (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
+            return a * Math.pow(2, -10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
         }
     },
     Back: {
-        In( k ) {
+        In(k) {
             let s = 1.70158;
-            return k * k * ( ( s + 1 ) * k - s );
+            return k * k * ((s + 1) * k - s);
         },
-        Out( k ) {
+        Out(k) {
             let s = 1.70158;
-            return --k * k * ( ( s + 1 ) * k + s ) + 1;
+            return --k * k * ((s + 1) * k + s) + 1;
         },
-        InOut( k ) {
+        InOut(k) {
             let s = 1.70158 * 1.525;
-            if ( ( k *= 2 ) < 1 ) return 0.5 * ( k * k * ( ( s + 1 ) * k - s ) );
-            return 0.5 * ( ( k -= 2 ) * k * ( ( s + 1 ) * k + s ) + 2 );
+            if ((k *= 2) < 1) return 0.5 * (k * k * ((s + 1) * k - s));
+            return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
         }
     },
     Bounce: {
-        In( k ) {
-            return 1 - Q.TWEEN.Easing.Bounce.Out( 1 - k );
+        In(k) {
+            return 1 - Q.TWEEN.Easing.Bounce.Out(1 - k);
         },
-        Out( k ) {
-            if ( k < ( 1 / 2.75 ) ) {
+        Out(k) {
+            if (k < (1 / 2.75)) {
                 return 7.5625 * k * k;
-            } else if ( k < ( 2 / 2.75 ) ) {
-                return 7.5625 * ( k -= ( 1.5 / 2.75 ) ) * k + 0.75;
-            } else if ( k < ( 2.5 / 2.75 ) ) {
-                return 7.5625 * ( k -= ( 2.25 / 2.75 ) ) * k + 0.9375;
+            } else if (k < (2 / 2.75)) {
+                return 7.5625 * (k -= (1.5 / 2.75)) * k + 0.75;
+            } else if (k < (2.5 / 2.75)) {
+                return 7.5625 * (k -= (2.25 / 2.75)) * k + 0.9375;
             } else {
-                return 7.5625 * ( k -= ( 2.625 / 2.75 ) ) * k + 0.984375;
+                return 7.5625 * (k -= (2.625 / 2.75)) * k + 0.984375;
             }
         },
-        InOut( k ) {
-            if ( k < 0.5 ) return Q.TWEEN.Easing.Bounce.In( k * 2 ) * 0.5;
-            return Q.TWEEN.Easing.Bounce.Out( k * 2 - 1 ) * 0.5 + 0.5;
+        InOut(k) {
+            if (k < 0.5) return Q.TWEEN.Easing.Bounce.In(k * 2) * 0.5;
+            return Q.TWEEN.Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
         }
     }
 };
 
 Q.TWEEN.Interpolation = {
-    Linear( v, k ) {
-        let m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Q.TWEEN.Interpolation.Utils.Linear;
+    Linear(v, k) {
+        let m = v.length - 1, f = m * k, i = Math.floor(f), fn = Q.TWEEN.Interpolation.Utils.Linear;
 
-        if ( k < 0 ) return fn( v[ 0 ], v[ 1 ], f );
-        if ( k > 1 ) return fn( v[ m ], v[ m - 1 ], m - f );
-        return fn( v[ i ], v[ i + 1 > m ? m : i + 1 ], f - i );
+        if (k < 0) return fn(v[ 0 ], v[ 1 ], f);
+        if (k > 1) return fn(v[ m ], v[ m - 1 ], m - f);
+        return fn(v[ i ], v[ i + 1 > m ? m : i + 1 ], f - i);
     },
-    Bezier( v, k ) {
+    Bezier(v, k) {
         let b = 0, n = v.length - 1, pw = Math.pow, bn = Q.TWEEN.Interpolation.Utils.Bernstein, i;
 
-        for ( i = 0; i <= n; i++ ) {
-            b += pw( 1 - k, n - i ) * pw( k, i ) * v[ i ] * bn( n, i );
+        for (i = 0; i <= n; i++) {
+            b += pw(1 - k, n - i) * pw(k, i) * v[ i ] * bn(n, i);
         }
         return b;
     },
-    CatmullRom( v, k ) {
-        let m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Q.TWEEN.Interpolation.Utils.CatmullRom;
+    CatmullRom(v, k) {
+        let m = v.length - 1, f = m * k, i = Math.floor(f), fn = Q.TWEEN.Interpolation.Utils.CatmullRom;
 
-        if ( v[ 0 ] === v[ m ] ) {
-            if ( k < 0 ) i = Math.floor( f = m * ( 1 + k ) );
-            return fn( v[ ( i - 1 + m ) % m ], v[ i ], v[ ( i + 1 ) % m ], v[ ( i + 2 ) % m ], f - i );
+        if (v[ 0 ] === v[ m ]) {
+            if (k < 0) i = Math.floor(f = m * (1 + k));
+            return fn(v[ (i - 1 + m) % m ], v[ i ], v[ (i + 1) % m ], v[ (i + 2) % m ], f - i);
         } else {
-            if ( k < 0 ) return v[ 0 ] - ( fn( v[ 0 ], v[ 0 ], v[ 1 ], v[ 1 ], -f ) - v[ 0 ] );
-            if ( k > 1 ) return v[ m ] - ( fn( v[ m ], v[ m ], v[ m - 1 ], v[ m - 1 ], f - m ) - v[ m ] );
-            return fn( v[ i ? i - 1 : 0 ], v[ i ], v[ m < i + 1 ? m : i + 1 ], v[ m < i + 2 ? m : i + 2 ], f - i );
+            if (k < 0) return v[ 0 ] - (fn(v[ 0 ], v[ 0 ], v[ 1 ], v[ 1 ], -f) - v[ 0 ]);
+            if (k > 1) return v[ m ] - (fn(v[ m ], v[ m ], v[ m - 1 ], v[ m - 1 ], f - m) - v[ m ]);
+            return fn(v[ i ? i - 1 : 0 ], v[ i ], v[ m < i + 1 ? m : i + 1 ], v[ m < i + 2 ? m : i + 2 ], f - i);
         }
     },
     Utils: {
-        Linear( p0, p1, t ) {
-            return ( p1 - p0 ) * t + p0;
+        Linear(p0, p1, t) {
+            return (p1 - p0) * t + p0;
         },
-        Bernstein( n , i ) {
+        Bernstein(n , i) {
             let fc = Q.TWEEN.Interpolation.Utils.Factorial;
-            return fc( n ) / fc( i ) / fc( n - i );
+            return fc(n) / fc(i) / fc(n - i);
         },
         Factorial: (function () {
             let a = [ 1 ];
-            return function ( n ) {
+            return function (n) {
                 let s = 1, i;
-                if ( a[ n ] ) return a[ n ];
-                for ( i = n; i > 1; i-- ) s *= i;
+                if (a[ n ]) return a[ n ];
+                for (i = n; i > 1; i--) s *= i;
                 return a[ n ] = s;
             };
         })(),
-        CatmullRom( p0, p1, p2, p3, t ) {
-            let v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
-            return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
+        CatmullRom(p0, p1, p2, p3, t) {
+            let v0 = (p2 - p0) * 0.5, v1 = (p3 - p1) * 0.5, t2 = t * t, t3 = t * t2;
+            return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (- 3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1;
         }
     }
 };
+
 }).call(this, Game);

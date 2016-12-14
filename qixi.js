@@ -12,6 +12,7 @@ Q.renderer = null;
 Q.state = null;
 Q.paused = false;
 Q._FPS = 60;
+Q.PI_2 = 2 * Math.PI;
 
 Q.dragAndDrop = false;
 Q.draggableSprites = [];
@@ -29,13 +30,13 @@ Q.create = function(width, height, setup, assetsToLoad, callback) {
     
     //stage will be the parent of all objects
     Q.stage = new Q.Container();
-    Q.stage.width = Q.canvas.width;
-    Q.stage.height = Q.canvas.height;
-    Q.stage.parent = {
-        worldTransform: new Q.Matrix(),
-        worldAlpha: 1, 
-        children: []
-    };
+    // Q.stage.parent = {
+    //     worldTransform: new Q.Matrix(),
+    //     worldAlpha: 1, 
+    //     children: []
+    // };
+
+    Q.add = new Q.Factory(Q.stage);
 
     //initialize mouse pointer
     Q.pointer = new Pointer(Q.renderer.canvas);
@@ -96,7 +97,7 @@ function update(dt = 1) {
 
     //update tweens
     if(Q.TWEEN)
-        Q.TWEEN.update(dt);
+        Q.TWEEN.update();
 
     //update drag and drop objects
     if (Q.dragAndDrop) {
@@ -109,16 +110,18 @@ function update(dt = 1) {
     }
 }
 
-let then = null,
+let then = window.performance.now(),
     dt = 0,
-    step = 1/Q._FPS,
-    fRate = 1 / 1000;
+    step = 1/Q._FPS,    // 0.0167 seconds = 16.67 ms
+    ms2sec = 1 / 1000;   // 0.001 seconds = 1 ms
 
-//game loop
+//game loop, now is ms
 function gameLoop(now) {
     requestAnimationFrame(gameLoop);
 
-    dt += Math.min(1, (now - (then || now)) * fRate);
+    // duration capped at 1.0 seconds
+    // dt += Math.min(1, (now - (then || now)) * ms2sec);
+    dt += Math.min(1, (now - then) * ms2sec);
 
     then = now;
 
@@ -127,8 +130,9 @@ function gameLoop(now) {
         // Run the code for each frame.
         update(step);
     }
+
     // render all sprites on the stage.
-    Q.renderer.render(Q.stage);
+    Q.renderer.render(Q.stage, dt);    
 }
 
 Q.resume = function() {
@@ -146,8 +150,8 @@ Object.defineProperties(Q, {
         },
         set: function(value) {
             dt = 0;
-            then = null;
-            step = 1 / this._FPS;
+            then = window.performance.now();
+            step = 1 / value;
             this._FPS = value;
        },
         enumerable: true, configurable: true
@@ -183,12 +187,12 @@ Q.Renderer = class {
         this.canvas.setAttribute('width', width);
         this.canvas.setAttribute('height', height);
     }
-    render(container) {
+    render(container, dt) {
         let ctx = this.canvas.ctx;
 
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 0;
+        ctx.globalCompositeOperation = 'source-over';
 
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -369,8 +373,6 @@ Q.Container = class {
             y: this.gy,
             width: this.gx + this.width,
             height: this.gy + this.height
-            // width: this.width,
-            // height: this.height
         };
     }
     get layer() {
@@ -503,24 +505,31 @@ Q.Container = class {
         this.children[index2] = child;
     }
     updateTransform() {
-        // if(this.parent) {
+        let pt = this.parent.worldTransform,
+            wt = this.worldTransform,
+            a, b, c, d, tx, ty;
+
+        // if rotation is between 0 then we can simplify the multiplication
+        // process..
+        if(this.rotation % Q.PI_2) {
+            // check to see if the rotation is the same as the previous 
+            // render. This means we only need to use sin and cos when 
+            // rotation actually changes
             if(this.rotation !== this._rotationCache) {
                 this._rotationCache = this.rotation;
                 this._sr = Math.sin(this.rotation);
                 this._cr = Math.cos(this.rotation);
             }
 
-            let pt = this.parent.worldTransform,
-                wt = this.worldTransform,
+            // get the matrix values of the displayobject
+            a = this._cr * this.scale.x,
+            b = this._sr * this.scale.x,
+            c = -this._sr * this.scale.y,
+            d = this._cr * this.scale.y,
+            tx = this.position.x,
+            ty = this.position.y;
 
-                // get the matrix values of the displayobject
-                a = this._cr * this.scale.x,
-                b = this._sr * this.scale.x,
-                c = -this._sr * this.scale.y,
-                d = this._cr * this.scale.y,
-                tx = this.position.x,
-                ty = this.position.y;
-
+            // check for pivot.. not often used!
             if(this.pivot.x || this.pivot.y) {
                 tx -= this.pivot.x * a + this.pivot.y * c;
                 ty -= this.pivot.x * b + this.pivot.y * d;
@@ -533,12 +542,27 @@ Q.Container = class {
             wt.d = c * pt.b + d * pt.d;
             wt.tx = tx * pt.a + ty * pt.c + pt.tx;
             wt.ty = tx * pt.b + ty * pt.d + pt.ty;
+        }
+        else {
+            // lets do the fast version as we know there is no rotation..
+            a  = this.scale.x;
+            d  = this.scale.y;
 
-            this.worldAlpha = this.alpha * this.parent.worldAlpha;
-            this.globalPosition.set(wt.tx, wt.ty);
+            tx = this.position.x - this.pivot.x * a;
+            ty = this.position.y - this.pivot.y * d;
 
-            this._currentBounds = null;
-        // }
+            wt.a  = a  * pt.a;
+            wt.b  = a  * pt.b;
+            wt.c  = d  * pt.c;
+            wt.d  = d  * pt.d;
+            wt.tx = tx * pt.a + ty * pt.c + pt.tx;
+            wt.ty = tx * pt.b + ty * pt.d + pt.ty;
+        }
+
+        this.worldAlpha = this.alpha * this.parent.worldAlpha;
+        this.globalPosition.set(wt.tx, wt.ty);
+
+        this._currentBounds = null;
     }
     getBounds() {
         if(!this._currentBounds) {
@@ -646,16 +670,6 @@ Q.Container = class {
     }
 };
 
-Q.container = function(...sprites) {
-    let sprite = new Q.Container(...sprites);
-
-    //Add the sprite to the stage
-    Q.stage.addChild(sprite);
-
-    //Return the sprite to the main program
-    return sprite;
-};
-
 Q.frame = function(source, x, y, width, height) {
     let o = {};
     o.image = Q.Assets.cache[source].source;
@@ -704,7 +718,7 @@ Q.Sprite = class extends Q.Container {
 
         this.position.set(x, y);
         this.anchor = new Q.Point();
-
+        
         this.frames = [];
         this._currentFrame = 0;
         this._texture = null;
@@ -716,7 +730,6 @@ Q.Sprite = class extends Q.Container {
     }
     set width(value) {
         let sign = Q.utils.sign(this.scale.x) || 1;
-        // let sign = value ? (value < 0 ? -1 : 1) : 0;
         this.scale.x = sign * value / this._texture.frame.w;
         this._width = value;
     }
@@ -725,7 +738,6 @@ Q.Sprite = class extends Q.Container {
     }
     set height(value) {
         let sign = Q.utils.sign(this.scale.y) || 1;
-        // let sign = value ? (value < 0 ? -1 : 1) : 0;
         this.scale.y = sign * value / this._texture.frame.h;
         this._height = value;
     }
@@ -852,8 +864,6 @@ Q.Sprite = class extends Q.Container {
     }
     getBounds(matrix) {
         if(!this._currentBounds) {
-            // let width = this.width,
-            //     height = this.height,
             let width = this._texture.frame.w,
                 height = this._texture.frame.h,
 
@@ -941,11 +951,6 @@ Q.Sprite = class extends Q.Container {
         this._bounds.width = this._texture.frame.w;
         this._bounds.height = this._texture.frame.h;
 
-        // this._bounds.x = -this.width * this.anchor.x;
-        // this._bounds.y = -this.height * this.anchor.y;
-        // this._bounds.width = this.width;
-        // this._bounds.height = this.height;
-
         return this._bounds;
     }
     //Add a `gotoAndStop` method to go to a specific frame.
@@ -988,28 +993,6 @@ Q.Sprite = class extends Q.Container {
             this._texture.frame.h
         );
     }
-};
-
-Q.sprite = function(source, x, y) {
-    //Create the sprite
-    let sprite = new Q.Sprite(source, x, y);
-
-    //Add the sprite to the stage
-    Q.stage.addChild(sprite);
-
-    //Return the sprite to the main program
-    return sprite;
-};
-
-Q.button = function(source, x, y) {
-    let sprite = new Q.Sprite(source, x, y);
-
-    sprite.interactive = true;
-    sprite.type = 'button';
-    
-    Q.stage.addChild(sprite);
-
-    return sprite;
 };
 
 let Animation = {
@@ -1109,53 +1092,6 @@ let Animation = {
             this.numberOfFrames = 0;
             clearInterval(this.timerInterval);
         }
-    }
-};
-
-Q.MovieClip = class extends Q.Sprite {
-    constructor(textures, x, y) {
-        super(textures[0], x, y);
-        
-        this.textures = textures;
-        this.animationSpeed = 1;
-        this.playing = false;
-        this.loop = true;
-        this.onComplete = null;
-    }
-    stop() {
-        this.playing = false;
-        return this;
-    }
-    play() {
-        this.playing = true;
-        return this;
-    }
-    gotoAndPlay(frameNumber) {
-        this.play();
-        this.currentFrame = frameNumber;
-        return this;
-    }
-    gotoAndStop(frameNumber) {
-        this.stop();
-        this.currentFrame = frameNumber;
-        let round = (this.currentFrame + 0.5) | 0;
-        this.texture = this.textures[round % this.textures.length];
-        return this;
-    }
-    update(dt) {
-        if(this.playing) {
-            this.currentFrame += this.animationSpeed; // * dt;
-            let round = (this.currentFrame + 0.5) | 0;
-            this.currentFrame = this.currentFrame % this.textures.length;
-            if(this.loop || round < this.textures.length) {
-                this.texture = this.textures[round % this.textures.length];
-            }
-            else if(round >= this.textures.length) {
-                this.gotoAndStop(this.textures.length - 1);
-                if (this.onComplete) this.onComplete();
-            }
-        }
-        return this;
     }
 };
 
@@ -1383,13 +1319,6 @@ Q.Text = class extends Q.Sprite {
         this.texture = this.canvas;
         this.dirty = false;
     }
-    // updateTransform() {
-    //     if(this.dirty) {
-    //         this.updateText();
-    //     }
-
-    //     super.updateTransform();
-    // }
     determineFontProperties(fontStyle) {
         let properties = Q.Text.fontPropertiesCache[fontStyle];
 
@@ -1541,17 +1470,6 @@ Q.Text = class extends Q.Sprite {
 Q.Text.fontPropertiesCache = {};
 Q.Text.fontPropertiesCanvas = document.createElement('canvas');
 Q.Text.fontPropertiesContext = Q.Text.fontPropertiesCanvas.getContext('2d');
-
-Q.text = function(source, style, x, y) {
-    //Create the sprite
-    let sprite = new Q.Text(source, style, x, y);
-
-    //Add the sprite to the stage
-    Q.stage.addChild(sprite);
-
-    //Return the sprite to the main program
-    return sprite;
-};
 
 Q.Graphics = class extends Q.Container {
     constructor() {
@@ -1938,12 +1856,403 @@ Q.Graphics.RECT = 1;
 Q.Graphics.CIRC = 2;
 Q.Graphics.ELIP = 3;
 
-Q.graphics = function() {
-    let sprite = new Q.Graphics();
-    
-    Q.stage.addChild(sprite);
+Q.Factory = class {
+    constructor(parent) {
+        this.parent = parent;
+    }
+    sprite(source, x, y) {
+        //Create the sprite
+        let sprite = new Q.Sprite(source, x, y);
 
-    return sprite;
+        //Add the sprite to the parent
+        this.parent.addChild(sprite);
+
+        //Return the sprite to the main program
+        return sprite;
+    }
+    tilingSprite(source, width, height, x, y) {
+        let sprite = new Q.TilingSprite(source, width, height, x, y);
+
+        this.parent.addChild(sprite);
+
+        return sprite;
+    }
+    container(...sprites) {
+        let sprite = new Q.Container(...sprites);
+
+        this.parent.addChild(sprite);
+
+        return sprite;
+    }
+    button(source, x, y) {
+        let sprite = new Q.Sprite(source, x, y);
+
+        sprite.interactive = true;
+        sprite.type = 'button';
+        
+        this.parent.addChild(sprite);
+
+        return sprite;
+    }
+    movieClip(source, x, y) {
+        let sprite = new Q.MovieClip(source, x, y);
+
+        this.parent.addChild(sprite);
+
+        return sprite;
+    }
+    text(source, style, x, y) {
+        let sprite = new Q.Text(source, style, x, y);
+
+        this.parent.addChild(sprite);
+
+        return sprite;
+    }
+    graphics() {
+        let sprite = new Q.Graphics();
+        
+        this.parent.addChild(sprite);
+
+        return sprite;
+    }
+    rectangle(
+        width = 32, height = 32,  
+        fillStyle = 0xFF3300, 
+        strokeStyle = 0x0033CC, 
+        lineWidth = 0,
+        x = 0, y = 0 
+    ) {
+        let o = new Q.Graphics();
+        o._sprite = undefined;
+        o._width = width;
+        o._height = height;
+        o._fillStyle = Q.utils.color(fillStyle);
+        o._strokeStyle = Q.utils.color(strokeStyle);
+        o._lineWidth = lineWidth;
+
+        //Draw the rectangle
+        let draw = (width, height, fillStyle, strokeStyle, lineWidth) => {
+            o.clear();
+            o.beginFill(fillStyle);
+            if (lineWidth > 0) {
+                o.lineStyle(lineWidth, strokeStyle, 1);
+            }
+            o.drawRect(0, 0, width, height);
+            o.endFill();
+        };
+
+        //Draw the line and capture the sprite that the `draw` function
+        //returns
+        draw(o._width, o._height, o._fillStyle, o._strokeStyle, o._lineWidth);
+
+        //Generate a texture from the rectangle
+        let texture = o.generateTexture();
+
+        //Use the texture to create a sprite
+        let sprite = new Q.Sprite(texture);
+
+        //Position the sprite
+        sprite.x = x;
+        sprite.y = y;
+
+        //Add getters and setters to the sprite
+        Object.defineProperties(sprite, {
+            "fillStyle": {
+                get() {
+                    return o._fillStyle;
+                },
+                set(value) {
+                    o._fillStyle = Q.utils.color(value);
+
+                    //Draw the new rectangle 
+                    draw(o._width, o._height, o._fillStyle, o._strokeStyle, o._lineWidth, o._x, o._y);
+
+                    //Generate a new texture and set it as the sprite's texture
+                    let texture = o.generateTexture();
+                    o._sprite.texture = texture;
+                }, 
+                enumerable: true, configurable: true
+            },
+            "strokeStyle": {
+                get() {
+                    return o._strokeStyle;
+                },
+                set(value) {
+                    o._strokeStyle = Q.utils.color(value);
+
+                    //Draw the new rectangle 
+                    draw(o._width, o._height, o._fillStyle, o._strokeStyle, o._lineWidth, o._x, o._y);
+
+                    //Generate a new texture and set it as the sprite's texture
+                    let texture = o.generateTexture();
+                    o._sprite.texture = texture;
+                }, 
+                enumerable: true, configurable: true
+            },
+            "lineWidth": {
+                get() {
+                    return o._lineWidth;
+                },
+                set(value) {
+                    o._lineWidth = value;
+
+                    //Draw the new rectangle 
+                    draw(o._width, o._height, o._fillStyle, o._strokeStyle, o._lineWidth, o._x, o._y);
+
+                    //Generate a new texture and set it as the sprite's texture
+                    let texture = o.generateTexture();
+                    o._sprite.texture = texture;
+                }, 
+                enumerable: true, configurable: true
+            }
+        });
+
+        //Get a local reference to the sprite so that we can 
+        //change the rectangle properties later using the getters/setters
+        o._sprite = sprite;
+
+        this.parent.addChild(sprite);
+
+        //Return the sprite
+        return sprite;
+    }
+    circle(
+        diameter = 32, 
+        fillStyle = 0xFF3300, 
+        strokeStyle = 0x0033CC, 
+        lineWidth = 0,
+        x = 0, y = 0 
+    ) {
+        let o = new Q.Graphics();
+        o._sprite = undefined;
+        o._diameter = diameter;
+        o._fillStyle = Q.utils.color(fillStyle);
+        o._strokeStyle = Q.utils.color(strokeStyle);
+        o._lineWidth = lineWidth;
+
+        //Draw the rectangle
+        let draw = (diameter, fillStyle, strokeStyle, lineWidth) => {
+            o.clear();
+            o.beginFill(fillStyle);
+            if (lineWidth > 0) {
+                o.lineStyle(lineWidth, strokeStyle, 1);
+            }
+            o.drawCircle(0, 0, diameter / 2);
+            o.endFill();
+        };
+
+        //Draw the line and capture the sprite that the `draw` function
+        //returns
+        draw(o._diameter, o._fillStyle, o._strokeStyle, o._lineWidth);
+
+        //Generate a texture from the rectangle
+        let texture = o.generateTexture();
+
+        //Use the texture to create a sprite
+        let sprite = new Q.Sprite(texture);
+
+        //Position the sprite
+        sprite.x = x;
+        sprite.y = y;
+
+        //Add getters and setters to the sprite
+        Object.defineProperties(sprite, {
+            "fillStyle": {
+                get() {
+                    return o._fillStyle;
+                },
+                set(value) {
+                    o._fillStyle = Q.utils.color(value);
+
+                    //Draw the new rectangle 
+                    draw(o._diameter, o._fillStyle, o._strokeStyle, o._lineWidth);
+
+                    //Generate a new texture and set it as the sprite's texture
+                    let texture = o.generateTexture();
+                    o._sprite.texture = texture;
+                }, 
+                enumerable: true, configurable: true
+            },
+            "strokeStyle": {
+                get() {
+                    return o._strokeStyle;
+                },
+                set(value) {
+                    o._strokeStyle = Q.utils.color(value);
+
+                    //Draw the new rectangle 
+                    draw(o._diameter, o._fillStyle, o._strokeStyle, o._lineWidth);
+
+                    //Generate a new texture and set it as the sprite's texture
+                    let texture = o.generateTexture();
+                    o._sprite.texture = texture;
+                }, 
+                enumerable: true, configurable: true
+            },
+            "diameter": {
+                get() {
+                    return o._diameter;
+                },
+                set(value) {
+                    o._lineWidth = 10;
+
+                    //Draw the cirlce
+                    draw(o._diameter, o._fillStyle, o._strokeStyle, o._lineWidth);
+
+                    //Generate a new texture and set it as the sprite's texture
+                    let texture = o.generateTexture();
+                    o._sprite.texture = texture;
+                }, 
+                enumerable: true, configurable: true
+            },
+            "radius": {
+                get() {
+                    return o._diameter / 2;
+                },
+                set(value) {
+                    //Draw the cirlce
+                    draw(value * 2, o._fillStyle, o._strokeStyle, o._lineWidth);
+
+                    //Generate a new texture and set it as the sprite's texture
+                    let texture = o.generateTexture();
+                    o._sprite.texture = texture;
+                }, 
+                enumerable: true, configurable: true
+            },
+        });
+
+        //Get a local reference to the sprite so that we can 
+        //change the rectangle properties later using the getters/setters
+        o._sprite = sprite;
+
+        sprite.circular = true;
+
+        this.parent.addChild(sprite);
+
+        //Return the sprite
+        return sprite;
+    }
+    line(
+        strokeStyle = 0x000000, 
+        lineWidth = 1, 
+        ax = 0, ay = 0, 
+        bx = 32, by = 32
+    ) {
+        //Create the line object
+        let o = new Q.Graphics();
+
+        //Private properties
+        o._strokeStyle = Q.utils.color(strokeStyle);
+        o._width = lineWidth;
+        o._ax = ax;
+        o._ay = ay;
+        o._bx = bx;
+        o._by = by;
+
+        //A helper function that draws the line
+        let draw = (strokeStyle, lineWidth, ax, ay, bx, by) => {
+            o.clear();
+            o.lineStyle(lineWidth, strokeStyle, 1);
+            o.moveTo(ax, ay);
+            o.lineTo(bx, by);
+        };
+
+        //Draw the line
+        draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
+
+        //Define getters and setters that redefine the line's start and 
+        //end points and re-draws it if they change
+        Object.defineProperties(o, {
+            "ax": {
+                get() {
+                    return o._ax;
+                },
+                set(value) {
+                    o._ax = value;
+                    draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
+                }, 
+                enumerable: true, configurable: true
+            },
+            "ay": {
+                get() {
+                    return o._ay;
+                },
+                set(value) {
+                    o._ay = value;
+                    draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
+                }, 
+                enumerable: true, configurable: true
+            },
+            "bx": {
+                get() {
+                    return o._bx;
+                },
+                set(value) {
+                    o._bx = value;
+                    draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
+                }, 
+                enumerable: true, configurable: true
+            },
+            "by": {
+                get() {
+                    return o._by;
+                },
+                set(value) {
+                    o._by = value;
+                    draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
+                }, 
+                enumerable: true, configurable: true
+            },
+            "strokeStyle": {
+                get() {
+                    return o._strokeStyle;
+                },
+                set(value) {
+                    o._strokeStyle = self.color(value);
+
+                    //Draw the line
+                    draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
+                }, 
+                enumerable: true, configurable: true
+            },
+            "width": {
+                get() {
+                    return o._width;
+                },
+                set(value) {
+                    o._width = value;
+
+                    //Draw the line
+                    draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
+                }, 
+                enumerable: true, configurable: true
+            }
+        });
+
+        this.parent.addChild(o);
+
+        //Return the line
+        return o;
+    }
+    tween(object) {
+        let sprite = new Q.TWEEN.Tween(object);
+
+        return sprite;
+    }
+    keyboard(keyCode) {
+        let obj = new Q.Keyboard(keyCode);
+        
+        return obj;
+    }
+    image(imageFileName) {
+        return Q.Assets.cache[imageFileName];
+    }
+    sound(soundFileName) {
+        return Q.Assets.cache[soundFileName];
+    }
+    json(jsonFileName) {
+        return Q.Assets.cache[jsonFileName];
+    }
 };
 
 class Pointer {
@@ -2383,18 +2692,6 @@ Q.Keyboard = class {
     }
 };
 
-Q.image = function(imageFileName) {
-    return Q.Assets.cache[imageFileName];
-};
-
-Q.json = function(jsonFileName) {
-    return Q.Assets.cache[jsonFileName];
-};
-
-Q.sound = function(soundFileName) {
-    return Q.Assets.cache[soundFileName];
-};
-
 Q.Assets = {
     //Properties to help track the assets being loaded
     toLoad: 0,
@@ -2816,7 +3113,7 @@ Q.Point = class {
     constructor(x = 0, y = 0) {
         this.set(x, y);
     }
-    set(x, y) {
+    set(x, y = x) {
         this.x = x;
         this.y = y;
     }
@@ -3029,6 +3326,9 @@ function boot() {
 
 boot();
 
-// root.PIXI = Q;
 root.Game = Q;
+root.QIXI = Q;
+
+return Q;
+
 }).call(this);

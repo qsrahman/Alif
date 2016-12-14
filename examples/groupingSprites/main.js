@@ -12,7 +12,7 @@ function setup() {
     tiger = new Game.Sprite('tiger.png');
     tiger.position.set(64, 64);
 
-    animals = Game.container(cat, hedgehog, tiger);
+    animals = Game.add.container(cat, hedgehog, tiger);
 
     //Change the group's width and height
     // animals.width = 200;

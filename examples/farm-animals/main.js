@@ -9,33 +9,34 @@ function setup() {
         [[0, 0], [131, 0], [262, 0]],
         131, 200
     );
-    chicken = Game.sprite(chickenFrames);
+    chicken = Game.add.sprite(chickenFrames);
 
     let horseFrames = Game.frames(
         'assets/horse_spritesheet.png',
         [[0, 0], [212, 0], [424, 0]],
         212, 200
     );
-    horse = Game.sprite(horseFrames);
+    horse = Game.add.sprite(horseFrames);
 
     let sheepFrames = Game.frames(
         'assets/sheep_spritesheet.png',
         [[0, 0], [244, 0], [488, 0]],
         244, 200
     );
-    sheep = Game.sprite(sheepFrames);
+    sheep = Game.add.sprite(sheepFrames);
 
     let pigFrames = Game.frames(
         'assets/pig_spritesheet.png',
         [[0, 0], [297, 0], [394, 0]],
         297, 200
     );
-    pig = Game.sprite(pigFrames);
+    pig = Game.add.sprite(pigFrames);
 
-    rightArrow = Game.sprite('assets/arrow.png');    
-    leftArrow = Game.sprite('assets/arrow.png');
+    rightArrow = Game.add.sprite('assets/arrow.png');    
+    leftArrow = Game.add.sprite('assets/arrow.png');
     leftArrow.scale.x = -1;
     leftArrow.x = 300;
+
     Game.state = play;
 }
 
