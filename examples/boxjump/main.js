@@ -201,7 +201,7 @@ function play(dt) {
 
     for(let i = 0; i < cubes.length; i++) {
        if(Game.hitTestRectangle(player, cubes[i])) {
-            Game.particleEffect(
+            Game.add.particleEffect(
                 player.x, player.y,
                 () => Game.add.sprite('pixel.png'),
                 8

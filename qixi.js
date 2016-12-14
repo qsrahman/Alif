@@ -12,6 +12,7 @@ Q.renderer = null;
 Q.state = null;
 Q.paused = false;
 Q._FPS = 60;
+Q.PI_2 = 2 * Math.PI;
 
 Q.dragAndDrop = false;
 Q.draggableSprites = [];
@@ -504,14 +505,21 @@ Q.Container = class {
         this.children[index2] = child;
     }
     updateTransform() {
-        if(this.rotation !== this._rotationCache) {
-            this._rotationCache = this.rotation;
-            this._sr = Math.sin(this.rotation);
-            this._cr = Math.cos(this.rotation);
-        }
-
         let pt = this.parent.worldTransform,
             wt = this.worldTransform,
+            a, b, c, d, tx, ty;
+
+        // if rotation is between 0 then we can simplify the multiplication
+        // process..
+        if(this.rotation % Q.PI_2) {
+            // check to see if the rotation is the same as the previous 
+            // render. This means we only need to use sin and cos when 
+            // rotation actually changes
+            if(this.rotation !== this._rotationCache) {
+                this._rotationCache = this.rotation;
+                this._sr = Math.sin(this.rotation);
+                this._cr = Math.cos(this.rotation);
+            }
 
             // get the matrix values of the displayobject
             a = this._cr * this.scale.x,
@@ -521,18 +529,35 @@ Q.Container = class {
             tx = this.position.x,
             ty = this.position.y;
 
-        if(this.pivot.x || this.pivot.y) {
-            tx -= this.pivot.x * a + this.pivot.y * c;
-            ty -= this.pivot.x * b + this.pivot.y * d;
-        }
+            // check for pivot.. not often used!
+            if(this.pivot.x || this.pivot.y) {
+                tx -= this.pivot.x * a + this.pivot.y * c;
+                ty -= this.pivot.x * b + this.pivot.y * d;
+            }
 
-        // concat the parent matrix with the objects transform.
-        wt.a = a * pt.a + b * pt.c;
-        wt.b = a * pt.b + b * pt.d;
-        wt.c = c * pt.a + d * pt.c;
-        wt.d = c * pt.b + d * pt.d;
-        wt.tx = tx * pt.a + ty * pt.c + pt.tx;
-        wt.ty = tx * pt.b + ty * pt.d + pt.ty;
+            // concat the parent matrix with the objects transform.
+            wt.a = a * pt.a + b * pt.c;
+            wt.b = a * pt.b + b * pt.d;
+            wt.c = c * pt.a + d * pt.c;
+            wt.d = c * pt.b + d * pt.d;
+            wt.tx = tx * pt.a + ty * pt.c + pt.tx;
+            wt.ty = tx * pt.b + ty * pt.d + pt.ty;
+        }
+        else {
+            // lets do the fast version as we know there is no rotation..
+            a  = this.scale.x;
+            d  = this.scale.y;
+
+            tx = this.position.x - this.pivot.x * a;
+            ty = this.position.y - this.pivot.y * d;
+
+            wt.a  = a  * pt.a;
+            wt.b  = a  * pt.b;
+            wt.c  = d  * pt.c;
+            wt.d  = d  * pt.d;
+            wt.tx = tx * pt.a + ty * pt.c + pt.tx;
+            wt.ty = tx * pt.b + ty * pt.d + pt.ty;
+        }
 
         this.worldAlpha = this.alpha * this.parent.worldAlpha;
         this.globalPosition.set(wt.tx, wt.ty);
@@ -693,7 +718,7 @@ Q.Sprite = class extends Q.Container {
 
         this.position.set(x, y);
         this.anchor = new Q.Point();
-
+        
         this.frames = [];
         this._currentFrame = 0;
         this._texture = null;
