@@ -4,21 +4,21 @@ let dungeon, player, treasure, enemies, chimes, exit,
     healthBar, message, gameScene, gameOverScene, bounds;
 
 function setup() {
-    chimes = Game.sound('assets/chimes.wav');
+    chimes = Game.add.sound('assets/chimes.wav');
 
-    dungeon = Game.sprite('dungeon.png');
-    exit = Game.sprite('door.png', 32);
+    dungeon = Game.add.sprite('dungeon.png');
+    exit = Game.add.sprite('door.png', 32);
     
-    player = Game.sprite('explorer.png');
+    player = Game.add.sprite('explorer.png');
     player.x = 68;
     player.y = Game.canvas.height / 2 - player.halfHeight;
 
-    treasure = Game.sprite('treasure.png');
+    treasure = Game.add.sprite('treasure.png');
     treasure.x = Game.canvas.width - treasure.width - 32;
     treasure.y = Game.canvas.height / 2 - treasure.halfHeight;
     treasure.pickedUp = false;
 
-    gameScene = Game.container(dungeon, exit, player, treasure);
+    gameScene = Game.add.container(dungeon, exit, player, treasure);
 
     let numberOfEnemies = 6,
         spacing = 48,
@@ -29,7 +29,7 @@ function setup() {
     enemies = [];
 
     for(let i = 0; i < numberOfEnemies; i++) {
-        let enemy = Game.sprite('blob.png');
+        let enemy = Game.add.sprite('blob.png');
         enemy.x = spacing * i + xOffset;
         enemy.y = Game.utils.randomInt(0, Game.canvas.height - enemy.height);
         enemy.vy = speed * direction;
@@ -51,7 +51,7 @@ function setup() {
     innerBar.drawRect(0, 0, 128, 8);
     innerBar.endFill();
 
-    healthBar = Game.container(outerBar, innerBar);
+    healthBar = Game.add.container(outerBar, innerBar);
     healthBar.x = Game.canvas.width - 148;
     healthBar.y = 16;
 
@@ -66,7 +66,7 @@ function setup() {
     message.x = 100;
     message.y = Game.canvas.height / 2 - 64;
 
-    gameOverScene = Game.container(message);
+    gameOverScene = Game.add.container(message);
     gameOverScene.visible = false;
 
     Game.fourKeyController(player, 5, 38, 39, 40, 37);

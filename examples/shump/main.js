@@ -55,7 +55,7 @@ function setup() {
             //A function that returns the sprite that should
             //be used to make each bullet
             () => {
-                return Game.sprite('laserRed16.png');
+                return Game.add.sprite('laserRed16.png');
             }
         );
         //shootSound.play();

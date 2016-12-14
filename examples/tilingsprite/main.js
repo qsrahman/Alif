@@ -3,8 +3,7 @@
 let box;
 
 function setup() {
-    box = new Game.TilingSprite('tile.png', 128, 128);
-    Game.stage.addChild(box);
+    box = Game.add.tilingSprite('tile.png', 128, 128);
 
     Game.state = play;
 }

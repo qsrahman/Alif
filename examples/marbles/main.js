@@ -5,7 +5,7 @@ let sling, marbles, capturedMarble, hitSound;
 function setup() {
     let frames = Game.filmstrip('marbles.png', 32, 32);
 
-    marbles = Game.grid(
+    marbles = Game.add.grid(
         //Set the grid's properties
         5, 5, 128, 128, 
         true, 0, 0,
@@ -31,13 +31,13 @@ function setup() {
 
     //Create the "sling" which is a line that will connect
     //the pointer to the marbles
-    sling = Game.line("Yellow", 4);
+    sling = Game.add.line("Yellow", 4);
     sling.visible = false;
 
     //A variable to store the captured marble
     capturedMarble = null;
 
-    hitSound = Game.sound('ballhit.mp3');
+    hitSound = Game.add.sound('ballhit.mp3');
 
     //Change the state to `play`
     Game.state = play;

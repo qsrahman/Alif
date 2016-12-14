@@ -3,34 +3,34 @@
 let cat, square, star, message, ball, line, localMessage, globalMessage, collisionMessage;
 
 function setup() {
-    square = Game.rectangle(256, 256, 0x87cefa, 0x000000, 1);
+    square = Game.add.rectangle(256, 256, 0x87cefa, 0x000000, 1);
     square.anchor.set(0.5, 0.5);
     square.x = Game.canvas.width/2;
     square.y = Game.canvas.height/2;
 
-    cat = Game.sprite("cat.png");
+    cat = Game.add.sprite("cat.png");
     cat.x = -cat.halfWidth;
     cat.y = cat.height;
 
     Game.fourKeyController(cat, 5);
 
-    star = Game.sprite("star.png");
+    star = Game.add.sprite("star.png");
     star.anchor.set(0.5, 0.5);
     cat.addChild(star);
     square.addChild(cat);
 
-    localMessage = Game.text("Test", {font:"14px Futura", fill:"black"});
+    localMessage = Game.add.text("Test", {font:"14px Futura", fill:"black"});
     square.addChild(localMessage);
     localMessage.x = -square.halfWidth + 6;
     localMessage.y = -square.halfHeight + 2;
 
     star.angle = 0;
 
-    globalMessage = Game.text("This is some text to start", {font:"14px Futura", fill:"black"});
+    globalMessage = Game.add.text("This is some text to start", {font:"14px Futura", fill:"black"});
     globalMessage.x = 6;
     globalMessage.y = Game.canvas.height - globalMessage.height - 4;
 
-    collisionMessage = Game.text("Use the arrow keys to move...", {font:"16px Futura", fill:"black"}, 4);
+    collisionMessage = Game.add.text("Use the arrow keys to move...", {font:"16px Futura", fill:"black"}, 4);
 
     Game.state = play;
 }

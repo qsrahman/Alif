@@ -3,7 +3,8 @@
 let sky;
 
 function setup() {
-    sky = Game.tilingSprite("sky.png", Game.canvas.width, Game.canvas.height);
+    sky = Game.add.tilingSprite("sky.png", Game.canvas.width, Game.canvas.height);
+
     Game.state = play;
 }
 

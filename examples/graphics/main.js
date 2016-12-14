@@ -3,7 +3,7 @@
 let graphics, thing, count;
 
 function setup() {
-    graphics = Game.graphics();
+    graphics = Game.add.graphics();
  
     // set a fill and line style
     graphics.beginFill(0xFF3300);
@@ -46,7 +46,7 @@ function setup() {
     graphics.lineTo(600, 300);
             
     // let's create moving shape
-    thing = Game.graphics();
+    thing = Game.add.graphics();
     thing.position.x = 620/2;
     thing.position.y = 380/2;
     

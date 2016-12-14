@@ -12,14 +12,13 @@ var alienFrames =
 var count = 0;
 
 function setup() {
-    alienContainer = new Game.Container();
+    alienContainer = Game.add.container();
     alienContainer.position.set(400, 300);
-    Game.stage.addChild(alienContainer);
 
     for(var i = 0; i < 100; i++) {
         var frameName = alienFrames[i % 4];
 
-        var alien = Game.Sprite.fromFrame(frameName);
+        var alien = new Game.Sprite(frameName);
         alien.tint = Math.random() * 0xFFFFFF;
 
         /*

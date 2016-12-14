@@ -3,7 +3,7 @@
 var container;
 
 function setup() {
-    container = new Game.Container();
+    container = Game.add.container();
 
     for(var j = 0; j < 5; j++) {
         for(var i = 0; i < 5; i++) {
@@ -15,8 +15,6 @@ function setup() {
             container.addChild(bunny);
         }
     }
-
-    Game.stage.addChild(container);
 
     /*
      * All the bunnies are added to the container with the addChild method

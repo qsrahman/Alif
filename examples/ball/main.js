@@ -3,7 +3,7 @@
 let ball;
 
 function setup() {
-    ball = Game.circle(32, 0x888888, 0x0, 2, 96, 128);
+    ball = Game.add.circle(32, 0x888888, 0x0, 2, 96, 128);
 
     ball.vx = Game.utils.randomInt(3, 6);
     ball.vy = Game.utils.randomInt(2, 4);

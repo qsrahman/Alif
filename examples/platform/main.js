@@ -21,7 +21,7 @@ function play(dt) {
 }
 
 function makeWorld(level) {
-    let world = {}; //Game.container();
+    let world = {}; //Game.add.container();
 
     world.map = [];
     world.itemLocations = [];
@@ -56,7 +56,7 @@ function makeWorld(level) {
 
     function makeSprites() {
         world.map.forEach(cell => {
-            let sprite = Game.rectangle();
+            let sprite = Game.add.rectangle();
 
             sprite.x = cell.x * level.tileWidth;
             sprite.y = cell.y * level.tileHeight;
@@ -85,7 +85,7 @@ function makeWorld(level) {
 
     world.map.forEach(cell => {
         if(cell.item !== '') {
-            let sprite = g.rectangle();
+            let sprite = Game.add.rectangle();
 
             sprite.x = cell.x * level.tileWidth + level.tileWidth / 4;
             sprite.y = cell.y * level.tileHeight + level.tileWidth / 2;

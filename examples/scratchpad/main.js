@@ -16,7 +16,7 @@ let spline = (t, a, b, c, d) => {
 };
 
 function setup() {
-    cat = Game.sprite('cat.png'); 
+    cat = Game.add.sprite('cat.png'); 
     cat.position.set(32, 32);
 
     totalFrames = 120;

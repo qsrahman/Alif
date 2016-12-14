@@ -58,7 +58,7 @@ class Player extends Game.Sprite {
             this.vy = this.jumpForce;
             this.canJump = false;
             jumpSound.play();
-            new Game.TWEEN.Tween(player).to({rotation: this.rotation + Math.PI}, 600).start();
+            Game.add.tween(player).to({rotation: this.rotation + Math.PI}, 600).start();
         }
 
         this.x += this.vx * dt;
@@ -137,7 +137,7 @@ function drawLevel(maap) {
 
             cube.scale.y = 0;
             cube.anchor.set(0, 1);
-            new Game.TWEEN.Tween(cube.scale).to({y: height}, 300*height).start();
+            Game.add.tween(cube.scale).to({y: height}, 300*height).start();
         }
     }
 }
@@ -146,37 +146,37 @@ function setup() {
     w = Game.canvas.width;
     h = Game.canvas.height;
 
-    music = Game.sound('sounds/music.wav');
+    music = Game.add.sound('sounds/music.wav');
     music.loop = true;
     // music.volume = 0.3;
     // music.play();
 
-    hitSound = Game.sound('sounds/hit.wav');
-    jumpSound = Game.sound('sounds/jump.wav');
+    hitSound = Game.add.sound('sounds/hit.wav');
+    jumpSound = Game.add.sound('sounds/jump.wav');
 
-    line = Game.sprite('line.png', w/2, Math.floor(h*2/3));
+    line = Game.add.sprite('line.png', w/2, Math.floor(h*2/3));
     line.anchor.set(0.5, 0.5);
 
     player = new Player('player.png', 60, h*2/3-40);
 
     let textStyle = {font:'18px Arial', fill: 'white', align: 'center'};
 
-    labelDeath = Game.text('0', textStyle, 100, h-35);
+    labelDeath = Game.add.text('0', textStyle, 100, h-35);
     labelDeath.anchor.set(0.5, 0.5);
-    labelLevel = Game.text('1/', textStyle, w-100+0.5, h-35);
+    labelLevel = Game.add.text('1/', textStyle, w-100+0.5, h-35);
     labelLevel.anchor.set(0.5, 0.5);
-    labelTuto = Game.text('press space to jump.', textStyle, Math.floor(w/2)+0.5, h-35+0.5);
+    labelTuto = Game.add.text('press space to jump.', textStyle, Math.floor(w/2)+0.5, h-35+0.5);
     labelTuto.anchor.set(0.5, 0.5);
 
-    gameScene = Game.container(line, player, labelDeath, labelLevel, labelTuto);
+    gameScene = Game.add.container(line, player, labelDeath, labelLevel, labelTuto);
 
-    label1 = Game.text('you finished the game! :-D', { font: '30px Arial', fill: '#fff' }, w/2, h/2-20);
+    label1 = Game.add.text('you finished the game! :-D', { font: '30px Arial', fill: '#fff' }, w/2, h/2-20);
     label1.anchor.set(0.5, 0.5);
 
-    label2 = Game.text('and died '+hit+' times\ncan you do better?', { font: '20px Arial', fill: '#fff' }, w/2, h/2+20);
+    label2 = Game.add.text('and died '+hit+' times\ncan you do better?', { font: '20px Arial', fill: '#fff' }, w/2, h/2+20);
     label2.anchor.set(0.5, 0.5);
 
-    gameEndScene = Game.container(label1, label2);
+    gameEndScene = Game.add.container(label1, label2);
     gameEndScene.visible = false;
 
     drawLevel(map[level - 1]);
@@ -203,7 +203,7 @@ function play(dt) {
        if(Game.hitTestRectangle(player, cubes[i])) {
             Game.particleEffect(
                 player.x, player.y,
-                () => Game.sprite('pixel.png'),
+                () => Game.add.sprite('pixel.png'),
                 8
             );
             labelDeath.text = (++hit);

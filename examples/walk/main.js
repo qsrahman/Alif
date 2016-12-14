@@ -3,14 +3,14 @@
 let elf;
 
 function setup() {
-    let forest = Game.sprite('forest.png');
+    let forest = Game.add.sprite('forest.png');
 
     let elfFrames = Game.filmstrip(
         'walkcycle.png',
         64, 64
     );
 
-    elf = Game.sprite(elfFrames);
+    elf = Game.add.sprite(elfFrames);
     elf.position.set(32, 128);
 
     elf.states = {

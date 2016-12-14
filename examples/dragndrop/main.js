@@ -5,14 +5,14 @@ let cat, hedgehog, tiger;
 function setup() {
     Game.background = 'white';
     Game.renderer.canvas.style.border = "1px black dashed";
-    cat = Game.sprite('images/cat.png');
+    cat = Game.add.sprite('images/cat.png');
     cat.draggable = true;
 
-    tiger = Game.sprite('images/tiger.png');
+    tiger = Game.add.sprite('images/tiger.png');
     tiger.draggable = true;
     tiger.position.set(64, 64);
 
-    hedgehog = Game.sprite('images/hedgehog.png');
+    hedgehog = Game.add.sprite('images/hedgehog.png');
     hedgehog.draggable = true;
     hedgehog.position.set(128, 128);
 

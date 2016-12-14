@@ -9,17 +9,17 @@ function setup() {
     
     //Game.pointer.visible = false;
 
-    box = Game.rectangle(32, 32, "cyan", "white", 4, 52, 42);
+    box = Game.add.rectangle(32, 32, "cyan", "white", 4, 52, 42);
     box.anchor.set(0.5, 0.5);
     box.rotation = 0.5;
 
-    ball = Game.circle(42, "Plum", "PowderBlue", 8, 20, 110);
+    ball = Game.add.circle(42, "Plum", "PowderBlue", 8, 20, 110);
 
-    message = Game.text("Tap the circle!", {font:"14px puzzler", fill:"white"});
+    message = Game.add.text("Tap the circle!", {font:"14px puzzler", fill:"white"});
     message.x = 30;
     message.y = 0;
 
-    rocket = Game.sprite("assets/rocket.png");
+    rocket = Game.add.sprite("assets/rocket.png");
     //rocket.width = 50;
     //rocket.height = 50;
     rocket.anchor.set(0.5, 0.5);
@@ -27,24 +27,24 @@ function setup() {
     rocket.x = Game.canvas.width/2
     rocket.y = Game.canvas.height/2;
 
-    cat = Game.sprite("cat.png");
+    cat = Game.add.sprite("cat.png");
     cat.position.set(10, 190);
     cat.width = 42;
     cat.height = 42;
-    new Game.TWEEN.Tween(cat)
+    Game.add.tween(cat)
             .to({x: Game.canvas.width - 60}, 1000)
             .easing(Game.TWEEN.Easing.SmoothStep.Simple)
             .repeat()
             .yoyo(true)
             .start();
 
-    star = Game.sprite("assets/star.png");
+    star = Game.add.sprite("assets/star.png");
     star.circular = true;
 
     console.log("star.radius: " + star.radius);
     console.log("star.diameter: " + star.diameter);
 
-    pointerDisplay = Game.text("", {font:"8px PetMe64", fill:"white"});
+    pointerDisplay = Game.add.text("", {font:"8px PetMe64", fill:"white"});
     pointerDisplay.x = 10;
     pointerDisplay.y = 235;
 
@@ -56,10 +56,10 @@ function setup() {
         ball.fillStyle = colors[Game.utils.randomInt(0, 3)];
         ball.strokeStyle = colors[Game.utils.randomInt(0, 3)];
 
-        Game.sound("assets/bounce.wav").play();
+        Game.add.sound("assets/bounce.wav").play();
     };
 
-    line = Game.line("Yellow", 4, 162, 52, 220, 94);
+    line = Game.add.line("Yellow", 4, 162, 52, 220, 94);
     line.angleA = 0;
     line.angleB = 0;
 

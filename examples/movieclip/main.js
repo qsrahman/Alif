@@ -11,14 +11,14 @@ function setup() {
     }
 
     for(var i = 0; i < 50; i++) {
-        var explosion = new Game.MovieClip(explosionTextures);
+        var explosion = Game.add.movieClip(explosionTextures);
         explosion.position.set(Math.random() * 800, Math.random() * 600);
         explosion.anchor.set(0.5, 0.5);
         // explosion.pivot.set(0.5, 0.5);
         explosion.rotation = Math.random() * Math.PI;
         explosion.scale.x = explosion.scale.y = 0.75 + Math.random() * 0.5;
         explosion.gotoAndPlay(Math.random() * 27);
-        Game.stage.addChild(explosion);
+
         explosions.push(explosion);
     }
 
