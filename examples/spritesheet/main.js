@@ -1,31 +1,31 @@
 "use strict";
-
-var aliens = [];
-var alienContainer;
-var alienFrames = 
+let game;
+let aliens = [];
+let alienContainer;
+let alienFrames = 
     [
         "eggHead.png", 
         "flowerTop.png", 
         "helmlok.png", 
         "skully.png"
     ];
-var count = 0;
+let count = 0;
 
 function setup() {
-    alienContainer = Game.add.container();
+    alienContainer = game.add.container();
     alienContainer.position.set(400, 300);
 
-    for(var i = 0; i < 100; i++) {
-        var frameName = alienFrames[i % 4];
+    for(let i = 0; i < 100; i++) {
+        let frameName = alienFrames[i % 4];
 
-        var alien = new Game.Sprite(frameName);
+        let alien = new Alif.Sprite(game, frameName);
         alien.tint = Math.random() * 0xFFFFFF;
 
         /*
          * fun fact for the day :)
          * another way of doing the above would be
-         * var texture = Game.image(frameName);
-         * var alien = new Game.Sprite(texture);
+         * let texture = game.add.image(frameName);
+         * let alien = new Alif.Sprite(game, texture);
          */
 
          alien.position.set(Math.random() * 800 - 400, Math.random() * 600 - 300);
@@ -35,12 +35,12 @@ function setup() {
          alienContainer.addChild(alien)
     }
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
-    for(var i = 0; i < aliens.length; i++) {
-        var alien = aliens[i];
+    for(let i = 0; i < aliens.length; i++) {
+        let alien = aliens[i];
         alien.rotation += 0.1;
     }
 
@@ -49,7 +49,4 @@ function play(dt) {
     alienContainer.rotation += 0.01;
 }
 
-window.onload = function() {
-    Game.create(800, 600, setup, ['SpriteSheet.json']);
-    Game.start();
- };
+game = new Alif.Game(800, 600, setup, ['SpriteSheet.json']);

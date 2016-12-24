@@ -1,9 +1,21 @@
 'use strict';
 
+let game;
+
+game = new Alif.Game(
+    640, 480, setup,
+    [
+        'images/cat.png',
+        'images/tiger.png',
+        'audio/explosion.wav'
+    ],
+    load
+);
+
 function setup() {
     console.log('setup');
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
@@ -14,15 +26,3 @@ function play(dt) {
 function load(dt) {
     console.log('loading...');
 }
-
-window.onload = function() {
-    Game.create(640, 480, setup,
-        [
-            'images/cat.png',
-            'images/tiger.png',
-            'audio/explosion.wav'
-        ],
-        load
-    );
-    Game.start();
- };

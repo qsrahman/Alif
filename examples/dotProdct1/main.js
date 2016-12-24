@@ -1,12 +1,14 @@
 'use strict';
 
-let ship, boundary, message, target;
+let game, ship, boundary, message, target;
 
 function setup() {
-    ship = Game.add.sprite('spaceship.png');
+    game.renderer.backgroundColor = 'black';
+
+    ship = game.add.sprite('spaceship.png');
     ship.anchor.set(0.5);
-    ship.x = Game.canvas.width / 6;
-    ship.y = Game.canvas.height / 2;
+    ship.x = game.canvas.width / 6;
+    ship.y = game.canvas.height / 2;
     ship.ax = 0.2;
     ship.ay = 0.2;
     ship.vr = 0;
@@ -14,26 +16,26 @@ function setup() {
     ship.frictionY = 0.98;
     ship.moveForward = false;
 
-    boundary = Game.add.line('yellow', 2, 100, 100, 400, 400);
-    message = Game.add.text('', {font: '16px Futura', fill: 'white'});
+    boundary = game.add.line('yellow', 2, 100, 100, 400, 400);
+    message = game.add.text('', {font: '16px Futura', fill: 'white'});
     message.position.set(16);
 
-    target = Game.add.sprite(16, 'white');
+    target = game.add.circle(16, 'white');
 
-    Game.leftKey.press = () => ship.vr = -0.1;
-    Game.leftKey.release = () => {
-        if(!Game.rightKey.isDown) ship.vr = 0;
+    game.leftKey.press = () => ship.vr = -0.1;
+    game.leftKey.release = () => {
+        if(!game.rightKey.isDown) ship.vr = 0;
     }
 
-    Game.rightKey.press = () => ship.vr = 0.1;
-    Game.rightKey.release = () => {
-        if(!Game.leftKey.isDown) ship.vr = 0;
+    game.rightKey.press = () => ship.vr = 0.1;
+    game.rightKey.release = () => {
+        if(!game.leftKey.isDown) ship.vr = 0;
     }
 
-    Game.upKey.press = () => ship.moveForward = true;
-    Game.upKey.release = () => ship.moveForward = false;
+    game.upKey.press = () => ship.moveForward = true;
+    game.upKey.release = () => ship.moveForward = false;
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
@@ -112,13 +114,9 @@ function load(dt) {
     console.log('loading...');
 }
 
-window.onload = function() {
-    Game.create(640, 480, setup,
-        [
-            'spaceship.png'
-        ],
-        load
-    );
-    Game.renderer.backgroundColor = 'black';
-    Game.start();
- };
+game = new Alif.Game(640, 480, setup,
+    [
+        'spaceship.png'
+    ],
+    load
+);

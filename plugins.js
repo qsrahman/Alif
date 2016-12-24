@@ -2,87 +2,6 @@
 
 var Q = Q || {};
 
-//Center and scale the game engine inside the HTML page 
-Q.scaleToWindow = function(backgroundColor = '#2C3539') {
-    let scaleX, scaleY, scale, center;
-
-    //1. Scale the canvas to the correct size
-    //Figure out the scale amount on each axis
-    scaleX = window.innerWidth / Q.canvas.width;
-    scaleY = window.innerHeight / Q.canvas.height;
-
-    //Scale the canvas based on whichever value is less: `scaleX` or `scaleY`
-    scale = Math.min(scaleX, scaleY);
-    Q.canvas.style.transformOrigin = '0 0';
-    Q.canvas.style.transform = 'scale(' + scale + ')';
-
-    //2. Center the canvas.
-    //Decide whether to center the canvas vertically or horizontally.
-    //Wide canvases should be centered vertically, and 
-    //square or tall canvases should be centered horizontally
-
-    if (Q.canvas.width > Q.canvas.height) {
-        if (Q.canvas.width * scale < window.innerWidth) {
-            center = "horizontally";
-        } 
-        else { 
-            center = "vertically";
-        }
-    } 
-    else {
-        if (Q.canvas.height * scale < window.innerHeight) {
-            center = "vertically";
-        } 
-        else { 
-            center = "horizontally";
-        }
-    }
-
-    let margin;
-    //Center horizontally (for square or tall canvases)
-    if (center === 'horizontally') {
-        margin = (window.innerWidth - Q.canvas.width * scale) / 2;
-        Q.canvas.style.marginLeft = margin + 'px';
-        Q.canvas.style.marginRight = margin + 'px';
-    }
-
-    //Center vertically (for wide canvases) 
-    if (center === 'vertically') {
-        margin = (window.innerHeight - Q.canvas.height * scale) / 2;
-        Q.canvas.style.marginTop = margin + 'px';
-        Q.canvas.style.marginBottom = margin + 'px';
-    }
-
-    //3. Remove any padding from the canvas and set the canvas
-    //display style to 'block'
-    Q.canvas.style.paddingLeft = 0;
-    Q.canvas.style.paddingRight = 0;
-    Q.canvas.style.paddingTop = 0;
-    Q.canvas.style.paddingBottom = 0;
-    Q.canvas.style.display = 'block';
-
-    //4. Set the color of the HTML body background
-    document.body.style.backgroundColor = backgroundColor;
-
-    //5. Set the game engine and pointer to the correct scale. 
-    //This is important for correct hit testing between the pointer and sprites
-    Q.pointer.scale = scale;
-    Q.scale = scale;
-
-    //Fix some quirkiness in scaling for Safari
-    let ua = navigator.userAgent.toLowerCase();
-    if (ua.indexOf("safari") !== -1) {
-      if (ua.indexOf("chrome") > -1) {
-        // Chrome
-      } 
-      else {
-        // Safari
-        Q.canvas.style.maxHeight = "100%";
-        Q.canvas.style.minHeight = "100%";
-      }
-    }
-};
-
 /*
 Wait
 ----
@@ -287,9 +206,10 @@ Q.followConstant= function(follower, leader, speed) {
 };
 
 Q.TilingSprite = class extends Q.Sprite {
-    constructor(source, width, height, x, y) {
-        super(source, x, y);
+    constructor(game, source, width, height, x, y) {
+        super(game, source, x, y);
 
+        this.game = game;
         this.width = width;
         this.height = height;
 
@@ -349,10 +269,19 @@ Q.TilingSprite = class extends Q.Sprite {
     }
 };
 
+Q.Factory.prototype.tilingSprite = function(source, width, height, x, y) {
+    let sprite = new Q.TilingSprite(this.game, source, width, height, x, y);
+
+    this.parent.addChild(sprite);
+
+    return sprite;
+};
+
 Q.MovieClip = class extends Q.Sprite {
-    constructor(textures, x, y) {
-        super(textures[0], x, y);
+    constructor(game, textures, x, y) {
+        super(game, textures[0], x, y);
         
+        this.game = game;
         this.textures = textures;
         this.animationSpeed = 1;
         this.playing = false;
@@ -394,6 +323,14 @@ Q.MovieClip = class extends Q.Sprite {
         }
         return this;
     }
+};
+
+Q.Factory.prototype.movieClip = function(source, x, y) {
+    let sprite = new Q.MovieClip(this.game, source, x, y);
+
+    this.parent.addChild(sprite);
+
+    return sprite;
 };
 
 //Use `shoot` to create bullet sprites 
@@ -486,6 +423,35 @@ Q.Factory.prototype.emitter = function (interval, particleFunction) {
 };
 
 Q.Factory.prototype.particleEffect = function(
+    x, y, 
+    spriteFunction,
+    numberOfParticles,
+    gravity,
+    randomSpacing,
+    minAngle, maxAngle,
+    minSize, maxSize, 
+    minSpeed, maxSpeed,
+    minScaleSpeed, maxScaleSpeed,
+    minAlphaSpeed, maxAlphaSpeed,
+    minRotationSpeed, maxRotationSpeed
+) {
+    return Q.particleEffect(
+        this.game, x, y, 
+        spriteFunction,
+        numberOfParticles,
+        gravity,
+        randomSpacing,
+        minAngle, maxAngle,
+        minSize, maxSize, 
+        minSpeed, maxSpeed,
+        minScaleSpeed, maxScaleSpeed,
+        minAlphaSpeed, maxAlphaSpeed,
+        minRotationSpeed, maxRotationSpeed
+    );
+}
+
+Q.particleEffect = function(
+    game,
     x = 0, y = 0, 
     spriteFunction = () => console.log("Sprite creation function"),
     numberOfParticles = 20,
@@ -590,18 +556,19 @@ Q.Factory.prototype.particleEffect = function(
             //Remove the particle if its `alpha` reaches zero
             if (particle.alpha <= 0) {
                 Q.remove(particle);
-                Q.particles.splice(Q.particles.indexOf(particle), 1);
+                game.particles.splice(game.particles.indexOf(particle), 1);
             }
         };
 
         //Push the particle into the `particles` array
         //The `particles` array needs to be updated by the game loop each
         //frame
-        Q.particles.push(particle);
+        game.particles.push(particle);
     }
 };
 
-Q.Factory.prototype.grid = function(
+Q.grid = function(
+    game,
     columns = 0, rows = 0, cellWidth = 32, cellHeight = 32,
     centerCell = false, xOffset = 0, yOffset = 0,
     makeSprite,
@@ -611,7 +578,7 @@ Q.Factory.prototype.grid = function(
     //group is what the function returns back to the main program.
     //All the sprites in the grid cells will be added
     //as children to this container
-    let container = Q.add.container();
+    let container = game.add.container();
 
     //The `create` method plots the grid
 
@@ -660,6 +627,21 @@ Q.Factory.prototype.grid = function(
 
     //Return the `container` group back to the main program
     return container;
+};
+
+Q.Factory.prototype.grid = function(
+    columns, rows, cellWidth, cellHeight,
+    centerCell, xOffset, yOffset,
+    makeSprite,
+    extra
+) {
+    return Q.grid(
+        this.game,
+        columns, rows, cellWidth, cellHeight,
+        centerCell, xOffset, yOffset,
+        makeSprite,
+        extra
+    );
 };
 
 Q.progressBar = {
@@ -2387,4 +2369,4 @@ Q.TWEEN.Interpolation = {
     }
 };
 
-}).call(this, Game);
+}).call(this, Alif);

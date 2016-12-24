@@ -1,14 +1,14 @@
 'use strict';
 
-let ball;
+let game, ball;
 
 function setup() {
-    ball = Game.add.circle(32, 0x888888, 0x0, 2, 96, 128);
+    ball = game.add.circle(32, 0x888888, 0x0, 2, 96, 128);
 
-    ball.vx = Game.utils.randomInt(3, 6);
-    ball.vy = Game.utils.randomInt(2, 4);
+    ball.vx = Alif.utils.randomInt(3, 6);
+    ball.vy = Alif.utils.randomInt(2, 4);
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
@@ -18,17 +18,14 @@ function play(dt) {
     
     //Bounce the ball off the canvas edges. 
     //Left and right
-    if(ball.x < 0 || ball.x + ball.diameter > Game.canvas.width) {
+    if(ball.x < 0 || ball.x + ball.diameter > game.canvas.width) {
         ball.vx *= -1;
     }
 
     //Top and bottom
-    if(ball.y < 0 || ball.y + ball.diameter > Game.canvas.height) {
+    if(ball.y < 0 || ball.y + ball.diameter > game.canvas.height) {
         ball.vy *= -1;
     }
 }
 
-window.onload = function() {
-    Game.create(640, 480, setup);
-    Game.start();
- };
+game = new Alif.Game(640, 480, setup);

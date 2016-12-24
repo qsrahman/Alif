@@ -1,9 +1,9 @@
 'use strict';
 
-let graphics, thing, count;
+let game, graphics, thing, count;
 
 function setup() {
-    graphics = Game.add.graphics();
+    graphics = game.add.graphics();
  
     // set a fill and line style
     graphics.beginFill(0xFF3300);
@@ -46,13 +46,13 @@ function setup() {
     graphics.lineTo(600, 300);
             
     // let's create moving shape
-    thing = Game.add.graphics();
+    thing = game.add.graphics();
     thing.position.x = 620/2;
     thing.position.y = 380/2;
     
     count = 0;
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
@@ -73,7 +73,4 @@ function play(dt) {
     thing.rotation = count * 0.1;
 }
 
-window.onload = function() {
-    Game.create(620, 380, setup);
-    Game.start();
- };
+game = new Alif.Game(620, 380, setup);

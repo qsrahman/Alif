@@ -1,11 +1,12 @@
 "use strict";
 
-var bunny;
+let game, bunny;
 
 function setup() {
+    game.renderer.backgroundColor = '#66FF99';
+
     // create a new Sprite using the texture
-    // var bunny = new Game.Sprite(texture);
-    bunny = Game.add.sprite("bunny.png");
+    bunny = game.add.sprite("bunny.png");
 
     // center the sprites anchor point
     bunny.anchor.x = 0.5;
@@ -17,7 +18,7 @@ function setup() {
     bunny.position.x = 320;
     bunny.position.y = 240;
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
@@ -25,8 +26,4 @@ function play(dt) {
     bunny.rotation += 0.1;
 }
 
-window.onload = function() {
-    Game.create(640, 480, setup, ['bunny.png']);
-    Game.renderer.backgroundColor = '#66FF99';
-    Game.start();
-};
+game = new Alif.Game(640, 480, setup, ['bunny.png']);

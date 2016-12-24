@@ -1,11 +1,11 @@
 'use strict';
 
-let box;
+let game, box;
 
 function setup() {
-    box = Game.add.tilingSprite('tile.png', 128, 128);
+    box = game.add.tilingSprite('tile.png', 128, 128);
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
@@ -22,12 +22,9 @@ function load(dt) {
     console.log('loading...');
 }
 
-window.onload = function() {
-    Game.create(256, 256, setup,
-        [
-            'tile.png'
-        ],
-        load
-    );
-    Game.start();
- };
+game = new Alif.Game(256, 256, setup,
+    [
+        'tile.png'
+    ],
+    load
+);

@@ -1,8 +1,10 @@
 'use strict';
 
-var level, world, player, output, score;
+var game, level, world, player, output, score;
 
 function setup() {
+    game.renderer.backgroundColor = 'white';
+
     let level = {
         widthInTiles: 20,
         heightInTiles: 15,
@@ -14,14 +16,14 @@ function setup() {
 
     player = world.player;
     
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
 }
 
 function makeWorld(level) {
-    let world = {}; //Game.add.container();
+    let world = {}; //game.add.container();
 
     world.map = [];
     world.itemLocations = [];
@@ -35,7 +37,7 @@ function makeWorld(level) {
     makeSprites();
 
     function makeMap() {
-        let cellIsAlive = () => Game.utils.randomInt(0, 3) === 0;
+        let cellIsAlive = () => Alif.utils.randomInt(0, 3) === 0;
 
         let numberOfCells = level.heightInTiles * level.widthInTiles;
 
@@ -56,7 +58,7 @@ function makeWorld(level) {
 
     function makeSprites() {
         world.map.forEach(cell => {
-            let sprite = Game.add.rectangle();
+            let sprite = game.add.rectangle();
 
             sprite.x = cell.x * level.tileWidth;
             sprite.y = cell.y * level.tileHeight;
@@ -85,7 +87,7 @@ function makeWorld(level) {
 
     world.map.forEach(cell => {
         if(cell.item !== '') {
-            let sprite = Game.add.rectangle();
+            let sprite = game.add.rectangle();
 
             sprite.x = cell.x * level.tileWidth + level.tileWidth / 4;
             sprite.y = cell.y * level.tileHeight + level.tileWidth / 2;
@@ -118,8 +120,4 @@ function makeWorld(level) {
     return world;
 }
 
-window.onload = function() {
-    Game.create(640, 480, setup);
-    Game.renderer.backgroundColor = 'white';
-    Game.start();
- };
+game = new Alif.Game(640, 480, setup);

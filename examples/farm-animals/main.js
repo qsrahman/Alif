@@ -1,62 +1,59 @@
 'use strict';
 
-let chicken, horse, sheep, pig, leftArrow, rightArrow;
+let game, chicken, horse, sheep, pig, leftArrow, rightArrow;
 
 function setup() {
+    game.renderer.backgroundImage = 'assets/background.png'
 
-    let chickenFrames = Game.frames(
+    let chickenFrames = Alif.frames(
         'assets/chicken_spritesheet.png',
         [[0, 0], [131, 0], [262, 0]],
         131, 200
     );
-    chicken = Game.add.sprite(chickenFrames);
+    chicken = game.add.sprite(chickenFrames);
 
-    let horseFrames = Game.frames(
+    let horseFrames = Alif.frames(
         'assets/horse_spritesheet.png',
         [[0, 0], [212, 0], [424, 0]],
         212, 200
     );
-    horse = Game.add.sprite(horseFrames);
+    horse = game.add.sprite(horseFrames);
 
-    let sheepFrames = Game.frames(
+    let sheepFrames = Alif.frames(
         'assets/sheep_spritesheet.png',
         [[0, 0], [244, 0], [488, 0]],
         244, 200
     );
-    sheep = Game.add.sprite(sheepFrames);
+    sheep = game.add.sprite(sheepFrames);
 
-    let pigFrames = Game.frames(
+    let pigFrames = Alif.frames(
         'assets/pig_spritesheet.png',
         [[0, 0], [297, 0], [394, 0]],
         297, 200
     );
-    pig = Game.add.sprite(pigFrames);
+    pig = game.add.sprite(pigFrames);
 
-    rightArrow = Game.add.sprite('assets/arrow.png');    
-    leftArrow = Game.add.sprite('assets/arrow.png');
+    rightArrow = game.add.sprite('assets/arrow.png');    
+    leftArrow = game.add.sprite('assets/arrow.png');
     leftArrow.scale.x = -1;
     leftArrow.x = 300;
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
 }
 
-window.onload = function() {
-    Game.create(640, 360, setup,
-        [
-            'assets/chicken_spritesheet.png',
-            'assets/horse_spritesheet.png',
-            'assets/sheep_spritesheet.png',
-            'assets/pig_spritesheet.png',
-            'assets/arrow.png',
-            'assets/chicken.mp3',
-            'assets/horse.mp3',
-            'assets/sheep.mp3',
-            'assets/pig.mp3'
-        ]
-    );
-    Game.renderer.backgroundImage = 'assets/background.png'
-    Game.start();
- };
+game = new Alif.Game(640, 360, setup,
+    [
+        'assets/chicken_spritesheet.png',
+        'assets/horse_spritesheet.png',
+        'assets/sheep_spritesheet.png',
+        'assets/pig_spritesheet.png',
+        'assets/arrow.png',
+        'assets/chicken.mp3',
+        'assets/horse.mp3',
+        'assets/sheep.mp3',
+        'assets/pig.mp3'
+    ]
+);

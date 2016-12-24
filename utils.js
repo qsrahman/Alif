@@ -146,4 +146,4 @@ Q.utils = {
         return !isNaN(value) ? value : Q.utils.colorToHex(value);
     }
 };
-}).call(this, Game);
+}).call(this, Alif);

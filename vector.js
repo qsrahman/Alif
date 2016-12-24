@@ -226,4 +226,4 @@ Q.Vector = class {
         return "(" + this.x.toFixed(3).replace(/\.?0+$/,'') + "," + this.y.toFixed(3).replace(/\.?0+$/,'') + ")";
     }
 };
-}).call(this, Game);
+}).call(this, Alif);

@@ -35,45 +35,46 @@ let map = [
     alien = null,
     boxes = [],
     monsters = [],
-    boundry;
+    boundry,
+    game;
 
 function setup() {
     buildMap(map);
     buildMap(gameObjects);
 
-    Game.leftKey.press = () => {
+    game.leftKey.press = () => {
         alien.vx = -4;
         alien.vy = 0;
     };
-    Game.leftKey.release = () => {
-        if (!Game.rightKey.isDown && alien.vy === 0) {
+    game.leftKey.release = () => {
+        if (!game.rightKey.isDown && alien.vy === 0) {
             alien.vx = 0;
         }
     };
-    Game.rightKey.press = () => {
+    game.rightKey.press = () => {
         alien.vx = 4;
         alien.vy = 0;
     };
-    Game.rightKey.release = () => {
-        if (!Game.leftKey.isDown && alien.vy === 0) {
+    game.rightKey.release = () => {
+        if (!game.leftKey.isDown && alien.vy === 0) {
             alien.vx = 0;
         }
     };
-    Game.upKey.press = () => {
+    game.upKey.press = () => {
         alien.vx = 0;
         alien.vy = -4;
     };
-    Game.upKey.release = () => {
-        if (!Game.downKey.isDown && alien.vx === 0) {
+    game.upKey.release = () => {
+        if (!game.downKey.isDown && alien.vx === 0) {
             alien.vy = 0;
         }
     };
-    Game.downKey.press = () => {
+    game.downKey.press = () => {
         alien.vx = 0;
         alien.vy = 4;
     };
-    Game.downKey.release = () => {
-        if (!Game.upKey.isDown && alien.vx === 0) {
+    game.downKey.release = () => {
+        if (!game.upKey.isDown && alien.vx === 0) {
             alien.vy = 0;
         }
     };
@@ -81,23 +82,23 @@ function setup() {
     boundry = {
         x: 64, 
         y: 64, 
-        width: Game.canvas.width - 64, 
-        height: Game.canvas.height - 64
+        width: game.canvas.width - 64, 
+        height: game.canvas.height - 64
     };
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
-    Game.move(alien);
-    Game.contain(alien, boundry);
+    Alif.move(alien);
+    Alif.contain(alien, boundry);
 
     boxes.forEach(box => {
-        Game.rectangleCollision(alien, box);
+        Alif.rectangleCollision(alien, box);
     });
 
     monsters.forEach(monster => {
-        Game.move(monster);
+        Alif.move(monster);
 
         //Check whether the monster is at a tile corner
         if (Math.floor(monster.x) % SIZE === 0 && 
@@ -132,31 +133,31 @@ function buildMap(levelMap) {
       if(currentTile !== EMPTY) {        
         switch (currentTile) {
           case FLOOR:
-            let floor = Game.add.sprite('floor.png');
+            let floor = game.add.sprite('floor.png');
             floor.x = column * SIZE;
             floor.y = row * SIZE;
             break;          
           case BOX:
-            let box = Game.add.sprite('box.png');
+            let box = game.add.sprite('box.png');
             box.x = column * SIZE;
             box.y = row * SIZE;
             boxes.push(box);
             break;
           case WALL:
-            let wall = Game.add.sprite('wall.png');
+            let wall = game.add.sprite('wall.png');
             wall.x = column * SIZE;
             wall.y = row * SIZE;
             break;
           case ALIEN:
             //Note: "alien" has already been defined in the main
             //program so you don't neeed to preceed it with "let"
-            alien = Game.add.sprite('alien.png');
+            alien = game.add.sprite('alien.png');
             alien.x = column * SIZE;
             alien.y = row * SIZE;
             break;
           case MONSTER:
             let frames = ['monsterNormal.png', 'monsterScared.png'];
-            let monster = Game.add.sprite(frames);
+            let monster = game.add.sprite(frames);
             monster.state = {
                 NORMAL: 0,
                 SCARED: 1
@@ -315,11 +316,8 @@ function findClosestDirection(monster) {
 function endGame() {
 }
 
-window.onload = function() {
-    Game.create(704, 512, setup,
-        [
-            'monsterMaze.json'
-        ]
-    );
-    Game.start();
- };
+game = new Alif.Game(704, 512, setup,
+    [
+        'monsterMaze.json'
+    ]
+);
