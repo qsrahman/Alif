@@ -1,7 +1,6 @@
 // Copyright 2016 Qazi Sami ur Rahman and other contributors
 // some small handy functions
 (function(Q) {
-'use strict';
 
 var Q = Q || {};
 
