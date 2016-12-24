@@ -1,21 +1,18 @@
 'use strict';
 
-class Player extends Game.Sprite {
-    constructor(source, x, y) {
-        super(source, x, y);
-
-        Game.stage.addChild(this);
-    }
-    update(dt) {
-        this.x += this.vx;
-    }
-}
-
 let player;
 let bullets = [];
+let meteors = [
+    'meteorBrown_big1.png', 
+    'meteorBrown_med1.png', 
+    'meteorBrown_med3.png', 
+    'meteorBrown_small1.png', 
+    'meteorBrown_small2.png',
+    'meteorBrown_tiny1.png'
+]
 
 function setup() {
-    player = new Player('playerShip1_orange.png');
+    player = Game.add.sprite('playerShip1_orange.png');
     player.anchor.set(0.5, 0.5);
     player.scale.set(0.5, 0.5);
     player.x = Game.canvas.width / 2;
@@ -46,10 +43,11 @@ function setup() {
         Game.shoot(
             player,  //The shooter
             4.71,    //The angle at which to shoot (4.71 is up)
-            player.halfWidth - 20, //Bullet's x position on the ship
-            -70,       //Bullet's y position on the ship
-            Game.stage, //The container to which the bullet should be added
-            7,       //The bullet's speed (pixels per frame)
+            //player.halfWidth - 20, //Bullet's x position on the ship
+            40,
+            //-85,       //Bullet's y position on the ship
+            //Game.stage, //The container to which the bullet should be added
+            10,       //The bullet's speed (pixels per frame)
             bullets, //The array used to store the bullets
 
             //A function that returns the sprite that should
@@ -65,9 +63,21 @@ function setup() {
 }
 
 function play(dt) {
-    player.update(dt);
+    player.x += player.vx;
+
     Game.contain(player, {x:0, y:0, width:Game.canvas.width, height:Game.canvas.height});
+
     Game.move(bullets);
+
+    bullets = bullets.filter(bullet => {
+        if(bullet.y < -20) {
+            Game.remove(bullet);
+            return false;
+        }
+        return true;
+    });
+
+    console.log(bullets.length);
 }
 
 window.onload = function() {

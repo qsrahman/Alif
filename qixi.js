@@ -1,5 +1,4 @@
 (function() {
-'use strict';
 
 var root = this,
     Q = Q || {};
@@ -42,11 +41,11 @@ Q.create = function(width, height, setup, assetsToLoad, callback) {
     Q.pointer = new Pointer(Q.renderer.canvas);
 
     //initialize some often used keys
-    Q.leftKey = new Q.Keyboard(37),
-    Q.upKey = new Q.Keyboard(38),
-    Q.rightKey = new Q.Keyboard(39),
-    Q.downKey = new Q.Keyboard(40),
-    Q.spaceKey = new Q.Keyboard(32)
+    Q.leftKey = new Q.Keyboard(37);
+    Q.upKey = new Q.Keyboard(38);
+    Q.rightKey = new Q.Keyboard(39);
+    Q.downKey = new Q.Keyboard(40);
+    Q.spaceKey = new Q.Keyboard(32);
 
     Q.setup = setup;
     Q.load = callback || null;
@@ -110,29 +109,32 @@ function update(dt = 1) {
     }
 }
 
-let then = window.performance.now(),
-    dt = 0,
-    step = 1/Q._FPS,    // 0.0167 seconds = 16.67 ms
-    ms2sec = 1 / 1000;   // 0.001 seconds = 1 ms
+let then = null,
+    step = 1 / Q._FPS,    // 0.0167 seconds = 16.67 ms
+    accumulator = 0;
 
 //game loop, now is ms
 function gameLoop(now) {
     requestAnimationFrame(gameLoop);
 
-    // duration capped at 1.0 seconds
-    // dt += Math.min(1, (now - (then || now)) * ms2sec);
-    dt += Math.min(1, (now - then) * ms2sec);
+    // time take by one frame converted to seconds
+    // let dt = (now - then || now) * 0.001;
+    // console.log(1/dt);
+
+    // duration capped at 1.0 second
+    accumulator += Math.min(1, (now - then || now) * 0.001);
 
     then = now;
 
-    while(dt > step) {
-        dt -= step;
+    while(accumulator > step) {
         // Run the code for each frame.
         update(step);
+
+        accumulator -= step;
     }
 
     // render all sprites on the stage.
-    Q.renderer.render(Q.stage, dt);    
+    Q.renderer.render(Q.stage, accumulator);    
 }
 
 Q.resume = function() {
@@ -149,8 +151,8 @@ Object.defineProperties(Q, {
             return this._FPS;
         },
         set: function(value) {
-            dt = 0;
-            then = window.performance.now();
+            then = null;
+            accumulator = 0;
             step = 1 / value;
             this._FPS = value;
        },
@@ -472,6 +474,7 @@ Q.Container = class {
         }
 
         child.parent = this;
+        child.layer = this.children.length;
         this.children.push(child);
     }
     add(...sprites) {
@@ -500,8 +503,9 @@ Q.Container = class {
         if (index1 < 0 || index2 < 0) {
             throw new Error('swapChildren: Both the supplied DisplayObjects must be a child of the caller.');
         }
-
+        child2.layer = index1;
         this.children[index1] = child2;
+        child.layer = index2
         this.children[index2] = child;
     }
     updateTransform() {
@@ -854,13 +858,6 @@ Q.Sprite = class extends Q.Container {
         this._texture = Q.Assets.cache[source[0]];
         this.width = this._texture.frame.w;
         this.height = this._texture.frame.h;
-    }
-    static fromFrame(frameId) {
-        let texture = Q.Assets.cache[frameId];
-        if(!texture)
-            throw new Error("The frameId '"+ frameId +"' does not exist in the asset cache" + this);
-
-        return new Q.Sprite(frameId);
     }
     getBounds(matrix) {
         if(!this._currentBounds) {
@@ -2208,7 +2205,7 @@ Q.Factory = class {
                     return o._strokeStyle;
                 },
                 set(value) {
-                    o._strokeStyle = self.color(value);
+                    o._strokeStyle = Q.utils.color(value);
 
                     //Draw the line
                     draw(o._strokeStyle, o._width, o._ax, o._ay, o._bx, o._by);
@@ -2343,29 +2340,21 @@ class Pointer {
     moveHandler(event) {
         //Get the element that's firing the event
         let element = event.target;
-        // let rect = event.target.getBoundingClientRect();
 
         //Find the pointer’s x and y position (for mouse).
         //Subtract the element's top and left offset from the browser window
         this._x = (event.pageX - element.offsetLeft);
         this._y = (event.pageY - element.offsetTop);
 
-        // this._x = (event.clientX - rect.left);
-        // this._y = (event.clientY - rect.top);
-
         //Prevent the event's default behavior 
         event.preventDefault();
     }
     touchmoveHandler(event) {
         let element = event.target;
-        // let rect = event.target.getBoundingClientRect();
 
         //Find the touch point's x and y position
         this._x = (event.targetTouches[0].pageX - element.offsetLeft);
         this._y = (event.targetTouches[0].pageY - element.offsetTop);
-
-        // this._x = (event.targetTouches[0].clientX - rect.left);
-        // this._y = (event.targetTouches[0].clientY - rect.top);
 
         event.preventDefault();
     }
@@ -2380,18 +2369,15 @@ class Pointer {
 
         //Call the `press` method if it's been assigned
         if (this.press) this.press();
+
         event.preventDefault();
     }
     touchstartHandler(event) {
         let element = event.target;
-        // let rect = event.target.getBoundingClientRect();
         
         //Find the touch point's x and y position
         this._x = event.targetTouches[0].pageX - element.offsetLeft;
         this._y = event.targetTouches[0].pageY - element.offsetTop;
-
-        // this._x = (event.targetTouches[0].clientX - rect.left);
-        // this._y = (event.targetTouches[0].clientY - rect.top);
 
         //Set the down states
         this.isDown = true;
@@ -2403,6 +2389,7 @@ class Pointer {
 
         //Call the `press` method if it's been assigned
         if (this.press) this.press();
+
         event.preventDefault();
     }
     upHandler(event) {
@@ -2439,6 +2426,7 @@ class Pointer {
 
         //Call the `release` method if it's been assigned
         if (this.release) this.release();
+
         event.preventDefault();
     }
     hitTestSprite(sprite) {
@@ -3328,7 +3316,5 @@ boot();
 
 root.Game = Q;
 root.QIXI = Q;
-
-return Q;
 
 }).call(this);

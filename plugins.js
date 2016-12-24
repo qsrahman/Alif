@@ -1,5 +1,4 @@
 (function(Q) {
-'use strict';
 
 var Q = Q || {};
 
@@ -170,97 +169,6 @@ Q.fourKeyController = function(s, speed, up = 38, right = 39, down = 40, left = 
             s.vy = 0;
         }
     };
-};
-
-Q.contain = function(s, container, bounce = false, extra){
-    //Give the container x and y anchor offset values, if it doesn't
-    //have any
-    if (container.xAnchorOffset === undefined) container.xAnchorOffset = 0;
-    if (container.yAnchorOffset === undefined) container.yAnchorOffset = 0;
-    if (s.parent.gx === undefined) s.parent.gx = 0;
-    if (s.parent.gy === undefined) s.parent.gy = 0;
-
-    //The `collision` object is used to store which
-    //side of the containing rectangle the sprite hits
-    let collision;
-
-    //Left
-    if (s.x - s.xAnchorOffset < container.x - s.parent.gx - container.xAnchorOffset) {
-        //Bounce the sprite if `bounce` is true
-        if (bounce) s.vx *= -1;
-
-        //If the sprite has `mass`, let the mass
-        //affect the sprite's velocity
-        if(s.mass) s.vx /= s.mass;
-        s.x = container.x - s.parent.gx - container.xAnchorOffset + s.xAnchorOffset;
-        collision = "left";
-    }
-
-    //Top
-    if (s.y - s.yAnchorOffset < container.y - s.parent.gy - container.yAnchorOffset) {
-        if (bounce) s.vy *= -1;
-        if(s.mass) s.vy /= s.mass;
-        s.y = container.y - s.parent.gy - container.yAnchorOffset + s.yAnchorOffset;
-        collision = "top";
-    }
-
-    //Right
-    if (s.x - s.xAnchorOffset + s.width > container.width - container.xAnchorOffset) {
-        if (bounce) s.vx *= -1;
-        if(s.mass) s.vx /= s.mass;
-        s.x = container.width - s.width - container.xAnchorOffset + s.xAnchorOffset;
-        collision = "right";
-    }
-
-    //Bottom
-    if (s.y - s.yAnchorOffset + s.height > container.height - container.yAnchorOffset) {
-        if (bounce) s.vy *= -1;
-        if(s.mass) s.vy /= s.mass;
-        s.y = container.height - s.height - container.yAnchorOffset + s.yAnchorOffset;
-        collision = "bottom";
-    }
-
-    //The `extra` function runs if there was a collision
-    //and `extra` has been defined
-    if (collision && extra) extra(collision);
-
-    //Return the `collision` object
-    return collision;
-};
-
-Q.outsideBounds = function(s, bounds, extra){
-    let x = bounds.x,
-        y = bounds.y,
-        width = bounds.width,
-        height = bounds.height,
-
-        //The `collision` object is used to store which
-        //side of the containing rectangle the sprite hits
-        collision;
-
-    //Left
-    if (s.x < x - s.width) {
-        collision = "left";
-    }
-    //Top
-    if (s.y < y - s.height) {
-        collision = "top";
-    }
-    //Right
-    if (s.x > width) {
-        collision = "right";
-    }
-    //Bottom
-    if (s.y > height) {
-        collision = "bottom";
-    }
-
-    //The `extra` function runs if there was a collision
-    //and `extra` has been defined
-    if (collision && extra) extra(collision);
-
-    //Return the `collision` object
-    return collision;
 };
 
 function _getCenter(o, dimension, axis) {
@@ -489,41 +397,63 @@ Q.MovieClip = class extends Q.Sprite {
 };
 
 //Use `shoot` to create bullet sprites 
+// Q.shoot = function(
+//     shooter, angle, x, y, container, bulletSpeed, bulletArray, bulletSprite
+// ) {
+//     //Make a new sprite using the user-supplied `bulletSprite` function
+//     let bullet = bulletSprite();
+
+//     //Set the bullet's anchor point to its center
+//     bullet.anchor.set(0.5, 0.5);
+
+//     //Temporarily add the bullet to the shooter
+//     //so that we can position it relative to the
+//     //shooter's position
+//     shooter.addChild(bullet);
+//     bullet.x = x;
+//     bullet.y = y;
+
+//     //Find the bullet's global coordinates so that we can use
+//     //them to position the bullet on the new parent container
+//     let tempGx = bullet.getGlobalPosition().x,
+//         tempGy = bullet.getGlobalPosition().y;
+
+//     //Add the bullet to the new parent container using
+//     //the new global coordinates
+//     container.addChild(bullet);
+//     // Q.stage.addChild(bullet);
+//     bullet.x = tempGx;
+//     bullet.y = tempGy;
+
+//     //Set the bullet's velocity
+//     bullet.vx = Math.cos(angle) * bulletSpeed;
+//     bullet.vy = Math.sin(angle) * bulletSpeed;
+
+//     //Push the bullet into the `bulletArray`
+//     bulletArray.push(bullet);
+// };
+
 Q.shoot = function(
-    shooter, angle, x, y, container, bulletSpeed, bulletArray, bulletSprite
+    shooter, angle, offsetFromCenter, bulletSpeed, bulletArray, bulletSprite
 ) {
     //Make a new sprite using the user-supplied `bulletSprite` function
     let bullet = bulletSprite();
 
-    //Set the bullet's anchor point to its center
-    bullet.anchor.set(0.5, 0.5);
-
-    //Temporarily add the bullet to the shooter
-    //so that we can position it relative to the
-    //shooter's position
-    shooter.addChild(bullet);
-    bullet.x = x;
-    bullet.y = y;
-
-    //Find the bullet's global coordinates so that we can use
-    //them to position the bullet on the new parent container
-    let tempGx = bullet.getGlobalPosition().x,
-        tempGy = bullet.getGlobalPosition().y;
-
-    //Add the bullet to the new parent container using
-    //the new global coordinates
-    container.addChild(bullet);
-    // Q.stage.addChild(bullet);
-    bullet.x = tempGx;
-    bullet.y = tempGy;
+    //Set the bullet's start point
+    bullet.x
+        = shooter.centerX - bullet.halfWidth
+        + (offsetFromCenter * Math.cos(angle));
+    bullet.y
+        = shooter.centerY - bullet.halfHeight
+        + (offsetFromCenter * Math.sin(angle));
 
     //Set the bullet's velocity
     bullet.vx = Math.cos(angle) * bulletSpeed;
     bullet.vy = Math.sin(angle) * bulletSpeed;
 
-    //Push the bullet into the `bulletArray`
+    //Push the bullet into the
     bulletArray.push(bullet);
-}
+};
 
 Q.Factory.prototype.emitter = function (interval, particleFunction) {
     let emitter = {},
@@ -814,10 +744,10 @@ The worldObject needs to have a `width` and `height` property.
 Q.Factory.prototype.worldCamera = function(world, worldWidth, worldHeight, canvas) {
     //Define a `camera` object with helpful properties
     let camera = {
-        width: canvas.width,
-        height: canvas.height,
         _x: 0,
         _y: 0,
+        width: canvas.width,
+        height: canvas.height,
 
         //`x` and `y` getters/setters
         //When you change the camera's position,
@@ -911,6 +841,97 @@ Q.Factory.prototype.worldCamera = function(world, worldWidth, worldHeight, canva
 
     //Return the `camera` object 
     return camera;
+};
+
+Q.contain = function(s, container, bounce = false, extra){
+    //Give the container x and y anchor offset values, if it doesn't
+    //have any
+    if (container.xAnchorOffset === undefined) container.xAnchorOffset = 0;
+    if (container.yAnchorOffset === undefined) container.yAnchorOffset = 0;
+    if (s.parent.gx === undefined) s.parent.gx = 0;
+    if (s.parent.gy === undefined) s.parent.gy = 0;
+
+    //The `collision` object is used to store which
+    //side of the containing rectangle the sprite hits
+    let collision;
+
+    //Left
+    if (s.x - s.xAnchorOffset < container.x - s.parent.gx - container.xAnchorOffset) {
+        //Bounce the sprite if `bounce` is true
+        if (bounce) s.vx *= -1;
+
+        //If the sprite has `mass`, let the mass
+        //affect the sprite's velocity
+        if(s.mass) s.vx /= s.mass;
+        s.x = container.x - s.parent.gx - container.xAnchorOffset + s.xAnchorOffset;
+        collision = "left";
+    }
+
+    //Top
+    if (s.y - s.yAnchorOffset < container.y - s.parent.gy - container.yAnchorOffset) {
+        if (bounce) s.vy *= -1;
+        if(s.mass) s.vy /= s.mass;
+        s.y = container.y - s.parent.gy - container.yAnchorOffset + s.yAnchorOffset;
+        collision = "top";
+    }
+
+    //Right
+    if (s.x - s.xAnchorOffset + s.width > container.width - container.xAnchorOffset) {
+        if (bounce) s.vx *= -1;
+        if(s.mass) s.vx /= s.mass;
+        s.x = container.width - s.width - container.xAnchorOffset + s.xAnchorOffset;
+        collision = "right";
+    }
+
+    //Bottom
+    if (s.y - s.yAnchorOffset + s.height > container.height - container.yAnchorOffset) {
+        if (bounce) s.vy *= -1;
+        if(s.mass) s.vy /= s.mass;
+        s.y = container.height - s.height - container.yAnchorOffset + s.yAnchorOffset;
+        collision = "bottom";
+    }
+
+    //The `extra` function runs if there was a collision
+    //and `extra` has been defined
+    if (collision && extra) extra(collision);
+
+    //Return the `collision` object
+    return collision;
+};
+
+Q.outsideBounds = function(s, bounds, extra){
+    let x = bounds.x,
+        y = bounds.y,
+        width = bounds.width,
+        height = bounds.height,
+
+        //The `collision` object is used to store which
+        //side of the containing rectangle the sprite hits
+        collision;
+
+    //Left
+    if (s.x < x - s.width) {
+        collision = "left";
+    }
+    //Top
+    if (s.y < y - s.height) {
+        collision = "top";
+    }
+    //Right
+    if (s.x > width) {
+        collision = "right";
+    }
+    //Bottom
+    if (s.y > height) {
+        collision = "bottom";
+    }
+
+    //The `extra` function runs if there was a collision
+    //and `extra` has been defined
+    if (collision && extra) extra(collision);
+
+    //Return the `collision` object
+    return collision;
 };
 
 /*
@@ -1256,6 +1277,58 @@ Q.multipleCircleCollision = function(arrayOfCircles, global = false) {
 };
 
 /*
+#### hitTestRectangle
+Use it to find out if two rectangular sprites are touching.
+Parameters:
+a. A sprite object with `centerX`, `centerY`, `halfWidth` and `halfHeight` properties.
+b. A sprite object with `centerX`, `centerY`, `halfWidth` and `halfHeight` properties.
+*/
+Q.hitTestRectangle = function(r1, r2, global = false) {
+    let hit, combinedHalfWidths, combinedHalfHeights, dx, dy;
+
+    //A letiable to determine whether there's a collision
+    hit = false;
+
+    //Calculate the distance vector
+    if (global) {
+        dx = (r1.gx + r1.halfWidth - r1.xAnchorOffset) - 
+             (r2.gx + r2.halfWidth - r2.xAnchorOffset);
+
+        dy = (r1.gy + r1.halfHeight - r1.yAnchorOffset) - 
+             (r2.gy + r2.halfHeight - r2.yAnchorOffset);
+    } 
+    else {
+        dx = r1.centerX - r2.centerX;
+        dy = r1.centerY - r2.centerY;
+    }
+
+    //Figure out the combined half-widths and half-heights
+    combinedHalfWidths = r1.halfWidth + r2.halfWidth;
+    combinedHalfHeights = r1.halfHeight + r2.halfHeight;
+
+    //Check for a collision on the x axis
+    if (Math.abs(dx) < combinedHalfWidths) {
+        //A collision might be occuring. 
+        //Check for a collision on the y axis
+        if (Math.abs(dy) < combinedHalfHeights) {
+            //There's definitely a collision happening
+            hit = true;
+        } 
+        else {
+            //There's no collision on the y axis
+            hit = false;
+        }
+    } 
+    else {
+        //There's no collision on the x axis
+        hit = false;
+    }
+
+    //`hit` will be either `true` or `false`
+    return hit;
+};
+
+/*
 #### rectangleCollision
 Use it to prevent two rectangular sprites from overlapping.
 Optionally, make the first retangle bounceoff the second rectangle.
@@ -1316,7 +1389,7 @@ Q.rectangleCollision = function(r1, r2, bounce = false, global = false) {
                 }
                 //Bounce
                 if (bounce) {
-                    r1.dy *= -1;
+                    r1.vy *= -1;
 
                     /*Alternative
                     //Find the bounce surface's dx and dy properties
@@ -1347,7 +1420,7 @@ Q.rectangleCollision = function(r1, r2, bounce = false, global = false) {
 
                 //Bounce
                 if (bounce) {
-                    r1.dx *= -1;
+                    r1.vx *= -1;
 
                     /*Alternative
                     //Find the bounce surface's dx and dy properties
@@ -1373,58 +1446,6 @@ Q.rectangleCollision = function(r1, r2, bounce = false, global = false) {
     //"bottom", or "left" depening on which side of r1 is touching r2.
     return collision;
 }
-
-/*
-#### hitTestRectangle
-Use it to find out if two rectangular sprites are touching.
-Parameters:
-a. A sprite object with `centerX`, `centerY`, `halfWidth` and `halfHeight` properties.
-b. A sprite object with `centerX`, `centerY`, `halfWidth` and `halfHeight` properties.
-*/
-Q.hitTestRectangle = function(r1, r2, global = false) {
-    let hit, combinedHalfWidths, combinedHalfHeights, dx, dy;
-
-    //A letiable to determine whether there's a collision
-    hit = false;
-
-    //Calculate the distance vector
-    if (global) {
-        dx = (r1.gx + r1.halfWidth - r1.xAnchorOffset) - 
-             (r2.gx + r2.halfWidth - r2.xAnchorOffset);
-
-        dy = (r1.gy + r1.halfHeight - r1.yAnchorOffset) - 
-             (r2.gy + r2.halfHeight - r2.yAnchorOffset);
-    } 
-    else {
-        dx = r1.centerX - r2.centerX;
-        dy = r1.centerY - r2.centerY;
-    }
-
-    //Figure out the combined half-widths and half-heights
-    combinedHalfWidths = r1.halfWidth + r2.halfWidth;
-    combinedHalfHeights = r1.halfHeight + r2.halfHeight;
-
-    //Check for a collision on the x axis
-    if (Math.abs(dx) < combinedHalfWidths) {
-        //A collision might be occuring. 
-        //Check for a collision on the y axis
-        if (Math.abs(dy) < combinedHalfHeights) {
-            //There's definitely a collision happening
-            hit = true;
-        } 
-        else {
-            //There's no collision on the y axis
-            hit = false;
-        }
-    } 
-    else {
-        //There's no collision on the x axis
-        hit = false;
-    }
-
-    //`hit` will be either `true` or `false`
-    return hit;
-};
 
   /*
   hitTestCircleRectangle

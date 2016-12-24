@@ -135,6 +135,14 @@ function play(dt) {
             Game.state = end;
         }
     });
+
+    bullets = bullets.filter(bullet => {
+        if(bullet.y < -20) {
+            Game.remove(bullet);
+            return false;
+        }
+        return true;
+    });
 }
 
 function reset() {

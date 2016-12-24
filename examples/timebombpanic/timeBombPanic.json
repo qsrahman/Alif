@@ -1,0 +1,33 @@
+{
+    "frames": {
+        "floor.png": {
+            "frame":{"x":0,"y":0,"w":64,"h":64}
+        },
+        "box.png": {
+            "frame":{"x":64,"y":0,"w":64,"h":64}
+        },
+        "wall.png": {
+            "frame":{"x":128,"y":0,"w":64,"h":64}
+        },
+        "alien.png": {
+            "frame":{"x":192,"y":0,"w":64,"h":64}
+        },
+        "bomb.png": {
+            "frame":{"x":256,"y":0,"w":48,"h":36}
+        },
+        "display.png": {
+            "frame":{"x":0,"y":64,"w":128,"h":48}
+        },
+        "gameover.png": {
+            "frame":{"x":0,"y":129,"w":316,"h":290}
+        }
+    },
+    "meta": {
+        "app": "http://www.mokgames.com/texturepacker/",
+        "version": "1.0",
+        "image": "timeBombPanic.png",
+        "format": "RGBA8888",
+        "size": {"w":320,"h":419},
+        "scale": 1
+    }
+}
