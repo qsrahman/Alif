@@ -57,7 +57,8 @@ let map = [
     bombs = [],
     gameWorld,
     camera,
-    timer;
+    timer,
+    game;
 
 class Timer {
     constructor(ms = 0) {
@@ -81,77 +82,77 @@ class Timer {
 }
 
 function setup() {  
-    gameWorld = Game.add.container();
+    gameWorld = game.add.container();
 
     buildMap(map);
     buildMap(gameObjects);
 
-    let timeDisplay = Game.add.sprite('display.png');
+    let timeDisplay = game.add.sprite('display.png');
     //gameWorld.addChild(timeDisplay);
-    timeDisplay.x = Game.canvas.width / 2 - timeDisplay.width / 2;
+    timeDisplay.x = game.canvas.width / 2 - timeDisplay.width / 2;
     timeDisplay.y = 8;
 
-    gameOverDisplay = Game.add.sprite('gameover.png');
+    gameOverDisplay = game.add.sprite('gameover.png');
     //gameWorld.addChild(gameOverDisplay);
-    gameOverDisplay.x = Game.canvas.width / 2 - gameOverDisplay.width / 2;
-    gameOverDisplay.y = Game.canvas.height / 2 - gameOverDisplay.height / 2;
+    gameOverDisplay.x = game.canvas.width / 2 - gameOverDisplay.width / 2;
+    gameOverDisplay.y = game.canvas.height / 2 - gameOverDisplay.height / 2;
     gameOverDisplay.visible = false;
 
-    gameOverMessage = Game.add.text('Game Over!', {font:'bold 30px Helvetica', fill:'black'});
+    gameOverMessage = game.add.text('Game Over!', {font:'bold 30px Helvetica', fill:'black'});
     //gameWorld.addChild(gameOverMessage);
     gameOverMessage.x = 275;
     gameOverMessage.y = 270;
     gameOverMessage.visible = false;
 
-    timerMessage = Game.add.text('00', {font:'bold 40px Helvetica', fill:'white'});
+    timerMessage = game.add.text('00', {font:'bold 40px Helvetica', fill:'white'});
     //gameWorld.addChild(timerMessage);
     timerMessage.x = 330;
     timerMessage.y = 10;
 
-    Game.leftKey.press = () => {
+    game.leftKey.press = () => {
         alien.vx = -4;
         alien.vy = 0;
     };
-    Game.leftKey.release = () => {
-        if (!Game.rightKey.isDown && alien.vy === 0) {
+    game.leftKey.release = () => {
+        if (!game.rightKey.isDown && alien.vy === 0) {
             alien.vx = 0;
         }
     };
-    Game.rightKey.press = () => {
+    game.rightKey.press = () => {
         alien.vx = 4;
         alien.vy = 0;
     };
-    Game.rightKey.release = () => {
-        if (!Game.leftKey.isDown && alien.vy === 0) {
+    game.rightKey.release = () => {
+        if (!game.leftKey.isDown && alien.vy === 0) {
             alien.vx = 0;
         }
     };
-    Game.upKey.press = () => {
+    game.upKey.press = () => {
         alien.vx = 0;
         alien.vy = -4;
     };
-    Game.upKey.release = () => {
-        if (!Game.downKey.isDown && alien.vx === 0) {
+    game.upKey.release = () => {
+        if (!game.downKey.isDown && alien.vx === 0) {
             alien.vy = 0;
         }
     };
-    Game.downKey.press = () => {
+    game.downKey.press = () => {
         alien.vx = 0;
         alien.vy = 4;
     };
-    Game.downKey.release = () => {
-        if (!Game.upKey.isDown && alien.vx === 0) {
+    game.downKey.release = () => {
+        if (!game.upKey.isDown && alien.vx === 0) {
             alien.vy = 0;
         }
     };
 
-    camera = Game.add.worldCamera(gameWorld, map[0].length * SIZE, map.length * SIZE, Game.canvas);
+    camera = game.add.worldCamera(gameWorld, map[0].length * SIZE, map.length * SIZE, game.canvas);
     camera.centerOver(alien);
 
     timer = new Timer(30);
     timer.start();
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
@@ -162,15 +163,15 @@ function play(dt) {
     camera.follow(alien);
 
     boxes.forEach(box => {
-        Game.rectangleCollision(alien, box);
+        Alif.rectangleCollision(alien, box);
     });
 
     bombs.forEach(bomb => {
-        if(Game.hitTestRectangle(alien, bomb) && bomb.visible) {
+        if(Alif.hitTestRectangle(alien, bomb) && bomb.visible) {
             bomb.visible = false;
             bombsDefused++;
             if(bombsDefused === bombs.length) {
-                Game.state = endGame;
+                game.state = endGame;
             }
         }
     });
@@ -179,7 +180,7 @@ function play(dt) {
 
     //Check whether the time is over
     if(timer.time === 0) {
-        Game.state = endGame;
+        game.state = endGame;
     }
 }
 
@@ -191,26 +192,26 @@ function buildMap(levelMap) {
       if(currentTile !== EMPTY) {        
         switch (currentTile) {
           case FLOOR:
-            let floor = Game.add.sprite('floor.png');
+            let floor = game.add.sprite('floor.png');
             gameWorld.addChild(floor);
             floor.x = column * SIZE;
             floor.y = row * SIZE;
             break;          
           case BOX:
-            let box = Game.add.sprite('box.png');
+            let box = game.add.sprite('box.png');
             gameWorld.addChild(box);
             box.x = column * SIZE;
             box.y = row * SIZE;
             boxes.push(box);
             break;
           case WALL:
-            let wall = Game.add.sprite('wall.png');
+            let wall = game.add.sprite('wall.png');
             gameWorld.addChild(wall);
             wall.x = column * SIZE;
             wall.y = row * SIZE;
             break;
           case BOMB:
-            let bomb = Game.add.sprite('bomb.png');
+            let bomb = game.add.sprite('bomb.png');
             gameWorld.addChild(bomb);
             bomb.x = column * SIZE + 10;
             bomb.y = row * SIZE + 18;
@@ -219,7 +220,7 @@ function buildMap(levelMap) {
           case ALIEN:
             //Note: "alien" has already been defined in the main
             //program so you don't neeed to preceed it with "let"
-            alien = Game.add.sprite('alien.png');
+            alien = game.add.sprite('alien.png');
             gameWorld.addChild(alien);
             alien.x = column * SIZE;
             alien.y = row * SIZE;
@@ -244,11 +245,8 @@ function endGame() {
     }
 }
 
-window.onload = function() {
-    Game.create(704, 512, setup,
-        [
-            'timeBombPanic.json'
-        ]
-    );
-    Game.start();
- };
+game = new Alif.Game(704, 512, setup,
+    [
+        'timeBombPanic.json'
+    ]
+);

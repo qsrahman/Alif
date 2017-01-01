@@ -1,6 +1,7 @@
 // Copyright 2016 Qazi Sami ur Rahman and other contributors
 // A 2-dimensional vector implementation
 (function(Q) {
+'use strict';
 
 var Q = Q || {};
 
@@ -77,33 +78,33 @@ Q.Vector = class {
         return this;
     }
 
-    subtract(v) {
+    sub(v) {
         return new Vector(this.x - v.x, this.y - v.y);
     }
 
-    subtractFrom(v) {
+    subFrom(v) {
         this.x -= v.x;
         this.y -= v.y;
 
         return this;
     }
 
-    multiply(val) {
+    mul(val) {
         return new Vector(this.x * val, this.y * val);
     }
 
-    multiplyBy(val) {
+    mulBy(val) {
         this.x *= val;
         this.y *= val;
 
         return this;
     }
 
-    divide(val) {
+    div(val) {
         return new Vector(this.x / val, this.y / val);
     }
 
-    divideBy(val) {
+    divBy(val) {
         this.x /= val;
         this.y /= val;
 
@@ -175,7 +176,7 @@ Q.Vector = class {
     }
 
     rotateAbout(pivot, angle) {
-        this.subtractFrom(pivot);
+        this.subFrom(pivot);
         this.rotateBy(angle);
         this.addTo(pivot);
 
@@ -195,7 +196,7 @@ Q.Vector = class {
     projection(v) {
         let dot = this.dot(v);
         let lenSq = v.lengthSq(); // vector doted with itself give lengthSq :)
-        return v.multiply(dot / lenSq);
+        return v.mul(dot / lenSq);
     }
 
     // Determines if a given vector is to the right or left of this vector
@@ -212,7 +213,7 @@ Q.Vector = class {
     limit(max) {
         if(this.lengthSq > max*max) {
             this.normalize();
-            this.multiplyBy(max);
+            this.mulBy(max);
         }
 
         return this;
@@ -226,4 +227,4 @@ Q.Vector = class {
         return "(" + this.x.toFixed(3).replace(/\.?0+$/,'') + "," + this.y.toFixed(3).replace(/\.?0+$/,'') + ")";
     }
 };
-}).call(this, Game);
+}).call(this, Alif);

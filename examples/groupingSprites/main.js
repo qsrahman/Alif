@@ -1,18 +1,18 @@
 'use strict';
 
-let cat, hedgehog, tiger, animals;
+let game, cat, hedgehog, tiger, animals;
 
 function setup() {
-    cat = new Game.Sprite('cat.png');
+    cat = new Alif.Sprite(game, 'cat.png');
     cat.position.set(0, 0);
 
-    hedgehog = new Game.Sprite('hedgehog.png');
+    hedgehog = new Alif.Sprite(game, 'hedgehog.png');
     hedgehog.position.set(32, 32);
 
-    tiger = new Game.Sprite('tiger.png');
+    tiger = new Alif.Sprite(game, 'tiger.png');
     tiger.position.set(64, 64);
 
-    animals = Game.add.container(cat, hedgehog, tiger);
+    animals = game.add.container(cat, hedgehog, tiger);
 
     //Change the group's width and height
     // animals.width = 200;
@@ -45,7 +45,7 @@ function setup() {
     //Find the width and height
     console.log(`Width: ${animals.width} Height: ${animals.height}`);
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
@@ -56,12 +56,9 @@ function load(dt) {
     console.log('loading...');
 }
 
-window.onload = function() {
-    Game.create(640, 480, setup,
-        [
-            'animals.json'
-        ],
-        load
-    );
-    Game.start();
- };
+game = new Alif.Game(640, 480, setup,
+    [
+        'animals.json'
+    ],
+    load
+);

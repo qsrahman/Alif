@@ -1,17 +1,17 @@
 'use strict';
 
-let tank, message, bullets = [];
+let game, tank, message, bullets = [];
 
 function setup() {
-    tank = Game.add.rectangle(32, 32, '0x808080', '0x000000', 2);
+    tank = game.add.rectangle(32, 32, '0x808080', '0x000000', 2);
     tank.anchor.set(0.5, 0.5);
 
-    let turret = Game.add.line('0xFF0000', 4, 0, 0, 32, 0);
+    let turret = game.add.line('0xFF0000', 4, 0, 0, 32, 0);
     tank.addChild(turret);
     turret.x = 0;
     turret.y = 0;
-    tank.x = Game.canvas.width/2 - tank.width/2;
-    tank.y = Game.canvas.height/2 - tank.height/2;
+    tank.x = game.canvas.width/2 - tank.width/2;
+    tank.y = game.canvas.height/2 - tank.height/2;
 
     tank.ax = 0.1;
     tank.ay = 0.1;
@@ -20,35 +20,35 @@ function setup() {
     tank.moveForward = false;
     tank.speed = 0;
 
-    Game.leftKey.press = () => tank.vr = -0.1;
-    Game.leftKey.release = () => {
-        if (!Game.rightKey.isDown) tank.vr = 0;
+    game.leftKey.press = () => tank.vr = -0.1;
+    game.leftKey.release = () => {
+        if (!game.rightKey.isDown) tank.vr = 0;
     }
 
-    Game.rightKey.press = () => tank.vr = 0.1;
-    Game.rightKey.release = () => {
-        if (!Game.leftKey.isDown) tank.vr = 0;
+    game.rightKey.press = () => tank.vr = 0.1;
+    game.rightKey.release = () => {
+        if (!game.leftKey.isDown) tank.vr = 0;
     }
 
-    Game.upKey.press = () => tank.moveForward = true;
-    Game.upKey.release = () => tank.moveForward = false;
+    game.upKey.press = () => tank.moveForward = true;
+    game.upKey.release = () => tank.moveForward = false;
 
-    Game.spaceKey.press = () => {
-        Game.shoot(
+    game.spaceKey.press = () => {
+        Alif.shoot(
             tank,
             tank.rotation,
-            30,
+            35,
             0,
-            Game.stage,
+            game.stage,
             7,
             bullets,
-            () => Game.add.circle(8, '0xFF0000')
+            () => game.add.circle(8, '0xFF0000')
         );
     };
 
-    message = Game.add.text('', {font:'12px Arial', fill: 'black'}, 8, 8);
+    message = game.add.text('', {font:'12px Arial', fill: 'black'}, 8, 8);
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
@@ -74,20 +74,18 @@ function play(dt) {
         bullet.x += bullet.vx;
         bullet.y += bullet.vy;
 
-        let collision = Game.outsideBounds(
+        let collision = Alif.outsideBounds(
             bullet, 
-            {x:0, y:0, width:Game.canvas.width, height:Game.canvas.height});
+            {x:0, y:0, width:game.canvas.width, height:game.canvas.height});
 
         if(collision) {
             message.text = "The bullet hit the " + collision;
-            Game.remove(bullet);
+            Alif.remove(bullet);
             return false;
         }
         return true;
     });
 }
 
-window.onload = function() {
-    Game.create(640, 480, setup);
-    Game.start();
- };
+game = new Alif.Game(640, 480, setup);
+ 

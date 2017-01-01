@@ -1,36 +1,34 @@
 'use strict';
 
-let cat, hedgehog, tiger;
+let game, cat, hedgehog, tiger;
 
 function setup() {
-    Game.background = 'white';
-    Game.renderer.canvas.style.border = "1px black dashed";
-    cat = Game.add.sprite('images/cat.png');
+    game.renderer.backgroundColor = 'white';
+    game.renderer.canvas.style.border = "1px black dashed";
+
+    cat = game.add.sprite('images/cat.png');
     cat.draggable = true;
 
-    tiger = Game.add.sprite('images/tiger.png');
+    tiger = game.add.sprite('images/tiger.png');
     tiger.draggable = true;
     tiger.position.set(64, 64);
 
-    hedgehog = Game.add.sprite('images/hedgehog.png');
+    hedgehog = game.add.sprite('images/hedgehog.png');
     hedgehog.draggable = true;
     hedgehog.position.set(128, 128);
 
-    Game.dragAndDrop = true;
+    game.dragAndDrop = true;
     
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
 }
 
-window.onload = function() {
-    Game.create(640, 480, setup,
-        [
-            'images/cat.png',
-            'images/tiger.png',
-            'images/hedgehog.png'
-        ]
-    );
-    Game.start();
- };
+game = new Alif.Game(640, 480, setup,
+    [
+        'images/cat.png',
+        'images/tiger.png',
+        'images/hedgehog.png'
+    ]
+);

@@ -1,6 +1,7 @@
 // Copyright 2016 Qazi Sami ur Rahman and other contributors
 // some small handy functions
 (function(Q) {
+'use strict';
 
 var Q = Q || {};
 
@@ -146,4 +147,4 @@ Q.utils = {
         return !isNaN(value) ? value : Q.utils.colorToHex(value);
     }
 };
-}).call(this, Game);
+}).call(this, Alif);

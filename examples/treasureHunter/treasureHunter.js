@@ -1,24 +1,30 @@
-window.onload = function() {
-
-let dungeon, player, treasure, enemies, chimes, exit,
+let game, dungeon, player, treasure, enemies, chimes, exit,
     healthBar, message, gameScene, gameOverScene, bounds;
 
+game = new Alif.Game(
+    512, 512, setup, 
+    [
+        'assets/chimes.wav', 
+        'assets/treasureHunter.json'
+    ]
+);
+
 function setup() {
-    chimes = Game.add.sound('assets/chimes.wav');
+    chimes = game.add.sound('assets/chimes.wav');
 
-    dungeon = Game.add.sprite('dungeon.png');
-    exit = Game.add.sprite('door.png', 32);
+    dungeon = game.add.sprite('dungeon.png');
+    exit = game.add.sprite('door.png', 32);
     
-    player = Game.add.sprite('explorer.png');
+    player = game.add.sprite('explorer.png');
     player.x = 68;
-    player.y = Game.canvas.height / 2 - player.halfHeight;
+    player.y = game.canvas.height / 2 - player.halfHeight;
 
-    treasure = Game.add.sprite('treasure.png');
-    treasure.x = Game.canvas.width - treasure.width - 32;
-    treasure.y = Game.canvas.height / 2 - treasure.halfHeight;
+    treasure = game.add.sprite('treasure.png');
+    treasure.x = game.canvas.width - treasure.width - 32;
+    treasure.y = game.canvas.height / 2 - treasure.halfHeight;
     treasure.pickedUp = false;
 
-    gameScene = Game.add.container(dungeon, exit, player, treasure);
+    gameScene = game.add.container(dungeon, exit, player, treasure);
 
     let numberOfEnemies = 6,
         spacing = 48,
@@ -29,9 +35,9 @@ function setup() {
     enemies = [];
 
     for(let i = 0; i < numberOfEnemies; i++) {
-        let enemy = Game.add.sprite('blob.png');
+        let enemy = game.add.sprite('blob.png');
         enemy.x = spacing * i + xOffset;
-        enemy.y = Game.utils.randomInt(0, Game.canvas.height - enemy.height);
+        enemy.y = Alif.utils.randomInt(0, game.canvas.height - enemy.height);
         enemy.vy = speed * direction;
         direction *= -1;
         enemies.push(enemy);
@@ -40,58 +46,59 @@ function setup() {
     }
 
     //Create the black background rectangle
-    let outerBar = new Game.Graphics();
+    let outerBar = new Alif.Graphics(game);
     outerBar.beginFill(0x000000);
     outerBar.drawRect(0, 0, 128, 8);
     outerBar.endFill();
 
     //Create the front red rectangle
-    let innerBar = new Game.Graphics();
+    let innerBar = new Alif.Graphics(game);
     innerBar.beginFill(0xFF3300);
     innerBar.drawRect(0, 0, 128, 8);
     innerBar.endFill();
 
-    healthBar = Game.add.container(outerBar, innerBar);
-    healthBar.x = Game.canvas.width - 148;
+    healthBar = game.add.container(outerBar, innerBar);
+    healthBar.x = game.canvas.width - 148;
     healthBar.y = 16;
 
     healthBar.inner = innerBar;
 
     gameScene.addChild(healthBar);
 
-    message = new Game.Text(
+    message = new Alif.Text(
+        game,
         "The End!",
         {font: "64px Futura", fill: "black"}
     );
     message.x = 100;
-    message.y = Game.canvas.height / 2 - 64;
+    message.y = game.canvas.height / 2 - 64;
 
-    gameOverScene = Game.add.container(message);
+    gameOverScene = game.add.container(message);
     gameOverScene.visible = false;
 
-    Game.fourKeyController(player, 5, 38, 39, 40, 37);
+    Alif.fourKeyController(player, 5, 38, 39, 40, 37);
 
     bounds = {
         x: 32, y: 16,
-        width: Game.canvas.width - 32,
-        height: Game.canvas.height - 32
+        width: game.canvas.width - 32,
+        height: game.canvas.height - 32
     }
-    Game.state = play;
+    game.state = play;
 }
 
 function play() {
-    Game.move(player);
-    Game.contain(player, bounds);
+    Alif.move(player);
+    Alif.contain(player, bounds);
 
     let playerHit = false;
 
     enemies.forEach(enemy => {
-        Game.move(enemy);
-        let enemyHitsEdges = Game.contain(enemy, bounds);
+        Alif.move(enemy);
+        let enemyHitsEdges = Alif.contain(enemy, bounds);
         if(enemyHitsEdges === 'top' || enemyHitsEdges === 'bottom') {
             enemy.vy *= -1;
         }
-        if(Game.hitTestRectangle(player, enemy)) {
+        if(Alif.hitTestRectangle(player, enemy)) {
             playerHit = true;
         }
     });
@@ -104,7 +111,7 @@ function play() {
         player.alpha = 1;
     }
 
-    if(Game.hitTestRectangle(player, treasure)) {
+    if(Alif.hitTestRectangle(player, treasure)) {
         if(!treasure.pickedUp) {
             chimes.play();
             treasure.pickedUp = true;
@@ -116,12 +123,12 @@ function play() {
     }
 
     if(healthBar.inner.width < 0) {
-        Game.state = end;
+        game.state = end;
         message.text = "You lost!";
     } 
     
-    if (Game.hitTestRectangle(treasure, exit)) {
-        Game.state = end;
+    if (Alif.hitTestRectangle(treasure, exit)) {
+        game.state = end;
         message.text = "You won!";
     }
 }
@@ -131,14 +138,3 @@ function end() {
     gameOverScene.visible = true;
 }
 
-Game.create(
-    512, 512, 
-    setup, 
-    [
-        'assets/chimes.wav', 
-        'assets/treasureHunter.json'
-    ]
-);
-
-Game.start();
-};

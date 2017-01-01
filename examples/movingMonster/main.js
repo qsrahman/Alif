@@ -1,13 +1,13 @@
 'use strict';
 
-let monster, boundry;
+let game, monster, boundry;
 
 function setup() {
-    let frame = Game.frame('movingMonster.png', 0, 64, 704, 512);
-    let background = Game.add.sprite(frame);
+    let frame = Alif.frame('movingMonster.png', 0, 64, 704, 512);
+    let background = game.add.sprite(frame);
 
-    frame = Game.frame('movingMonster.png', 0, 0, 64, 64);
-    monster = Game.add.sprite(frame);
+    frame = Alif.frame('movingMonster.png', 0, 0, 64, 64);
+    monster = game.add.sprite(frame);
     monster.x = 320;
     monster.y = 256;
     monster.speed = 1;
@@ -17,16 +17,16 @@ function setup() {
     boundry = {
         x: 0,
         y: 0,
-        width: Game.canvas.width,
-        height: Game.canvas.height
+        width: game.canvas.width,
+        height: game.canvas.height
     };
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
-    Game.move(monster);
-    Game.contain(monster, boundry, false, () => {
+    Alif.move(monster);
+    Alif.contain(monster, boundry, false, () => {
         changeDirection();
     });
 
@@ -66,11 +66,8 @@ function changeDirection() {
     }
 }
 
-window.onload = function() {
-    Game.create(704, 512, setup,
-        [
-            'movingMonster.png'
-        ]
-    );
-    Game.start();
- };
+game = new Alif.Game(704, 512, setup,
+    [
+        'movingMonster.png'
+    ]
+);

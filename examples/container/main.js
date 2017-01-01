@@ -1,13 +1,15 @@
 "use strict";
 
-var container;
+let game, container;
 
 function setup() {
-    container = Game.add.container();
+    game.renderer.backgroundColor = '#66FF99';
+
+    container = game.add.container();
 
     for(var j = 0; j < 5; j++) {
         for(var i = 0; i < 5; i++) {
-            var bunny = new Game.Sprite('bunny.png');
+            var bunny = new Alif.Sprite(game, 'bunny.png');
             bunny.x = 40 * i;
             bunny.y = 40 * j;
             // bunny.anchor.set(0.5, 0.5);
@@ -36,7 +38,7 @@ function setup() {
     console.log(container.gx);
     console.log(container.gy);
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
@@ -46,8 +48,4 @@ function play(dt) {
     // });
 }
 
-window.onload = function() {
-    Game.create(640, 480, setup, ['bunny.png']);
-    Game.renderer.backgroundColor = '#66FF99';
-    Game.start();
-};
+game = new Alif.Game(640, 480, setup, ['bunny.png']);

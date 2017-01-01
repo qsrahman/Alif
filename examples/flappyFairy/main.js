@@ -1,11 +1,11 @@
 'use strict';
 
-let sky;
+let game, sky;
 
 function setup() {
-    sky = Game.add.tilingSprite("sky.png", Game.canvas.width, Game.canvas.height);
+    sky = game.add.tilingSprite("sky.png", game.canvas.width, game.canvas.height);
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
@@ -17,12 +17,9 @@ function load(dt) {
     console.log('loading...');
 }
 
-window.onload = function() {
-    Game.create(910, 512, setup,
-        [
-            'sky.png'
-        ],
-        load
-    );
-    Game.start();
- };
+game = new Alif.Game(910, 512, setup,
+    [
+        'sky.png'
+    ],
+    load
+);

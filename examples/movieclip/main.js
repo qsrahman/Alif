@@ -1,17 +1,19 @@
 'use strict';
 
-let explosions = [];
+let game, explosions = [];
 
 function setup() {
     var explosionTextures = [];
 
-    for(var i = 0; i < 26; i++) {
-        var texture = 'Explosion_Sequence_A ' + (i+1) + '.png';
+    game.renderer.backgroundColor = 'black';
+
+    for(let i = 0; i < 26; i++) {
+        let texture = 'Explosion_Sequence_A ' + (i+1) + '.png';
         explosionTextures.push(texture);
     }
 
-    for(var i = 0; i < 50; i++) {
-        var explosion = Game.add.movieClip(explosionTextures);
+    for(let i = 0; i < 50; i++) {
+        let explosion = game.add.movieClip(explosionTextures);
         explosion.position.set(Math.random() * 800, Math.random() * 600);
         explosion.anchor.set(0.5, 0.5);
         // explosion.pivot.set(0.5, 0.5);
@@ -22,7 +24,7 @@ function setup() {
         explosions.push(explosion);
     }
 
-    Game.state = play;
+    game.state = play;
 }
 
 function play(dt) {
@@ -31,8 +33,4 @@ function play(dt) {
     });
 }
 
-window.onload = function() {
-    Game.create(800, 600, setup, ['SpriteSheet.json']);
-    Game.renderer.backgroundColor = 'black';
-    Game.start();
-};
+game = new Alif.Game(800, 600, setup, ['SpriteSheet.json']);
