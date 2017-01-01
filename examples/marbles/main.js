@@ -5,8 +5,6 @@ let game, sling, marbles, capturedMarble, hitSound;
 function setup() {
     game.renderer.backgroundColor = 'black';
 
-    let frames = Alif.filmstrip('marbles.png', 32, 32);
-
     marbles = game.add.grid(
         //Set the grid's properties
         5, 5, 128, 128, 
@@ -14,6 +12,7 @@ function setup() {
 
         //A function that describes how to make each peg in the grid
         () => {
+            let frames = Alif.filmstrip('marbles.png', 32, 32);
             let marble = new Alif.Sprite(game, frames);
             marble.show(Alif.utils.randomInt(0, 5));
             marble.circular = true;

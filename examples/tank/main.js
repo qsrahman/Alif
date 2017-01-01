@@ -37,9 +37,9 @@ function setup() {
         Alif.shoot(
             tank,
             tank.rotation,
-            // 30,
-            30,
-            // game.stage,
+            35,
+            0,
+            game.stage,
             7,
             bullets,
             () => game.add.circle(8, '0xFF0000')

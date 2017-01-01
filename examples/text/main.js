@@ -3,13 +3,13 @@
 let game, textSample, spinningText, countingText, count, score, remaining;
 
 function setup() {
-    game.renderer.backgroundColor = '#66FF99';
+    game.renderer.backgroundImage = 'textDemoBG.jpg';
 
     // create some white text using the Snippet webfont
     textSample = game.add.text("Game.js can has\nmultiline text!", {font: "35px Snippet", fill: "white", align: "left"}, 20, 20);
 
     // create a text object with a nice stroke
-    spinningText = game.add.text("I'm fun!", {font: "bold 60px Podkova", fill: "#cc00ff", align: "center", stroke: "#FFFFFF", strokeThickness: 6});
+    spinningText = game.add.text("I'm fun!", {font: "bold 60px Arial", fill: "#cc00ff", align: "center", stroke: "#FFFFFF", strokeThickness: 20});
 
     // setting the anchor point to 0.5 will center align the text... great for spinning!
     spinningText.anchor.x = spinningText.anchor.y = 0.5;

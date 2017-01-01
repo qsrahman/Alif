@@ -9,6 +9,7 @@ function setup() {
     square.y = game.canvas.height/2;
 
     cat = game.add.sprite("cat.png");
+    square.addChild(cat);
     cat.x = -cat.halfWidth;
     cat.y = cat.height;
 
@@ -17,7 +18,6 @@ function setup() {
     star = game.add.sprite("star.png");
     star.anchor.set(0.5, 0.5);
     cat.addChild(star);
-    square.addChild(cat);
 
     localMessage = game.add.text("Test", {font:"14px Futura", fill:"black"});
     square.addChild(localMessage);

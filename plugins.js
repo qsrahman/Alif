@@ -1,4 +1,5 @@
 (function(Q) {
+'use strict';
 
 var Q = Q || {};
 
@@ -20,6 +21,31 @@ Q.wait = function(duration = 0) {
     return new Promise((resolve, reject) => {
         setTimeout(resolve, duration);
     });
+};
+
+Q.remove = function(...sprites) {
+    //Remove sprites that's aren't in an array
+    if (!(sprites[0] instanceof Array)) {
+        if (sprites.length > 1) {
+            sprites.forEach(sprite  => {
+                sprite.parent.removeChild(sprite);
+            });
+        } 
+        else {
+            sprites[0].parent.removeChild(sprites[0]);
+        }
+    }
+    //Remove sprites in an array of sprites
+    else {
+        let spritesArray = sprites[0];
+        if (spritesArray.length > 0) {
+            for (let i = spritesArray.length - 1; i >= 0; i--) {
+                let sprite = spritesArray[i];
+                sprite.parent.removeChild(sprite);
+                spritesArray.splice(spritesArray.indexOf(sprite), 1);
+            }
+        }
+    }
 };
 
 //Move a sprite or an array of sprites by adding its
@@ -90,35 +116,49 @@ Q.fourKeyController = function(s, speed, up = 38, right = 39, down = 40, left = 
     };
 };
 
-function _getCenter(o, dimension, axis) {
-    if (o.anchor !== undefined) {
-        if (o.anchor[axis] !== 0) {
-            return 0;
-        } 
-        else {
-            //console.log(o.anchor[axis])
-            return dimension / 2;
-        }
-    } 
-    else {
-        return dimension; 
-    }
-}
+// function _getCenter(o, dimension, axis) {
+//     if (o.anchor !== undefined) {
+//         if (o.anchor[axis] !== 0) {
+//             return 0;
+//         } 
+//         else {
+//             //console.log(o.anchor[axis])
+//             return dimension / 2;
+//         }
+//     } 
+//     else {
+//         return dimension; 
+//     }
+// }
+
+// Q.distance = function (s1, s2) {
+//     let dx = (s2.x + _getCenter(s2, s2.width, "x")) 
+//            - (s1.x + _getCenter(s1, s1.width, "x")),
+//         dy = (s2.y + _getCenter(s2, s2.height, "y")) 
+//            - (s1.y + _getCenter(s1, s1.height, "y"));
+
+//     return Math.sqrt(dx * dx + dy * dy);
+// };
 
 Q.distance = function (s1, s2) {
-    let dx = (s2.x + _getCenter(s2, s2.width, "x")) 
-           - (s1.x + _getCenter(s1, s1.width, "x")),
-        dy = (s2.y + _getCenter(s2, s2.height, "y")) 
-           - (s1.y + _getCenter(s1, s1.height, "y"));
+    let dx = s2.centerX - s1.centerX; 
+        dy = s2.centerY - s1.centerY;
 
     return Math.sqrt(dx * dx + dy * dy);
 };
 
+// Q.distanceSq = function (s1, s2) {
+//     let dx = (s2.x + _getCenter(s2, s2.width, "x")) 
+//            - (s1.x + _getCenter(s1, s1.width, "x")),
+//         dy = (s2.y + _getCenter(s2, s2.height, "y")) 
+//            - (s1.y + _getCenter(s1, s1.height, "y"));
+
+//     return (dx * dx + dy * dy);
+// };
+
 Q.distanceSq = function (s1, s2) {
-    let dx = (s2.x + _getCenter(s2, s2.width, "x")) 
-           - (s1.x + _getCenter(s1, s1.width, "x")),
-        dy = (s2.y + _getCenter(s2, s2.height, "y")) 
-           - (s1.y + _getCenter(s1, s1.height, "y"));
+    let dx = s2.centerX - s1.centerX; 
+        dy = s2.centerY - s1.centerY;
 
     return (dx * dx + dy * dy);
 };
@@ -126,18 +166,30 @@ Q.distanceSq = function (s1, s2) {
 //### rotateAroundSprite
 //Make a sprite rotate around another sprite
 
+// Q.rotateAroundSprite = function(rotatingSprite, centerSprite, distance, angle) {
+//     rotatingSprite.x
+//       = (centerSprite.x + _getCenter(centerSprite, centerSprite.width, "x")) 
+//       - rotatingSprite.parent.x
+//       + (distance * Math.cos(angle))
+//       - _getCenter(rotatingSprite, rotatingSprite.width, "x");
+
+//     rotatingSprite.y
+//       = (centerSprite.y + _getCenter(centerSprite, centerSprite.height, "y")) 
+//       - rotatingSprite.parent.y
+//       + (distance * Math.sin(angle))
+//       - _getCenter(rotatingSprite, rotatingSprite.height, "y");
+// };
+
 Q.rotateAroundSprite = function(rotatingSprite, centerSprite, distance, angle) {
     rotatingSprite.x
-      = (centerSprite.x + _getCenter(centerSprite, centerSprite.width, "x")) 
-      - rotatingSprite.parent.x
+      = centerSprite.centerX - rotatingSprite.parent.x
       + (distance * Math.cos(angle))
-      - _getCenter(rotatingSprite, rotatingSprite.width, "x");
+      - rotatingSprite.halfWidth + rotatingSprite.xAnchorOffset
 
     rotatingSprite.y
-      = (centerSprite.y + _getCenter(centerSprite, centerSprite.height, "y")) 
-      - rotatingSprite.parent.y
+      = centerSprite.centerY - rotatingSprite.parent.y
       + (distance * Math.sin(angle))
-      - _getCenter(rotatingSprite, rotatingSprite.height, "y");
+      - rotatingSprite.halfWidth + rotatingSprite.yAnchorOffset;
 };
 
 //### rotateAroundPoint
@@ -166,21 +218,41 @@ You can use it to make a sprite rotate towards another sprite like this:
 box.rotation = angle(box, pointer);
 */
 
+// Q.angle = function(s1, s2) {
+//     return Math.atan2(
+//         //This code adapts to a shifted anchor point
+//         (s2.y + _getCenter(s2, s2.height, "y")) - 
+//         (s1.y + _getCenter(s1, s1.height, "y")),
+//         (s2.x + _getCenter(s2, s2.width, "x")) - 
+//         (s1.x + _getCenter(s1, s1.width, "x"))
+//     );
+// };
+
 Q.angle = function(s1, s2) {
     return Math.atan2(
         //This code adapts to a shifted anchor point
-        (s2.y + _getCenter(s2, s2.height, "y")) - 
-        (s1.y + _getCenter(s1, s1.height, "y")),
-        (s2.x + _getCenter(s2, s2.width, "x")) - 
-        (s1.x + _getCenter(s1, s1.width, "x"))
+        s2.centerY - s1.centerY,
+        s2.centerX - s1.centerX
     );
 };
 
+// Q.followEase = function(follower, leader, speed) {
+//     let dx = (leader.x + _getCenter(leader, leader.width, "x")) - 
+//              (follower.x + _getCenter(follower, follower.width, "x")),
+//         dy = (leader.y + _getCenter(leader, leader.height, "y")) - 
+//              (follower.y + _getCenter(follower, follower.height, "y")),
+//         distance = Math.sqrt(dx * dx + dy * dy);
+
+//     // Move the follower if it's more than 1 pixel away from the leader
+//     if(distance >= 1) {
+//         follower.x += dx * speed;
+//         follower.y += dy * speed;
+//     }
+// };
+
 Q.followEase = function(follower, leader, speed) {
-    let dx = (leader.x + _getCenter(leader, leader.width, "x")) - 
-             (follower.x + _getCenter(follower, follower.width, "x")),
-        dy = (leader.y + _getCenter(leader, leader.height, "y")) - 
-             (follower.y + _getCenter(follower, follower.height, "y")),
+    let dx = leader.centerX - follower.centerX,
+        dy = leader.centerY - follower.centerY,
         distance = Math.sqrt(dx * dx + dy * dy);
 
     // Move the follower if it's more than 1 pixel away from the leader
@@ -192,10 +264,8 @@ Q.followEase = function(follower, leader, speed) {
 
 Q.followConstant= function(follower, leader, speed) {
     //Figure out the distance between the sprites
-    let dx = (leader.x + _getCenter(leader, leader.width, "x")) - 
-             (follower.x + _getCenter(follower, follower.width, "x")),
-        dy = (leader.y + _getCenter(leader, leader.height, "y")) - 
-             (follower.y + _getCenter(follower, follower.height, "y")),
+    let dx = leader.centerX - follower.centerX,
+        dy = leader.centerY - follower.centerY,
         distance = Math.sqrt(dx * dx + dy * dy);
 
     //Move the follower if it's more than 1 move //away from the leader
@@ -205,192 +275,64 @@ Q.followConstant= function(follower, leader, speed) {
     }
 };
 
-Q.TilingSprite = class extends Q.Sprite {
-    constructor(game, source, width, height, x, y) {
-        super(game, source, x, y);
-
-        this.game = game;
-        this.width = width;
-        this.height = height;
-
-        this.tileScale = new Q.Point(1, 1);
-        this.tilePosition = new Q.Point(0, 0);
-    }
-    get tileX() {
-        return this.tilePosition.x;
-    }
-    set tileX(value) {
-        this.tilePosition.x = value;
-    }
-    get tileY() {
-        return this.tilePosition.y;
-    }
-    set tileY(value) {
-        this.tilePosition.y = value;
-    }
-    get tileScaleX() {
-        return this.tileScale.x;
-    }
-    set tileScaleX(value) {
-        this.tileScale.x = value;
-    }
-    get tileScaleY() {
-        return this.tileScale.y;
-    }
-    set tileScaleY(value) {
-        this.tileScale.y = value;
-    }
-    render(context) {
-        context.globalAlpha = this.worldAlpha;
-
-        this.worldTransform.setTransform(context);
-
-        if(!this.__tilePattern) {
-            this.__tilePattern = context.createPattern(this.texture.source, 'repeat');
-        }
-
-        context.beginPath();
-
-        context.scale(this.tileScale.x, this.tileScale.y);
-        context.translate(this.tilePosition.x, this.tilePosition.y);
-
-        context.fillStyle = this.__tilePattern;
-        context.fillRect(
-            -this.tilePosition.x, 
-            -this.tilePosition.y, 
-            this.width / this.tileScale.x, 
-            this.height / this.tileScale.y
-        );
-
-        context.scale(1/this.tileScale.x, 1/this.tileScale.y);
-        context.translate(-this.tilePosition.x, -this.tilePosition.y);
-
-        context.closePath();
-    }
-};
-
-Q.Factory.prototype.tilingSprite = function(source, width, height, x, y) {
-    let sprite = new Q.TilingSprite(this.game, source, width, height, x, y);
-
-    this.parent.addChild(sprite);
-
-    return sprite;
-};
-
-Q.MovieClip = class extends Q.Sprite {
-    constructor(game, textures, x, y) {
-        super(game, textures[0], x, y);
-        
-        this.game = game;
-        this.textures = textures;
-        this.animationSpeed = 1;
-        this.playing = false;
-        this.loop = true;
-        this.onComplete = null;
-    }
-    stop() {
-        this.playing = false;
-        return this;
-    }
-    play() {
-        this.playing = true;
-        return this;
-    }
-    gotoAndPlay(frameNumber) {
-        this.play();
-        this.currentFrame = frameNumber;
-        return this;
-    }
-    gotoAndStop(frameNumber) {
-        this.stop();
-        this.currentFrame = frameNumber;
-        let round = (this.currentFrame + 0.5) | 0;
-        this.texture = this.textures[round % this.textures.length];
-        return this;
-    }
-    update(dt) {
-        if(this.playing) {
-            this.currentFrame += this.animationSpeed; // * dt;
-            let round = (this.currentFrame + 0.5) | 0;
-            this.currentFrame = this.currentFrame % this.textures.length;
-            if(this.loop || round < this.textures.length) {
-                this.texture = this.textures[round % this.textures.length];
-            }
-            else if(round >= this.textures.length) {
-                this.gotoAndStop(this.textures.length - 1);
-                if (this.onComplete) this.onComplete();
-            }
-        }
-        return this;
-    }
-};
-
-Q.Factory.prototype.movieClip = function(source, x, y) {
-    let sprite = new Q.MovieClip(this.game, source, x, y);
-
-    this.parent.addChild(sprite);
-
-    return sprite;
-};
-
 //Use `shoot` to create bullet sprites 
-// Q.shoot = function(
-//     shooter, angle, x, y, container, bulletSpeed, bulletArray, bulletSprite
-// ) {
-//     //Make a new sprite using the user-supplied `bulletSprite` function
-//     let bullet = bulletSprite();
-
-//     //Set the bullet's anchor point to its center
-//     bullet.anchor.set(0.5, 0.5);
-
-//     //Temporarily add the bullet to the shooter
-//     //so that we can position it relative to the
-//     //shooter's position
-//     shooter.addChild(bullet);
-//     bullet.x = x;
-//     bullet.y = y;
-
-//     //Find the bullet's global coordinates so that we can use
-//     //them to position the bullet on the new parent container
-//     let tempGx = bullet.getGlobalPosition().x,
-//         tempGy = bullet.getGlobalPosition().y;
-
-//     //Add the bullet to the new parent container using
-//     //the new global coordinates
-//     container.addChild(bullet);
-//     // Q.stage.addChild(bullet);
-//     bullet.x = tempGx;
-//     bullet.y = tempGy;
-
-//     //Set the bullet's velocity
-//     bullet.vx = Math.cos(angle) * bulletSpeed;
-//     bullet.vy = Math.sin(angle) * bulletSpeed;
-
-//     //Push the bullet into the `bulletArray`
-//     bulletArray.push(bullet);
-// };
-
 Q.shoot = function(
-    shooter, angle, offsetFromCenter, bulletSpeed, bulletArray, bulletSprite
+    shooter, angle, x, y, container, bulletSpeed, bulletArray, bulletSprite
 ) {
     //Make a new sprite using the user-supplied `bulletSprite` function
     let bullet = bulletSprite();
 
-    //Set the bullet's start point
-    bullet.x
-        = shooter.centerX - bullet.halfWidth
-        + (offsetFromCenter * Math.cos(angle));
-    bullet.y
-        = shooter.centerY - bullet.halfHeight
-        + (offsetFromCenter * Math.sin(angle));
+    //Set the bullet's anchor point to its center
+    bullet.anchor.set(0.5, 0.5);
+
+    //Temporarily add the bullet to the shooter
+    //so that we can position it relative to the
+    //shooter's position
+    shooter.addChild(bullet);
+    bullet.x = x;
+    bullet.y = y;
+
+    //Find the bullet's global coordinates so that we can use
+    //them to position the bullet on the new parent container
+    let tempGx = bullet.getGlobalPosition().x,
+        tempGy = bullet.getGlobalPosition().y;
+
+    //Add the bullet to the new parent container using
+    //the new global coordinates
+    container.addChild(bullet);
+ 
+    bullet.x = tempGx;
+    bullet.y = tempGy;
 
     //Set the bullet's velocity
     bullet.vx = Math.cos(angle) * bulletSpeed;
     bullet.vy = Math.sin(angle) * bulletSpeed;
 
-    //Push the bullet into the
+    //Push the bullet into the `bulletArray`
     bulletArray.push(bullet);
 };
+
+// Q.shoot = function(
+//     shooter, angle, offsetFromCenter, bulletSpeed, bulletArray, bulletSprite
+// ) {
+//     //Make a new sprite using the user-supplied `bulletSprite` function
+//     let bullet = bulletSprite();
+
+//     //Set the bullet's start point
+//     bullet.x
+//         = shooter.centerX - bullet.halfWidth + bullet.xAnchorOffset
+//         + (offsetFromCenter * Math.cos(angle));
+//     bullet.y
+//         = shooter.centerY - bullet.halfHeight + bullet.yAnchorOffset
+//         + (offsetFromCenter * Math.sin(angle));
+
+//     //Set the bullet's velocity
+//     bullet.vx = Math.cos(angle) * bulletSpeed;
+//     bullet.vy = Math.sin(angle) * bulletSpeed;
+
+//     //Push the bullet into the
+//     bulletArray.push(bullet);
+// };
 
 Q.Factory.prototype.emitter = function (interval, particleFunction) {
     let emitter = {},
@@ -656,33 +598,33 @@ Q.progressBar = {
     initialized: false,
 
     //Use the `create` method to create the progress bar
-    create(canvas, assets) {
+    create(game) {
         if (!this.initialized) {
             //Store a reference to the `assets` object
             this.assets = Q.Assets;
 
             //Set the maximum width to half the width of the canvas
-            this.maxWidth = Q.canvas.width / 2;
+            this.maxWidth = game.canvas.width / 2;
 
             //Build the progress bar using two rectangle sprites and
             //one text sprite
 
             //1. Create the background bar's gray background
-            this.backBar = Q.rectangle(this.maxWidth, 32, this.backgroundColor);
-            this.backBar.x = (Q.canvas.width / 2) - (this.maxWidth / 2);
-            this.backBar.y = (Q.canvas.height / 2) - 16;
+            this.backBar = game.add.rectangle(this.maxWidth, 32, this.backgroundColor);
+            this.backBar.x = (game.canvas.width / 2) - (this.maxWidth / 2);
+            this.backBar.y = (game.canvas.height / 2) - 16;
 
             //2. Create the blue foreground bar. This is the element of the
             //progress bar that will increase in width as assets load
-            this.frontBar = Q.rectangle(this.maxWidth, 32, this.foregroundColor);
-            this.frontBar.x = (Q.canvas.width / 2) - (this.maxWidth / 2);
-            this.frontBar.y = (Q.canvas.height / 2) - 16;
+            this.frontBar = game.add.rectangle(this.maxWidth, 32, this.foregroundColor);
+            this.frontBar.x = (game.canvas.width / 2) - (this.maxWidth / 2);
+            this.frontBar.y = (game.canvas.height / 2) - 16;
 
             //3. A text sprite that will display the percentage
             //of assets that have loaded
-            this.percentage = Q.text('0%', {font:'28px sans-serif', fill: 'black'});
-            this.percentage.x = (Q.canvas.width / 2) - (this.maxWidth / 2) + 12;
-            this.percentage.y = (Q.canvas.height / 2) - 16;
+            this.percentage = game.add.text('0%', {font:'28px sans-serif', fill: 'black'});
+            this.percentage.x = (game.canvas.width / 2) - (this.maxWidth / 2) + 12;
+            this.percentage.y = (game.canvas.height / 2) - 16;
 
             //Flag the `progressBar` as having been initialized
             this.initialized = true;
@@ -1903,6 +1845,12 @@ Q.hit = function(a, b, react = false, bounce = false, global = false, extra) {
             return Q.circleRectangleCollision(a, b, bounce, global);
         }
     }
+};
+
+Q.Factory.prototype.tween = function(object) {
+    let sprite = new Q.TWEEN.Tween(object);
+
+    return sprite;
 };
 
 /**

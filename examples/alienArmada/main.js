@@ -57,9 +57,9 @@ function setup() {
         Alif.shoot(
             cannon,  //The shooter
             4.71,    //The angle at which to shoot (4.71 is up)
-            // cannon.halfWidth, //Bullet's x position on the cannon
-            20,       //Bullet's y position on the canon
-            // game.stage, //The container to which the bullet should be added
+            cannon.halfWidth, //Bullet's x position on the cannon
+            0,       //Bullet's y position on the canon
+            game.stage, //The container to which the bullet should be added
             7,       //The bullet's speed (pixels per frame)
             bullets, //The array used to store the bullets
 

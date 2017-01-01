@@ -1,9 +1,10 @@
 (function() {
+'use strict';
 
 var root = this,
     Q = Q || {};
 
-Q.VERSION = '0.1.0';
+Q.VERSION = '0.1.1';
 Q.PI_2 = 2 * Math.PI;
 
 Q.Game = class {
@@ -35,11 +36,22 @@ Q.Game = class {
         this.then = null;
         this.step = 1 / this._FPS;
         this.accumulator = 0;
+        this.elapsedms = 0;
+        this.elapsedsec = 0;
         this.paused = false;
 
         this.gameLoop = this.gameLoop.bind(this);
 
         this.boot();
+    }
+    get FPS() {
+        return this._FPS;
+    }
+    set FPS(vlaue) {
+        this.then = null;
+        this.accumulator = 0;
+        this.step = 1 / value;
+        this._FPS = value;
     }
     boot() {
         if (this.isBooted) return;
@@ -69,10 +81,6 @@ Q.Game = class {
     init() {
         this.showHeader();
 
-        //initialize renderer
-        this.renderer = new Q.Renderer(this, this.width, this.height);
-        this.canvas = this.renderer.canvas;
-
         //stage will be the parent of all objects
         this.stage = new Q.Container(this);
         // this.stage.parent = {
@@ -81,15 +89,19 @@ Q.Game = class {
         //     children: []
         // };
 
+        //initialize renderer
+        this.renderer = new Renderer(this, this.width, this.height);
+        this.canvas = this.renderer.canvas;
+
         this.add = new Q.Factory(this, this.stage);
 
         //initialize mouse pointer
-        this.pointer = new Pointer(this, this.renderer.canvas);
+        this.pointer = new Pointer(this);
 
         //initialize some often used keys
         this.leftKey = new Q.Keyboard(37);
-        this.upKey = new Q.Keyboard(38);
         this.rightKey = new Q.Keyboard(39);
+        this.upKey = new Q.Keyboard(38);
         this.downKey = new Q.Keyboard(40);
         this.spaceKey = new Q.Keyboard(32);
 
@@ -127,37 +139,39 @@ Q.Game = class {
         ];
         
         console.log.apply(console, args);
-    }  
-    update(dt = 1) {
+    }
+    update0() {
         //update all interactive objects
         let len = this.buttons.length;
         if (len > 0) {
             this.pointer.cursor = 'auto';
             for(let i = 0; i < len; i++) {
-                this.buttons[i].update(this.pointer, this.renderer.canvas);
-                if (this.buttons[i].state === 'over' || this.buttons[i].state === 'down') {
-                    if(this.buttons[i].parent !== null) {
-                        this.pointer.cursor = 'pointer';
-                    }
-                }
+                this.buttons[i].update(this.pointer);
+                // if (this.buttons[i].state === 'over' || 
+                //     this.buttons[i].state === 'down') {
+                //     if(this.buttons[i].parent !== null) {
+                //         this.pointer.cursor = 'pointer';
+                //     }
+                // }
             }
         }
-
-        //update all particles
-        len = this.particles.length
-        if (len > 0) {
-            for(let i = len - 1; i >= 0; i--) {
-                this.particles[i].update(dt);
-            }
-        }
-
-        //update tweens
-        if(Q.TWEEN)
-            Q.TWEEN.update();
 
         //update drag and drop objects
         if (this.dragAndDrop) {
             this.pointer.updateDragAndDrop();
+        }        
+
+        //update tweens
+        if(Q.TWEEN)
+            Q.TWEEN.update(this.then);
+    }
+    update1(dt = 1) {
+        //update all particles
+        let len = this.particles.length
+        if (len > 0) {
+            for(let i = len - 1; i >= 0; i--) {
+                this.particles[i].update(dt);
+            }
         }
 
         //call game stae function
@@ -165,22 +179,27 @@ Q.Game = class {
             this.state(dt);
         }
     }
-    //game loop, now is ms
+    //game loop, 'now' is ms
     gameLoop(now) {
         requestAnimationFrame(this.gameLoop);
 
-        // time take by one frame converted to seconds
-        // let dt = (now - then || now) * 0.001;
-        // console.log(1/dt);
+        // calculate time taken by one frame
+        this.elapsedms = (now - this.then || now);
+        this.elapsedsec = this.elapsedms * 0.001;
+        // console.log(this.elapsedms);
+        // console.log(this.elapsedsec);
+        // console.log(1 / this.elapsedsec);
 
         // duration capped at 1.0 second
-        this.accumulator += Math.min(1, (now - this.then || now) * 0.001);
+        this.accumulator += Math.min(1, this.elapsedsec);
 
         this.then = now;
 
+        this.update0();
+
         while(this.accumulator > this.step) {
             // Run the code for each frame.
-            this.update(this.step);
+            this.update1(this.step);
 
             this.accumulator -= this.step;
         }
@@ -188,20 +207,22 @@ Q.Game = class {
         // render all sprites on the stage.
         this.renderer.render(this.stage, this.accumulator);    
     }
+    // gameLoop(now) {
+    //     requestAnimationFrame(this.gameLoop);
+        
+    //     let dt = (now - this.then || now) * 0.06;
+    //     this.then = now;
+
+    //     this.update0();
+    //     this.update1(dt);
+        
+    //     this.renderer.render(this.stage);
+    // }
     resume() {
         this.paused = false;
     }
     pause() {
         this.paused = true;
-    }
-    get FPS() {
-        return this._FPS;
-    }
-    set FPS(vlaue) {
-        this.then = null;
-        this.accumulator = 0;
-        this.step = 1 / value;
-        this._FPS = value;
     }
     addToDOM() {
         let target;
@@ -226,17 +247,17 @@ Q.Game = class {
     }
 };
 
-Q.Renderer = class {
+class Renderer {
     constructor(game, width, height, canvasId) {
         this.game = game;
         width = width || 800;
         height = height || 600;
 
-        this.canvas = document.getElementById(canvasId);
-        if(!this.canvas) {
+        if(canvasId) {
+            this.canvas = document.getElementById(canvasId);
+        }
+        else {
             this.canvas = document.createElement('canvas');
-            this.canvas.setAttribute('width', width);
-            this.canvas.setAttribute('height', height);
             this.canvas.setAttribute('id', 'canvas');
         }
         this.canvas.ctx = this.canvas.getContext("2d");
@@ -597,11 +618,19 @@ Q.Container = class {
         }
 
         child.parent = this;
-        child.layer = this.children.length;
+        // child.layer = this.children.length;
         this.children.push(child);
     }
     add(...sprites) {
-        sprites.forEach(sprite => this.addChild(sprite));
+        if (sprites.length > 1) {
+            sprites.forEach(sprite  => {
+                this.addChild(sprite);
+            });
+        } 
+        else {
+            this.addChild(sprites[0]);
+        }
+        //sprites.forEach(sprite => this.addChild(sprite));
     }
     removeChild(child) {
         let index = this.children.indexOf(child);
@@ -614,8 +643,15 @@ Q.Container = class {
         }
     }
     remove(...sprites) {
-        sprites.forEach(sprite => this.removeChild(sprite));
-        return this;
+        if (sprites.length > 1) {
+            sprites.forEach(sprite  => {
+                this.removeChild(sprite);
+            });
+        } 
+        else {
+            this.removeChild(sprites[0]);
+        }
+        //sprites.forEach(sprite => this.removeChild(sprite));
     }
     swapChildren(child, child2) {
         if (child === child2) return;
@@ -626,9 +662,9 @@ Q.Container = class {
         if (index1 < 0 || index2 < 0) {
             throw new Error('swapChildren: Both the supplied DisplayObjects must be a child of the caller.');
         }
-        child2.layer = index1;
+        // child2.layer = index1;
         this.children[index1] = child2;
-        child.layer = index2
+        // child.layer = index2
         this.children[index2] = child;
     }
     updateTransform() {
@@ -934,6 +970,8 @@ Q.Sprite = class extends Q.Container {
             Object.assign(this, Animation);
     }
     createFromTileset(source) {
+        // source.image = Q.Assets.cache[source.image].source;
+
         //Throw an error if the source is not an image object
         if (!(source.image instanceof Image)) {
             throw new Error(`${source.image} is not an image object`);
@@ -953,6 +991,8 @@ Q.Sprite = class extends Q.Container {
         }
     }
     createFromTilesetFrames(source) {
+        // source.image = Q.Assets.cache[source.image].source;
+
         //Throw an error if the source is not an Image object
         if (!(source.image instanceof Image)) {
             throw new Error(`${source.image} is not an image object`);
@@ -1213,6 +1253,118 @@ let Animation = {
             this.numberOfFrames = 0;
             clearInterval(this.timerInterval);
         }
+    }
+};
+
+Q.TilingSprite = class extends Q.Sprite {
+    constructor(game, source, width, height, x, y) {
+        super(game, source, x, y);
+
+        this.game = game;
+        this.width = width;
+        this.height = height;
+
+        this.tileScale = new Q.Point(1, 1);
+        this.tilePosition = new Q.Point(0, 0);
+    }
+    get tileX() {
+        return this.tilePosition.x;
+    }
+    set tileX(value) {
+        this.tilePosition.x = value;
+    }
+    get tileY() {
+        return this.tilePosition.y;
+    }
+    set tileY(value) {
+        this.tilePosition.y = value;
+    }
+    get tileScaleX() {
+        return this.tileScale.x;
+    }
+    set tileScaleX(value) {
+        this.tileScale.x = value;
+    }
+    get tileScaleY() {
+        return this.tileScale.y;
+    }
+    set tileScaleY(value) {
+        this.tileScale.y = value;
+    }
+    render(context) {
+        context.globalAlpha = this.worldAlpha;
+
+        this.worldTransform.setTransform(context);
+
+        if(!this.__tilePattern) {
+            this.__tilePattern = context.createPattern(this.texture.source, 'repeat');
+        }
+
+        context.beginPath();
+
+        context.scale(this.tileScale.x, this.tileScale.y);
+        context.translate(this.tilePosition.x, this.tilePosition.y);
+
+        context.fillStyle = this.__tilePattern;
+        context.fillRect(
+            -this.tilePosition.x, 
+            -this.tilePosition.y, 
+            this.width / this.tileScale.x, 
+            this.height / this.tileScale.y
+        );
+
+        context.scale(1/this.tileScale.x, 1/this.tileScale.y);
+        context.translate(-this.tilePosition.x, -this.tilePosition.y);
+
+        context.closePath();
+    }
+};
+
+Q.MovieClip = class extends Q.Sprite {
+    constructor(game, textures, x, y) {
+        super(game, textures[0], x, y);
+        
+        this.game = game;
+        this.textures = textures;
+        this.animationSpeed = 1;
+        this.playing = false;
+        this.loop = true;
+        this.onComplete = null;
+    }
+    stop() {
+        this.playing = false;
+        return this;
+    }
+    play() {
+        this.playing = true;
+        return this;
+    }
+    gotoAndPlay(frameNumber) {
+        this.play();
+        this.currentFrame = frameNumber;
+        return this;
+    }
+    gotoAndStop(frameNumber) {
+        this.stop();
+        this.currentFrame = frameNumber;
+        let round = (this.currentFrame + 0.5) | 0;
+        this.texture = this.textures[round % this.textures.length];
+        return this;
+    }
+    update(dt) {
+        if(this.playing) {
+            this.currentFrame += this.animationSpeed; // * dt;
+            let round = (this.currentFrame + 0.5) | 0;
+            this.currentFrame = this.currentFrame % this.textures.length;
+            if(this.loop || round < this.textures.length) {
+                this.texture = this.textures[round % this.textures.length];
+            }
+            else if(round >= this.textures.length) {
+                this.gotoAndStop(this.textures.length - 1);
+                if (this.onComplete) this.onComplete();
+            }
+        }
+        return this;
     }
 };
 
@@ -2011,6 +2163,20 @@ Q.Factory = class {
 
         return sprite;
     }
+    tilingSprite(source, width, height, x, y) {
+        let sprite = new Q.TilingSprite(this.game, source, width, height, x, y);
+
+        this.parent.addChild(sprite);
+
+        return sprite;
+    }
+    movieClip(source, x, y) {
+        let sprite = new Q.MovieClip(this.game, source, x, y);
+
+        this.parent.addChild(sprite);
+
+        return sprite;
+    }
     text(source, style, x, y) {
         let sprite = new Q.Text(this.game, source, style, x, y);
 
@@ -2344,11 +2510,6 @@ Q.Factory = class {
         //Return the line
         return o;
     }
-    tween(object) {
-        let sprite = new Q.TWEEN.Tween(object);
-
-        return sprite;
-    }
     keyboard(keyCode) {
         let obj = new Q.Keyboard(keyCode);
         
@@ -2366,11 +2527,17 @@ Q.Factory = class {
 };
 
 class Pointer {
-    constructor(game, element, scale = 1) {
+    constructor(game, scale = 1) {
         this.game = game;
+
+        this.scale = scale;
+        this.element = game.canvas;
 
         this._x = 0,
         this._y = 0,
+        
+        this.width = 1;
+        this.height = 1;
 
         this.isDown = false,
         this.isUp = true,
@@ -2392,8 +2559,7 @@ class Pointer {
         this.dragOffsetX = 0,
         this.dragOffsetY = 0,
 
-        this.element = element;
-        this.scale = scale;
+        this._visible = true;
 
         this.element.addEventListener(
             'mousemove', this.moveHandler.bind(this), false
@@ -2431,12 +2597,6 @@ class Pointer {
     get y() {
         return this._y / this.scale;
     }
-    get width() {
-        return 1;
-    }
-    get height() {
-        return 1;
-    }
     get centerX() {
         return this.x;
     }
@@ -2451,6 +2611,18 @@ class Pointer {
     }
     set cursor(value) {
         this.element.style.cursor = value;
+    }
+    get visible() {
+        return this._visible;
+    }
+    set visible(value) {
+        if (value === true) {
+            this.cursor = "auto";
+        } 
+        else {
+            this.cursor = "none";
+        }
+        this._visible = value;
     }
     moveHandler(event) {
         //Get the element that's firing the event
@@ -2523,6 +2695,7 @@ class Pointer {
 
         //Call the `release` method if it's been assigned
         if (this.release) this.release();
+
         event.preventDefault();
     }
     touchendHandler(event) {
@@ -2553,10 +2726,10 @@ class Pointer {
         if (!sprite.circular) {
             //Get the position of the sprite's edges using global
             //coordinates
-            let left = sprite.gx,
-            right = sprite.gx + sprite.width,
-            top = sprite.gy,
-            bottom = sprite.gy + sprite.height;
+            let left = sprite.gx - sprite.xAnchorOffset,
+                right = sprite.gx + sprite.width - sprite.xAnchorOffset,
+                top = sprite.gy - sprite.yAnchorOffset,
+                bottom = sprite.gy + sprite.height - sprite.yAnchorOffset;
 
             //Find out if the pointer is intersecting the rectangle.
             //`hit` will become `true` if the pointer is inside the
@@ -2569,14 +2742,14 @@ class Pointer {
         else {
             //Find the distance between the pointer and the
             //center of the circle
-            let dx = this.x - (sprite.gx + sprite.radius),
-                dy = this.y - (sprite.gy + sprite.radius),
+            let dx = this.x - (sprite.gx + sprite.radius - sprite.xAnchorOffset),
+                dy = this.y - (sprite.gy + sprite.radius - sprite.yAnchorOffset),
 
-            distance = Math.sqrt(dx * dx + dy * dy);
+                distanceSq = (dx * dx + dy * dy);
 
             //The pointer is intersecting the circle if the
             //distance is less than the circle's radius
-            hit = distance < sprite.radius;
+            hit = (distanceSq < sprite.radius * sprite.radius);
         }
         return hit;
     }
@@ -2640,11 +2813,11 @@ class Pointer {
         //draggable sprite
         this.game.draggableSprites.some(sprite => {
             if (this.hitTestSprite(sprite) && sprite.draggable) {
-                this.cursor = 'pointer';
+                if (this.visible) this.cursor = 'pointer';
                 return true;
             } 
             else {
-                this.cursor = 'auto';
+                if (this.visible) this.cursor = 'auto';
                 return false;
             }
         });
@@ -2663,7 +2836,7 @@ let Interaction = {
     hoverOver: false,
     type: '',
 
-    update(pointer, canvas) {
+    update(pointer) {
         //Figure out if the pointer is touching the sprite
         let hit = pointer.hitTestSprite(this);
 
@@ -2675,7 +2848,7 @@ let Interaction = {
             //Show the first image state frame, if this is a `Button` sprite
             if (this.type === 'button') this.gotoAndStop(0);
         }
-
+                
         //If the pointer is touching the sprite, figure out
         //if the over or down state should be displayed
         if (hit) {
@@ -2704,11 +2877,14 @@ let Interaction = {
                     }
                 }
             }
-            pointer.cursor = 'pointer';
+            //Change the pointer icon to a hand
+            if (pointer.visible) pointer.cursor = 'pointer';
         }
-        else {
-            pointer.cursor = 'auto';
-        }
+        // else {
+            //Turn the pointer to an ordinary arrow icon if the
+            //pointer isn't touching a sprite
+        //     if (pointer.visible) pointer.cursor = 'auto';
+        // }
 
         //Perform the correct interactive action
 
@@ -2896,7 +3072,7 @@ Q.Assets = {
 
         xhr.onload = event => {
             //Check to make sure the file has loaded properly
-            if (xhr.status === 200) {
+            if (xhr.status === 200 || xhr.readyState === 4) {
                 //Convert the JSON data file into an ordinary object
                 let file = JSON.parse(xhr.responseText);
                 //Get the file name
@@ -3212,31 +3388,6 @@ class Sound {
     }
 }
 
-Q.remove = function(...sprites) {
-    //Remove sprites that's aren't in an array
-    if (!(sprites[0] instanceof Array)) {
-        if (sprites.length > 1) {
-            sprites.forEach(sprite  => {
-                sprite.parent.removeChild(sprite);
-            });
-        } 
-        else {
-            sprites[0].parent.removeChild(sprites[0]);
-        }
-    }
-    //Remove sprites in an array of sprites
-    else {
-        let spritesArray = sprites[0];
-        if (spritesArray.length > 0) {
-            for (let i = spritesArray.length - 1; i >= 0; i--) {
-                let sprite = spritesArray[i];
-                sprite.parent.removeChild(sprite);
-                spritesArray.splice(spritesArray.indexOf(sprite), 1);
-            }
-        }
-    }
-};
-
 Q.Point = class {
     constructor(x = 0, y = 0) {
         this.set(x, y);
@@ -3466,6 +3617,4 @@ else if (typeof define !== 'undefined' && define.amd) {
 else {
     root.Alif = Q;
 }
-
-return Q;
 }).call(this);

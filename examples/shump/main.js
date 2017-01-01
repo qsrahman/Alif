@@ -46,11 +46,10 @@ function setup() {
         Alif.shoot(
             player,  //The shooter
             4.71,    //The angle at which to shoot (4.71 is up)
-            //player.halfWidth - 20, //Bullet's x position on the ship
-            40,
-            //-85,       //Bullet's y position on the ship
-            //Game.stage, //The container to which the bullet should be added
-            10,       //The bullet's speed (pixels per frame)
+            player.halfWidth - 24, //Bullet's x position on the ship
+            -84,       //Bullet's y position on the ship
+            game.stage, //The container to which the bullet should be added
+            8,       //The bullet's speed (pixels per frame)
             bullets, //The array used to store the bullets
 
             //A function that returns the sprite that should
@@ -80,7 +79,7 @@ function play(dt) {
         return true;
     });
 
-    console.log(bullets.length);
+    // console.log(bullets.length);
 }
 
 game = new Alif.Game(400, 600, setup,
