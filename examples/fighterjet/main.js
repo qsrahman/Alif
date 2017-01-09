@@ -1,6 +1,5 @@
 "use strict";
 
-
 let game, movie, frames = [];
 
 function setup() {
@@ -12,10 +11,12 @@ function setup() {
     }
 
     movie = game.add.movieClip(frames);
+    // movie = game.add.sprite(frames);
     movie.position.set(400, 300);
     movie.anchor.set(0.5, 0.5);
     // movie.pivot.set(50, 50);
-    movie.animationSpeed = 0.5;
+    movie.animationSpeed = 0.6;
+    // movie.fps = 30;
     movie.play();
 
     game.state = play;
@@ -23,7 +24,7 @@ function setup() {
 
 function play(dt) {
     movie.rotation += 0.01;
-    movie.update(dt);
+    movie.update();
 }
 
 game = new Alif.Game(800, 600, setup, ['fighter.json']);

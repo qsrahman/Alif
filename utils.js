@@ -30,20 +30,21 @@ Q.utils = {
         return radians * 180 / Math.PI;
     },
 
-    randomRange(min, max) {
-        if(max === undefined) {
-            max = min;
-            min = 0;
-        }
-        return min + Math.random() * (max - min);
-    },
+    // randomRange(min, max) {
+    //     if(max === undefined) {
+    //         max = min;
+    //         min = 0;
+    //     }
+    //     return min + Math.random() * (max - min);
+    // },
 
     randomInt(min, max) {
         if(max === undefined) {
             max = min;
             min = 0;
         }
-        return Math.floor(min + Math.random() * (max - min + 1));
+        // return Math.floor(min + Math.random() * (max - min + 1));
+        return Math.floor(min + Math.random() * (max - min));
     },
 
     randomFloat(min, max) {

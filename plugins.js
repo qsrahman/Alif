@@ -116,48 +116,15 @@ Q.fourKeyController = function(s, speed, up = 38, right = 39, down = 40, left = 
     };
 };
 
-// function _getCenter(o, dimension, axis) {
-//     if (o.anchor !== undefined) {
-//         if (o.anchor[axis] !== 0) {
-//             return 0;
-//         } 
-//         else {
-//             //console.log(o.anchor[axis])
-//             return dimension / 2;
-//         }
-//     } 
-//     else {
-//         return dimension; 
-//     }
-// }
-
-// Q.distance = function (s1, s2) {
-//     let dx = (s2.x + _getCenter(s2, s2.width, "x")) 
-//            - (s1.x + _getCenter(s1, s1.width, "x")),
-//         dy = (s2.y + _getCenter(s2, s2.height, "y")) 
-//            - (s1.y + _getCenter(s1, s1.height, "y"));
-
-//     return Math.sqrt(dx * dx + dy * dy);
-// };
-
 Q.distance = function (s1, s2) {
-    let dx = s2.centerX - s1.centerX; 
+    let dx = s2.centerX - s1.centerX, 
         dy = s2.centerY - s1.centerY;
 
     return Math.sqrt(dx * dx + dy * dy);
 };
 
-// Q.distanceSq = function (s1, s2) {
-//     let dx = (s2.x + _getCenter(s2, s2.width, "x")) 
-//            - (s1.x + _getCenter(s1, s1.width, "x")),
-//         dy = (s2.y + _getCenter(s2, s2.height, "y")) 
-//            - (s1.y + _getCenter(s1, s1.height, "y"));
-
-//     return (dx * dx + dy * dy);
-// };
-
 Q.distanceSq = function (s1, s2) {
-    let dx = s2.centerX - s1.centerX; 
+    let dx = s2.centerX - s1.centerX, 
         dy = s2.centerY - s1.centerY;
 
     return (dx * dx + dy * dy);
@@ -165,21 +132,6 @@ Q.distanceSq = function (s1, s2) {
 
 //### rotateAroundSprite
 //Make a sprite rotate around another sprite
-
-// Q.rotateAroundSprite = function(rotatingSprite, centerSprite, distance, angle) {
-//     rotatingSprite.x
-//       = (centerSprite.x + _getCenter(centerSprite, centerSprite.width, "x")) 
-//       - rotatingSprite.parent.x
-//       + (distance * Math.cos(angle))
-//       - _getCenter(rotatingSprite, rotatingSprite.width, "x");
-
-//     rotatingSprite.y
-//       = (centerSprite.y + _getCenter(centerSprite, centerSprite.height, "y")) 
-//       - rotatingSprite.parent.y
-//       + (distance * Math.sin(angle))
-//       - _getCenter(rotatingSprite, rotatingSprite.height, "y");
-// };
-
 Q.rotateAroundSprite = function(rotatingSprite, centerSprite, distance, angle) {
     rotatingSprite.x
       = centerSprite.centerX - rotatingSprite.parent.x
@@ -197,7 +149,6 @@ Q.rotateAroundSprite = function(rotatingSprite, centerSprite, distance, angle) {
 //If distanceX and distanceY are the same value, the rotation will
 //be circular. If they're different values, the rotation will be
 //ellipical.
-
 Q.rotateAroundPoint = function(pointX, pointY, distanceX, distanceY, angle) {
     let point = {};
 
@@ -217,17 +168,6 @@ You can use it to make a sprite rotate towards another sprite like this:
 
 box.rotation = angle(box, pointer);
 */
-
-// Q.angle = function(s1, s2) {
-//     return Math.atan2(
-//         //This code adapts to a shifted anchor point
-//         (s2.y + _getCenter(s2, s2.height, "y")) - 
-//         (s1.y + _getCenter(s1, s1.height, "y")),
-//         (s2.x + _getCenter(s2, s2.width, "x")) - 
-//         (s1.x + _getCenter(s1, s1.width, "x"))
-//     );
-// };
-
 Q.angle = function(s1, s2) {
     return Math.atan2(
         //This code adapts to a shifted anchor point
@@ -235,20 +175,6 @@ Q.angle = function(s1, s2) {
         s2.centerX - s1.centerX
     );
 };
-
-// Q.followEase = function(follower, leader, speed) {
-//     let dx = (leader.x + _getCenter(leader, leader.width, "x")) - 
-//              (follower.x + _getCenter(follower, follower.width, "x")),
-//         dy = (leader.y + _getCenter(leader, leader.height, "y")) - 
-//              (follower.y + _getCenter(follower, follower.height, "y")),
-//         distance = Math.sqrt(dx * dx + dy * dy);
-
-//     // Move the follower if it's more than 1 pixel away from the leader
-//     if(distance >= 1) {
-//         follower.x += dx * speed;
-//         follower.y += dy * speed;
-//     }
-// };
 
 Q.followEase = function(follower, leader, speed) {
     let dx = leader.centerX - follower.centerX,
@@ -311,28 +237,6 @@ Q.shoot = function(
     //Push the bullet into the `bulletArray`
     bulletArray.push(bullet);
 };
-
-// Q.shoot = function(
-//     shooter, angle, offsetFromCenter, bulletSpeed, bulletArray, bulletSprite
-// ) {
-//     //Make a new sprite using the user-supplied `bulletSprite` function
-//     let bullet = bulletSprite();
-
-//     //Set the bullet's start point
-//     bullet.x
-//         = shooter.centerX - bullet.halfWidth + bullet.xAnchorOffset
-//         + (offsetFromCenter * Math.cos(angle));
-//     bullet.y
-//         = shooter.centerY - bullet.halfHeight + bullet.yAnchorOffset
-//         + (offsetFromCenter * Math.sin(angle));
-
-//     //Set the bullet's velocity
-//     bullet.vx = Math.cos(angle) * bulletSpeed;
-//     bullet.vy = Math.sin(angle) * bulletSpeed;
-
-//     //Push the bullet into the
-//     bulletArray.push(bullet);
-// };
 
 Q.Factory.prototype.emitter = function (interval, particleFunction) {
     let emitter = {},
@@ -788,7 +692,7 @@ Q.contain = function(s, container, bounce = false, extra){
         //affect the sprite's velocity
         if(s.mass) s.vx /= s.mass;
         s.x = container.x - s.parent.gx - container.xAnchorOffset + s.xAnchorOffset;
-        collision = "left";
+        collision = 'left';
     }
 
     //Top
@@ -796,7 +700,7 @@ Q.contain = function(s, container, bounce = false, extra){
         if (bounce) s.vy *= -1;
         if(s.mass) s.vy /= s.mass;
         s.y = container.y - s.parent.gy - container.yAnchorOffset + s.yAnchorOffset;
-        collision = "top";
+        collision = 'top';
     }
 
     //Right
@@ -804,7 +708,7 @@ Q.contain = function(s, container, bounce = false, extra){
         if (bounce) s.vx *= -1;
         if(s.mass) s.vx /= s.mass;
         s.x = container.width - s.width - container.xAnchorOffset + s.xAnchorOffset;
-        collision = "right";
+        collision = 'right';
     }
 
     //Bottom
@@ -812,7 +716,7 @@ Q.contain = function(s, container, bounce = false, extra){
         if (bounce) s.vy *= -1;
         if(s.mass) s.vy /= s.mass;
         s.y = container.height - s.height - container.yAnchorOffset + s.yAnchorOffset;
-        collision = "bottom";
+        collision = 'bottom';
     }
 
     //The `extra` function runs if there was a collision
@@ -835,19 +739,19 @@ Q.outsideBounds = function(s, bounds, extra){
 
     //Left
     if (s.x < x - s.width) {
-        collision = "left";
-    }
-    //Top
-    if (s.y < y - s.height) {
-        collision = "top";
+        collision = 'left';
     }
     //Right
     if (s.x > width) {
-        collision = "right";
+        collision = 'right';
+    }
+    //Top
+    if (s.y < y - s.height) {
+        collision = 'top';
     }
     //Bottom
     if (s.y > height) {
-        collision = "bottom";
+        collision = 'bottom';
     }
 
     //The `extra` function runs if there was a collision
@@ -872,15 +776,10 @@ Q.hitTestPoint = function(point, sprite) {
 
     //Find out if the sprite is rectangular or circular depending
     //on whether it has a `radius` property
-    if (sprite.radius) {
-        shape = "circle";
-    } 
-    else {
-        shape = "rectangle";
-    }
-
+    shape = sprite.radius ? 'circle' : 'rectangle';
+    
     //Rectangle
-    if (shape === "rectangle") {
+    if (shape === 'rectangle') {
         //Get the position of the sprite's edges
         left = sprite.x - sprite.xAnchorOffset;
         right = sprite.x + sprite.width - sprite.xAnchorOffset;
@@ -895,7 +794,7 @@ Q.hitTestPoint = function(point, sprite) {
     }
 
     //Circle
-    if (shape === "circle") {
+    if (shape === 'circle') {
         //Find the distance between the point and the
         //center of the circle
         dx = point.x - sprite.centerX,
@@ -952,8 +851,7 @@ Q.hitTestCircle = function(c1, c2, global = false) {
 
 /*
 #### circleCollision
-Use this function to prevent a moving circular sprite from overlapping and optionally
-bouncing off a non-moving circular sprite.
+Use this function to prevent a moving circular sprite from overlapping and optionally bouncing off a non-moving circular sprite.
 Parameters:
 a. A sprite object with `x`, `y` `centerX`, `centerY` and `radius` properties.
 b. A sprite object with `x`, `y` `centerX`, `centerY` and `radius` properties.
@@ -1300,13 +1198,13 @@ Q.rectangleCollision = function(r1, r2, bounce = false, global = false) {
                 //The collision is happening on the X axis
                 //But on which side? dy can tell us
                 if (dy > 0) {
-                    collision = "top";
+                    collision = 'top';
 
                     //Move the rectangle out of the collision
                     r1.y = r1.y + overlapY;
                 } 
                 else {
-                    collision = "bottom";
+                    collision = 'bottom';
 
                     //Move the rectangle out of the collision
                     r1.y = r1.y - overlapY;
@@ -1330,13 +1228,13 @@ Q.rectangleCollision = function(r1, r2, bounce = false, global = false) {
                 //The collision is happening on the Y axis
                 //But on which side? dx can tell us
                 if (dx > 0) {
-                    collision = "left";
+                    collision = 'left';
 
                     //Move the rectangle out of the collision
                     r1.x = r1.x + overlapX;
                 } 
                 else {    
-                    collision = "right";
+                    collision = 'right';
 
                     //Move the rectangle out of the collision
                     r1.x = r1.x - overlapX;
@@ -1405,11 +1303,11 @@ Q.rectangleCollision = function(r1, r2, bounce = false, global = false) {
       //If it is, we need to check whether it's in the 
       //top left, top center or top right
       if (c1x - c1.xAnchorOffset < r1x - 1 - r1.halfWidth - r1.xAnchorOffset) {
-        region = "topLeft";
+        region = 'topLeft';
       } else if (c1x - c1.xAnchorOffset > r1x + 1 + r1.halfWidth - r1.xAnchorOffset) {
-        region = "topRight";
+        region = 'topRight';
       } else {
-        region = "topMiddle";
+        region = 'topMiddle';
       }
     }
 
@@ -1420,11 +1318,11 @@ Q.rectangleCollision = function(r1, r2, bounce = false, global = false) {
       //If it is, we need to check whether it's in the bottom left,
       //bottom center, or bottom right
       if (c1x - c1.xAnchorOffset < r1x - 1 - r1.halfWidth - r1.xAnchorOffset) {
-        region = "bottomLeft";
+        region = 'bottomLeft';
       } else if (c1x - c1.xAnchorOffset > r1x + 1 + r1.halfWidth - r1.xAnchorOffset) {
-        region = "bottomRight";
+        region = 'bottomRight';
       } else {
-        region = "bottomMiddle";
+        region = 'bottomMiddle';
       }
     }
 
@@ -1432,15 +1330,15 @@ Q.rectangleCollision = function(r1, r2, bounce = false, global = false) {
     //so it must be on the left or right side
     else {
       if (c1x - c1.xAnchorOffset < r1x - r1.halfWidth - r1.xAnchorOffset) {
-        region = "leftMiddle";
+        region = 'leftMiddle';
       } else {
-        region = "rightMiddle";
+        region = 'rightMiddle';
       }
     }
 
     //Is this the circle touching the flat sides
     //of the rectangle?
-    if (region === "topMiddle" || region === "bottomMiddle" || region === "leftMiddle" || region === "rightMiddle") {
+    if (region === 'topMiddle' || region === 'bottomMiddle' || region === 'leftMiddle' || region === 'rightMiddle') {
 
       //Yes, it is, so do a standard rectangle vs. rectangle collision test
       collision = this.hitTestRectangle(c1, r1, global);
@@ -1452,22 +1350,22 @@ Q.rectangleCollision = function(r1, r2, bounce = false, global = false) {
       let point = {};
 
       switch (region) {
-        case "topLeft":
+        case 'topLeft':
           point.x = r1x - r1.xAnchorOffset;
           point.y = r1y - r1.yAnchorOffset;
           break;
 
-        case "topRight":
+        case 'topRight':
           point.x = r1x + r1.width - r1.xAnchorOffset;
           point.y = r1y - r1.yAnchorOffset;
           break;
 
-        case "bottomLeft":
+        case 'bottomLeft':
           point.x = r1x - r1.xAnchorOffset;
           point.y = r1y + r1.height - r1.yAnchorOffset;
           break;
 
-        case "bottomRight":
+        case 'bottomRight':
           point.x = r1x + r1.width - r1.xAnchorOffset;
           point.y = r1y + r1.height - r1.yAnchorOffset;
       }
@@ -1547,11 +1445,11 @@ Q.hitTestCirclePoint = function(c1, point, global = false) {
       //If it is, we need to check whether it's in the 
       //top left, top center or top right
       if (c1x - c1.xAnchorOffset < r1x - 1 - r1.halfWidth - r1.xAnchorOffset) {
-        region = "topLeft";
+        region = 'topLeft';
       } else if (c1x - c1.xAnchorOffset > r1x + 1 + r1.halfWidth - r1.xAnchorOffset) {
-        region = "topRight";
+        region = 'topRight';
       } else {
-        region = "topMiddle";
+        region = 'topMiddle';
       }
     }
 
@@ -1562,11 +1460,11 @@ Q.hitTestCirclePoint = function(c1, point, global = false) {
       //If it is, we need to check whether it's in the bottom left,
       //bottom center, or bottom right
       if (c1x - c1.xAnchorOffset < r1x - 1 - r1.halfWidth - r1.xAnchorOffset) {
-        region = "bottomLeft";
+        region = 'bottomLeft';
       } else if (c1x - c1.xAnchorOffset > r1x + 1 + r1.halfWidth - r1.xAnchorOffset) {
-        region = "bottomRight";
+        region = 'bottomRight';
       } else {
-        region = "bottomMiddle";
+        region = 'bottomMiddle';
       }
     }
 
@@ -1574,15 +1472,15 @@ Q.hitTestCirclePoint = function(c1, point, global = false) {
     //so it must be on the left or right side
     else {
       if (c1x - c1.xAnchorOffset < r1x - r1.halfWidth - r1.xAnchorOffset) {
-        region = "leftMiddle";
+        region = 'leftMiddle';
       } else {
-        region = "rightMiddle";
+        region = 'rightMiddle';
       }
     }
 
     //Is this the circle touching the flat sides
     //of the rectangle?
-    if (region === "topMiddle" || region === "bottomMiddle" || region === "leftMiddle" || region === "rightMiddle") {
+    if (region === 'topMiddle' || region === 'bottomMiddle' || region === 'leftMiddle' || region === 'rightMiddle') {
 
       //Yes, it is, so do a standard rectangle vs. rectangle collision test
       collision = this.rectangleCollision(c1, r1, bounce, global);
@@ -1594,22 +1492,22 @@ Q.hitTestCirclePoint = function(c1, point, global = false) {
       let point = {};
 
       switch (region) {
-        case "topLeft":
+        case 'topLeft':
           point.x = r1x - r1.xAnchorOffset;
           point.y = r1y - r1.yAnchorOffset;
           break;
 
-        case "topRight":
+        case 'topRight':
           point.x = r1x + r1.width - r1.xAnchorOffset;
           point.y = r1y - r1.yAnchorOffset;
           break;
 
-        case "bottomLeft":
+        case 'bottomLeft':
           point.x = r1x - r1.xAnchorOffset;
           point.y = r1y + r1.height - r1.yAnchorOffset;
           break;
 
-        case "bottomRight":
+        case 'bottomRight':
           point.x = r1x + r1.width - r1.xAnchorOffset;
           point.y = r1y + r1.height - r1.yAnchorOffset;
       }

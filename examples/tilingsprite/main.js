@@ -3,7 +3,7 @@
 let game, box;
 
 function setup() {
-    box = game.add.tilingSprite('tile.png', 128, 128);
+    box = game.add.tilingSprite('tile.png', 256, 256);
 
     game.state = play;
 }

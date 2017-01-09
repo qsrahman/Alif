@@ -83,11 +83,11 @@ Q.Game = class {
 
         //stage will be the parent of all objects
         this.stage = new Q.Container(this);
-        // this.stage.parent = {
-        //     worldTransform: new Q.Matrix(),
-        //     worldAlpha: 1, 
-        //     children: []
-        // };
+        this.stage.parent = {
+            worldTransform: new Q.Matrix(),
+            worldAlpha: 1, 
+            children: []
+        };
 
         //initialize renderer
         this.renderer = new Renderer(this, this.width, this.height);
@@ -140,7 +140,7 @@ Q.Game = class {
         
         console.log.apply(console, args);
     }
-    update0() {
+    preUpdate() {
         //update all interactive objects
         let len = this.buttons.length;
         if (len > 0) {
@@ -165,7 +165,7 @@ Q.Game = class {
         if(Q.TWEEN)
             Q.TWEEN.update(this.then);
     }
-    update1(dt = 1) {
+    update(dt = 1) {
         //update all particles
         let len = this.particles.length
         if (len > 0) {
@@ -186,26 +186,23 @@ Q.Game = class {
         // calculate time taken by one frame
         this.elapsedms = (now - this.then || now);
         this.elapsedsec = this.elapsedms * 0.001;
-        // console.log(this.elapsedms);
-        // console.log(this.elapsedsec);
-        // console.log(1 / this.elapsedsec);
 
         // duration capped at 1.0 second
         this.accumulator += Math.min(1, this.elapsedsec);
 
         this.then = now;
 
-        this.update0();
+        this.preUpdate();
 
         while(this.accumulator > this.step) {
             // Run the code for each frame.
-            this.update1(this.step);
+            this.update(this.step);
 
             this.accumulator -= this.step;
         }
 
         // render all sprites on the stage.
-        this.renderer.render(this.stage, this.accumulator);    
+        this.renderer.render(this.stage, this.accumulator);
     }
     // gameLoop(now) {
     //     requestAnimationFrame(this.gameLoop);
@@ -213,8 +210,8 @@ Q.Game = class {
     //     let dt = (now - this.then || now) * 0.06;
     //     this.then = now;
 
-    //     this.update0();
-    //     this.update1(dt);
+    //     this.preUpdate();
+    //     this.update(dt);
         
     //     this.renderer.render(this.stage);
     // }
@@ -286,8 +283,8 @@ class Renderer {
 
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // container.updateTransform();
-        // container.worldTransform.setTransform(ctx);
+        container.updateTransform();
+        container.worldTransform.setTransform(ctx);
 
         for (let i = 0, j = container.children.length; i < j; ++i) {
             renderChild(container.children[i]);
@@ -404,7 +401,7 @@ Q.Container = class {
         this.scale = new Q.Point(1, 1);
         this.pivot = new Q.Point();
 
-        this.globalPosition = new Q.Point(0, 0);
+        this.globalPosition = new Q.Point();
         
         this.rotation = 0;
 
@@ -585,6 +582,8 @@ Q.Container = class {
         return this._interactive;
     }
     set interactive(value) {
+        if(this._interactive === value) return;
+
         if (value === true) {
             Object.assign(this, Interaction);
             this.game.buttons.push(this);
@@ -603,13 +602,17 @@ Q.Container = class {
         return this._draggable;
     }
     set draggable(value) {
+        if(this._draggable === value) return;
+
         if (value === true) {
             this.game.draggableSprites.push(this);
             this._draggable = true;
-            // if (Q.dragAndDrop === false) Q.dragAndDrop = true;
+            if (this.game.dragAndDrop === false) this.game.dragAndDrop = true;
         }
         if (value === false) {
             this.game.draggableSprites.splice(this.game.draggableSprites.indexOf(this), 1);
+            if(this.game.draggableSprites.length === 0)
+                thia.game.dragAndDrop = false;
         }
     }
     addChild(child) {
@@ -653,6 +656,12 @@ Q.Container = class {
         }
         //sprites.forEach(sprite => this.removeChild(sprite));
     }
+    //Remove sprite from it's parent.
+    removeFromParent() {
+        if(this.parent) {
+            this.parent.removeChild(this);
+        }
+    }
     swapChildren(child, child2) {
         if (child === child2) return;
 
@@ -668,9 +677,9 @@ Q.Container = class {
         this.children[index2] = child;
     }
     updateTransform() {
-        let pt = this.parent.worldTransform,
-            wt = this.worldTransform,
-            a, b, c, d, tx, ty;
+        let pt = this.parent.worldTransform;
+        let wt = this.worldTransform;
+        let a, b, c, d, tx, ty;
 
         // if rotation is between 0 then we can simplify the multiplication
         // process..
@@ -766,6 +775,60 @@ Q.Container = class {
 
             let bounds = this._bounds;
 
+            // if(!childVisible) {
+            //     bounds = new Q.Rectangle();
+
+            //     let w0 = bounds.x,
+            //         w1 = bounds.width + bounds.x,
+
+            //         h0 = bounds.y,
+            //         h1 = bounds.height + bounds.y,
+
+            //         worldTransform = this.worldTransform,
+
+            //         a = worldTransform.a,
+            //         b = worldTransform.b,
+            //         c = worldTransform.c,
+            //         d = worldTransform.d,
+            //         tx = worldTransform.tx,
+            //         ty = worldTransform.ty,
+
+            //         x1 = a * w1 + c * h1 + tx,
+            //         y1 = d * h1 + b * w1 + ty,
+
+            //         x2 = a * w0 + c * h1 + tx,
+            //         y2 = d * h1 + b * w0 + ty,
+
+            //         x3 = a * w0 + c * h0 + tx,
+            //         y3 = d * h0 + b * w0 + ty,
+
+            //         x4 = a * w1 + c * h0 + tx,
+            //         y4 = d * h0 + b * w1 + ty;
+
+            //     maxX = x1;
+            //     maxY = y1;
+
+            //     minX = x1;
+            //     minY = y1;
+
+            //     minX = x2 < minX ? x2 : minX;
+            //     minX = x3 < minX ? x3 : minX;
+            //     minX = x4 < minX ? x4 : minX;
+
+            //     minY = y2 < minY ? y2 : minY;
+            //     minY = y3 < minY ? y3 : minY;
+            //     minY = y4 < minY ? y4 : minY;
+
+            //     maxX = x2 > maxX ? x2 : maxX;
+            //     maxX = x3 > maxX ? x3 : maxX;
+            //     maxX = x4 > maxX ? x4 : maxX;
+
+            //     maxY = y2 > maxY ? y2 : maxY;
+            //     maxY = y3 > maxY ? y3 : maxY;
+            //     maxY = y4 > maxY ? y4 : maxY;
+            // }
+
+
             bounds.x = minX;
             bounds.y = minY;
             bounds.width = maxX - minX;
@@ -780,7 +843,7 @@ Q.Container = class {
 
         this.worldTransform = Q.Matrix.IDENTITY;
 
-        for (var i = 0, j = this.children.length; i < j; ++i) {
+        for (let i = 0, j = this.children.length; i < j; ++i) {
             this.children[i].updateTransform();
         }
 
@@ -835,7 +898,7 @@ Q.Container = class {
 
 Q.frame = function(source, x, y, width, height) {
     let o = {};
-    o.image = Q.Assets.cache[source].source;
+    o.image = Q.Assets.cache[source];
     o.x = x;
     o.y = y;
     o.width = width;
@@ -846,7 +909,7 @@ Q.frame = function(source, x, y, width, height) {
 
 Q.frames = function(source, arrayOfPositions, width, height) {
     let o = {};
-    o.image = Q.Assets.cache[source].source;
+    o.image = Q.Assets.cache[source];
     o.data = arrayOfPositions;
     o.width = width;
     o.height = height;
@@ -854,16 +917,16 @@ Q.frames = function(source, arrayOfPositions, width, height) {
     return o;
 };
 
-Q.filmstrip = function(imageName, frameWidth, frameHeight, spacing){
-    let image = Q.Assets.cache[imageName].source,
+Q.filmstrip = function(source, frameWidth, frameHeight, spacing){
+    let image = Q.Assets.cache[source],
         positions = [],
         columns = image.width / frameWidth,
         rows = image.height / frameHeight,
         numberOfFrames = columns * rows;
 
     for(let i = 0; i < numberOfFrames; i++) {
-        let x = (i % columns) * frameWidth;
-        let y = Math.floor(i / columns) * frameHeight;
+        let x = (i % columns) * frameWidth,
+            y = Math.floor(i / columns) * frameHeight;
 
         if(spacing && spacing > 0) {
             x += spacing + (spacing * i % columns);
@@ -872,7 +935,7 @@ Q.filmstrip = function(imageName, frameWidth, frameHeight, spacing){
 
         positions.push([x, y]);
     }
-    return Q.frames(imageName, positions, frameWidth, frameHeight);
+    return Q.frames(source, positions, frameWidth, frameHeight);
 };
 
 Q.Sprite = class extends Q.Container {
@@ -882,18 +945,27 @@ Q.Sprite = class extends Q.Container {
         this.game = game;
         this.position.set(x, y);
         this.anchor = new Q.Point();
+        this._texture = null;
         
+        //properties used in animation
         this.frames = [];
         this._currentFrame = 0;
-        this._texture = null;
+        this.playing = false;
+        this.loop = true;
+        this.onComplete = null;
 
         this.texture = source;
+
+        //if sprite is extended as MovieClip than Animation is not added
+        if ((new.target !== Q.MovieClip) && (this.frames.length > 0)) {
+            Object.assign(this, Animation);
+        }
     }
     get width() {
         return Math.abs(this.scale.x) * this._texture.frame.w;
     }
     set width(value) {
-        let sign = Q.utils.sign(this.scale.x) || 1;
+        let sign = Math.sign(this.scale.x) || 1;
         this.scale.x = sign * value / this._texture.frame.w;
         this._width = value;
     }
@@ -901,7 +973,7 @@ Q.Sprite = class extends Q.Container {
         return Math.abs(this.scale.y) * this._texture.frame.h;
     }
     set height(value) {
-        let sign = Q.utils.sign(this.scale.y) || 1;
+        let sign = Math.sign(this.scale.y) || 1;
         this.scale.y = sign * value / this._texture.frame.h;
         this._height = value;
     }
@@ -916,27 +988,25 @@ Q.Sprite = class extends Q.Container {
     get currentFrame() {
         return this._currentFrame;
     }
-    set currentFrame(value) {
-        this._currentFrame = value;
-    }
     get texture() {
         return this._texture
     }
     set texture(source) {
+        //We need to figure out what the source is, and then use
+        //use that source data to display the sprite image correctly
         //If the source contains an `getContext` sub-property, this must
         //be a canvas object. Use that sub-image to make the sprite.
         if(source.getContext) {
-            this._texture = {
-                source: source,
-                frame: {x: 0, y: 0, w: source.width, h: source.height}
-            }
-            this.width = source.width;
-            this.height = source.height;
+            this.createFromCanvas(source);
         }
-        //If the source contains an `image` sub-property, this must be a
-        //`frame` object that's defining the rectangular area of an inner
-        //sub-image. Use that sub-image to make the sprite. If it doesn't 
-        //contain a `data` property, then it must be a single frame.
+        //Is the source a JavaScript Image object?
+        else if(Q.Assets.cache[source] instanceof Image) {
+            this.createFromImage(Q.Assets.cache[source]); 
+        }
+        //If the source contains an `image` sub-property, this must
+        //be a `frame` object that's defining the rectangular area of an 
+        //inner sub-image. Use that sub-image to make the sprite. If it
+        //doesn't contain a `data` property, then it must be a single frame.
         else if (source.image && !source.data) {
             this.createFromTileset(source);
         }
@@ -947,10 +1017,14 @@ Q.Sprite = class extends Q.Container {
         }
         //Is the source an array? If so, what kind of array?
         else if (source instanceof Array) {
-            if (source[0] && Q.Assets.cache[source[0]].source) {
+            if (Q.Assets.cache[source[0]] && Q.Assets.cache[source[0]].source) {
                 //The source is an array of frames on a texture atlas tileset
                 this.createFromAtlasFrames(source);
             }
+            //It must be an array of image objects
+            else if (Q.Assets.cache[source[0]] instanceof Image){
+                this.createFromImages(source);
+            } 
             //throw an error if the sources in the array aren't recognized
             else {
                 throw new Error(`The image sources in ${source} are not recognized`);
@@ -966,12 +1040,32 @@ Q.Sprite = class extends Q.Container {
             throw new Error(`The image source ${source} is not recognized`);
         }
 
-        if (this.frames.length > 0)
-            Object.assign(this, Animation);
+        // this.width = this._texture.frame.w;
+        // this.height = this._texture.frame.h;
+    }
+    createFromCanvas(source) {
+        this._texture = {
+            source: source,
+            frame: {
+                x: 0, 
+                y: 0, 
+                w: source.width, 
+                h: source.height
+            }
+        };
+    }
+    createFromImage(source) {
+        this._texture = {
+            source: source,
+            frame: {
+                x: 0,
+                y: 0,
+                w: source.width,
+                h: source.height
+            }
+        };
     }
     createFromTileset(source) {
-        // source.image = Q.Assets.cache[source.image].source;
-
         //Throw an error if the source is not an image object
         if (!(source.image instanceof Image)) {
             throw new Error(`${source.image} is not an image object`);
@@ -986,13 +1080,9 @@ Q.Sprite = class extends Q.Container {
                     h: source.height
                 }
             };
-            this.width = source.width;
-            this.height = source.height;
         }
     }
     createFromTilesetFrames(source) {
-        // source.image = Q.Assets.cache[source.image].source;
-
         //Throw an error if the source is not an Image object
         if (!(source.image instanceof Image)) {
             throw new Error(`${source.image} is not an image object`);
@@ -1008,20 +1098,26 @@ Q.Sprite = class extends Q.Container {
                     h: source.height
                 }
             };
-            this.width = source.width;
-            this.height = source.height;
         }
-    }
-    createFromAtlas(source) {
-        this._texture = source;
-        this.width = this._texture.frame.w;
-        this.height = this._texture.frame.h;
     }
     createFromAtlasFrames(source) {
         this.frames = source;
         this._texture = Q.Assets.cache[source[0]];
-        this.width = this._texture.frame.w;
-        this.height = this._texture.frame.h;
+    }
+    createFromImages(source) {
+        this.frames = source;
+        this._texture = {
+            source: Q.Assets.cache[source[0]],
+            frame: {
+                x: 0,
+                y: 0,
+                w: Q.Assets.cache[source[0]].width,
+                h: Q.Assets.cache[source[0]].height
+            }
+        };
+    }
+    createFromAtlas(source) {
+        this._texture = source;
     }
     getBounds(matrix) {
         if(!this._currentBounds) {
@@ -1096,6 +1192,7 @@ Q.Sprite = class extends Q.Container {
             }
 
             let bounds = this._bounds;
+            
             bounds.x = minX;
             bounds.width = maxX - minX;
 
@@ -1114,6 +1211,25 @@ Q.Sprite = class extends Q.Container {
 
         return this._bounds;
     }
+    // getLocalBounds() {
+    //     let matrixCache = this.worldTransform;
+
+    //     this.worldTransform = PIXI.identityMatrix;
+
+    //     for (let i = 0, j = this.children.length; i < j; ++i) {
+    //         this.children[i].updateTransform();
+    //     }
+
+    //     this._bounds = this.getBounds();
+
+    //     this.worldTransform = matrixCache;
+
+    //     for (let i = 0, j = this.children.length; i < j; ++i) {
+    //         this.children[i].updateTransform();
+    //     }
+
+    //     return this._bounds;
+    // }
     //Add a `gotoAndStop` method to go to a specific frame.
     gotoAndStop(frameNumber) {
         if (this.frames.length > 0 && frameNumber < this.frames.length) {
@@ -1128,10 +1244,22 @@ Q.Sprite = class extends Q.Container {
             //If each frame isn't an array, and it has a sub-object called `frame`,
             //then the frame must be a texture atlas id name.
             //In that case, get the source position from the atlas's `frame` object.
+            // else if (Q.Assets.cache[this.frames[frameNumber]].frame) {
+            //     this._texture = Q.Assets.cache[this.frames[frameNumber]];
+            //     this._texture.frame.x = this.frames[frameNumber].frame.x;
+            //     this._texture.frame.y = this.frames[frameNumber].frame.y;
+            //     this._texture.frame.w = this.frames[frameNumber].frame.w;
+            //     this._texture.frame.h = this.frames[frameNumber].frame.h;
+            //     this.width = this.frames[frameNumber].frame.w;
+            //     this.height = this.frames[frameNumber].frame.h;
+            // }
+            //c. Frames made from individual image objects.
+            //If neither of the above are true, then each frame must be
+            //an individual Image object
             else {
                 this._texture = Q.Assets.cache[this.frames[frameNumber]];
-                this.width = this._texture.frame.w;
-                this.height = this._texture.frame.h;
+                // this.width = this._texture.frame.w;
+                // this.height = this._texture.frame.h;                
             }
             //Set the `_currentFrame` value to the chosen frame
             this._currentFrame = frameNumber;
@@ -1163,8 +1291,6 @@ let Animation = {
     endFrame: 0,
     fps: 12,
     timerInterval: undefined,
-    playing: false,
-    loop: true,
 
     show(frameNumber) {
         //Reset any possible previous animations
@@ -1235,23 +1361,25 @@ let Animation = {
             //If we've reached the last frame and `loop`
             //is `true`, then start from the first frame again
         } 
+        else if (this.loop) {
+            this.gotoAndStop(this.startFrame);
+            this.frameCounter = 1;
+        }
         else {
-            if (this.loop) {
-                this.gotoAndStop(this.startFrame);
-                this.frameCounter = 1;
-            }
+            this.reset();
+            if(this.onComplete) this.onComplete();
         }
     },
     reset() {
         //Reset `playing` to `false`, set the `frameCounter` to 0,
         //and clear the `timerInterval`
         if (this.timerInterval !== undefined && this.playing === true) {
+            clearInterval(this.timerInterval);
             this.playing = false;
             this.frameCounter = 0;
             this.startFrame = 0;
             this.endFrame = 0;
             this.numberOfFrames = 0;
-            clearInterval(this.timerInterval);
         }
     }
 };
@@ -1261,8 +1389,10 @@ Q.TilingSprite = class extends Q.Sprite {
         super(game, source, x, y);
 
         this.game = game;
-        this.width = width;
-        this.height = height;
+        this.source = source;
+
+        this._width = width;
+        this._height = height;
 
         this.tileScale = new Q.Point(1, 1);
         this.tilePosition = new Q.Point(0, 0);
@@ -1279,6 +1409,18 @@ Q.TilingSprite = class extends Q.Sprite {
     set tileY(value) {
         this.tilePosition.y = value;
     }
+    get width() {
+        return this._width;
+    }
+    set width(value) {
+        this._width = value;
+    }
+    get height() {
+        return this._height;
+    }
+    set height(value) {
+        this._height = value;
+    }
     get tileScaleX() {
         return this.tileScale.x;
     }
@@ -1291,30 +1433,66 @@ Q.TilingSprite = class extends Q.Sprite {
     set tileScaleY(value) {
         this.tileScale.y = value;
     }
+    update(dt) {
+        this.tilePosition.x += this.vx;// * dt;
+        this.tilePosition.y += this.vy;// * dt;
+    }    
     render(context) {
         context.globalAlpha = this.worldAlpha;
 
         this.worldTransform.setTransform(context);
 
         if(!this.__tilePattern) {
-            this.__tilePattern = context.createPattern(this.texture.source, 'repeat');
+            let texture;
+
+            //If source is a part of texture atlas
+            if(Q.Assets.cache[this.source].frame) {
+                texture = document.createElement('canvas');
+                let ctx = texture.getContext('2d');
+                texture.width = this._texture.frame.w;
+                texture.height = this._texture.frame.h;
+
+                ctx.drawImage(
+                    this._texture.source,
+                    this._texture.frame.x,
+                    this._texture.frame.y,
+                    this._texture.frame.w,
+                    this._texture.frame.h,
+                    0,
+                    0,
+                    this._texture.frame.w,
+                    this._texture.frame.h
+                );
+            }
+            else {
+                //source is an Image object
+                texture = this._texture.source;
+            }
+
+            this.__tilePattern = context.createPattern(texture, 'repeat');
         }
 
         context.beginPath();
 
         context.scale(this.tileScale.x, this.tileScale.y);
-        context.translate(this.tilePosition.x, this.tilePosition.y);
+        context.translate(
+            this.tilePosition.x + (this.anchor.x * -this._width), 
+            this.tilePosition.y + (this.anchor.y * -this._height)
+        );
 
         context.fillStyle = this.__tilePattern;
         context.fillRect(
             -this.tilePosition.x, 
             -this.tilePosition.y, 
-            this.width / this.tileScale.x, 
-            this.height / this.tileScale.y
+            this._width / this.tileScale.x, 
+            this._height / this.tileScale.y
         );
 
         context.scale(1/this.tileScale.x, 1/this.tileScale.y);
-        context.translate(-this.tilePosition.x, -this.tilePosition.y);
+        context.translate(
+            -this.tilePosition.x + (this.anchor.x * -this._width), 
+            -this.tilePosition.y + (this.anchor.y * -this._height)
+        );
 
         context.closePath();
     }
@@ -1322,49 +1500,52 @@ Q.TilingSprite = class extends Q.Sprite {
 
 Q.MovieClip = class extends Q.Sprite {
     constructor(game, textures, x, y) {
-        super(game, textures[0], x, y);
+        super(game, textures, x, y);
         
         this.game = game;
-        this.textures = textures;
         this.animationSpeed = 1;
-        this.playing = false;
-        this.loop = true;
-        this.onComplete = null;
     }
     stop() {
         this.playing = false;
-        return this;
     }
     play() {
         this.playing = true;
-        return this;
+    }
+    gotoFrame(frameNumber) {
+        if(this.frames[0] instanceof Array) {
+            this._texture.frame.x = this.frames[frameNumber][0];
+            this._texture.frame.y = this.frames[frameNumber][1];            
+        }
+        else {
+            this._texture = Q.Assets.cache[this.frames[frameNumber]];
+        }        
     }
     gotoAndPlay(frameNumber) {
-        this.play();
-        this.currentFrame = frameNumber;
-        return this;
+        this._currentFrame = frameNumber;
+        this.playing = true;
     }
     gotoAndStop(frameNumber) {
-        this.stop();
-        this.currentFrame = frameNumber;
-        let round = (this.currentFrame + 0.5) | 0;
-        this.texture = this.textures[round % this.textures.length];
-        return this;
+        this.playing = false;
+        this._currentFrame = frameNumber;
+        let round = (this._currentFrame + 0.5) | 0;
+        this.gotoFrame(round % this.frames.length);
     }
     update(dt) {
-        if(this.playing) {
-            this.currentFrame += this.animationSpeed; // * dt;
-            let round = (this.currentFrame + 0.5) | 0;
-            this.currentFrame = this.currentFrame % this.textures.length;
-            if(this.loop || round < this.textures.length) {
-                this.texture = this.textures[round % this.textures.length];
-            }
-            else if(round >= this.textures.length) {
-                this.gotoAndStop(this.textures.length - 1);
-                if (this.onComplete) this.onComplete();
-            }
+        if(!this.playing) return;
+
+        this._currentFrame += this.animationSpeed; // * dt;
+
+        let round = (this._currentFrame + 0.5) | 0;
+
+        this._currentFrame %= this.frames.length;
+        
+        if(this.loop || round < this.frames.length) {
+            this.gotoFrame(round % this.frames.length)
         }
-        return this;
+        else if(round >= this.frames.length) {
+            this.gotoAndStop(this.frames.length - 1);
+            if (this.onComplete) this.onComplete();
+        }
     }
 };
 
@@ -1758,6 +1939,8 @@ Q.Graphics = class extends Q.Container {
         this._localBounds = new Q.Rectangle(0, 0, 1, 1);
         this.boundsPadding = 0;
     }
+    //Specifies the line style used for subsequent calls to Graphics 
+    //methods such as the lineTo() method or the drawCircle() method.
     lineStyle(lineWidth = 0, color = 0, alpha = 1) {
         if (!this.currentPath.points.length) this.graphicsData.pop();
 
@@ -2139,6 +2322,9 @@ Q.Factory = class {
     sprite(source, x, y) {
         //Create the sprite
         let sprite = new Q.Sprite(this.game, source, x, y);
+
+        // if (sprite.frames.length > 0)
+        //     Object.assign(sprite, Animation);
 
         //Add the sprite to the parent
         this.parent.addChild(sprite);
@@ -3037,14 +3223,16 @@ Q.Assets = {
     },
     loadImage(source, loadHandler) {
         let image = new Image();
-        image.addEventListener('load', () => {
-            image.name = source;
-            this.cache[image.name] = {
-                source: image,
-                frame: {x: 0, y: 0, w: image.width, h: image.height}
-            };
-            loadHandler();
-        }, false);
+        image.addEventListener("load", loadHandler, false);
+        this.cache[source] = image;
+        //Alternatively, if you only want the file name without the full
+        //path, you can get it like this:
+        //image.name = source.split("/").pop();
+        //this.cache[image.name] = image; 
+        //This will allow you to access the image like this:
+        //Q.Assets.cache["imageName.png"];
+
+        //Set the image's `src` property to start loading the image
         image.src = source;
     },
     loadFont(source, loadHandler) {
@@ -3071,25 +3259,27 @@ Q.Assets = {
         xhr.responseType = 'text';
 
         xhr.onload = event => {
-            //Check to make sure the file has loaded properly
-            if (xhr.status === 200 || xhr.readyState === 4) {
-                //Convert the JSON data file into an ordinary object
-                let file = JSON.parse(xhr.responseText);
-                //Get the file name
-                file.name = source;
-                //Assign the file as a property of the assets object so
-                //you can access it like this: `assets['file.json']`
-                this.cache[file.name] = file;
-                //Texture atlas support:
-                //If the JSON file has a `frames` property then 
-                //it's in Texture Packer format
-                if (file.frames) {
-                    //Create the tileset frames
-                    this.createTilesetFrames(file, source, loadHandler);
-                } 
-                else {
-                    //Alert the load handler that the file has loaded
-                    loadHandler();
+            if(xhr.readyState === 4) {
+                //Check to make sure the file has loaded properly
+                if (xhr.status === 200 || window.location.href.indexOf('http') == -1) {
+                    //Convert the JSON data file into an ordinary object
+                    let file = JSON.parse(xhr.responseText);
+                    //Get the file name
+                    file.name = source;
+                    //Assign the file as a property of the assets object so
+                    //you can access it like this: `assets['file.json']`
+                    this.cache[file.name] = file;
+                    //Texture atlas support:
+                    //If the JSON file has a `frames` property then 
+                    //it's in Texture Packer format
+                    if (file.frames) {
+                        //Create the tileset frames
+                        this.createTilesetFrames(file, source, loadHandler);
+                    } 
+                    else {
+                        //Alert the load handler that the file has loaded
+                        loadHandler();
+                    }
                 }
             }
         };
@@ -3112,11 +3302,8 @@ Q.Assets = {
         let imageLoadHandler = () => {
             //Assign the image as a property of the `assets` object so
             //you can access it like this:
-            //`assets['images/imageName.png']`
-            this.cache[imageSource] = {
-                source: image,
-                frame: {x: 0, y: 0, w: image.width, h: image.height}
-            };
+            //`Q.Assets.cache['images/imageName.png']`
+            this.cache[imageSource] = image
 
             //Loop through all the frames
             Object.keys(file.frames).forEach(frame => {
@@ -3410,7 +3597,7 @@ Q.Rectangle = class {
         this.x = x;
         this.y = y;
         this.width = width;
-        this.height = height;        
+        this.height = height;
     }
     clone() {
         return new Q.Rectangle(this.x, this.y, this.width, this.height);

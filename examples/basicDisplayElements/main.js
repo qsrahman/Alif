@@ -11,7 +11,16 @@ function setup() {
 
     box = game.add.rectangle(32, 32, "cyan", "white", 4, 52, 42);
     box.anchor.set(0.5, 0.5);
+    box.interactive = true;
     box.rotation = 0.5;
+    box.vr = 0.01;
+
+    box.over = () => {
+        box.vr = -0.01;
+    };
+    box.out = () => {
+        box.vr = 0.01;
+    };
 
     ball = game.add.circle(42, "Plum", "PowderBlue", 8, 20, 110);
 
@@ -69,7 +78,8 @@ function setup() {
 }
 
 function play(dt) {
-    box.rotation += 0.01;
+    box.rotation += box.vr;
+
     Alif.followEase(star, game.pointer, 0.1);
     rocket.rotation = Alif.angle(rocket, star);
 

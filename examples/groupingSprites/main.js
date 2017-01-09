@@ -12,14 +12,18 @@ function setup() {
     tiger = new Alif.Sprite(game, 'tiger.png');
     tiger.position.set(64, 64);
 
-    animals = game.add.container(cat, hedgehog, tiger);
-
+    animals = game.add.container(cat, hedgehog, tiger);    
     //Change the group's width and height
     // animals.width = 200;
     // animals.height = 200;
 
     //Position the group
     animals.position.set(96, 96);
+
+    animals.updateTransform();
+    animals.children.forEach(animal => {
+        animal.updateTransform();
+    });
 
     //Find the tiger's local position
     console.log(`Tiger local x: ${tiger.x}`);

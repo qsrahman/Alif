@@ -6,8 +6,8 @@ function setup() {
     game.renderer.backgroundColor = 'white';
 
     let level = {
-        widthInTiles: 20,
-        heightInTiles: 15,
+        widthInTiles: 16,
+        heightInTiles: 16,
         tileWidth: 32,
         tileHeight: 32
     };
@@ -33,7 +33,6 @@ function makeWorld(level) {
     world.player = null;
 
     makeMap();
-
     makeSprites();
 
     function makeMap() {
@@ -62,8 +61,8 @@ function makeWorld(level) {
 
             sprite.x = cell.x * level.tileWidth;
             sprite.y = cell.y * level.tileHeight;
-            sprite.width = level.tilewidth;
-            sprite.height = level.tileheight;
+            sprite.width = level.tileWidth;
+            sprite.height = level.tileHeight;
 
             switch (cell.terrain) {
                 case 'rock':
@@ -120,4 +119,4 @@ function makeWorld(level) {
     return world;
 }
 
-game = new Alif.Game(640, 480, setup);
+game = new Alif.Game(512, 512, setup);
