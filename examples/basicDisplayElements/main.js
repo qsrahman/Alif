@@ -15,12 +15,14 @@ function setup() {
     box.rotation = 0.5;
     box.vr = 0.01;
 
-    box.over = () => {
+    // box.over = () => {
+    box.on('over', () => {
         box.vr = -0.01;
-    };
-    box.out = () => {
+    });
+    // box.out = () => {
+    box.on('out', () => {
         box.vr = 0.01;
-    };
+    });
 
     ball = game.add.circle(42, "Plum", "PowderBlue", 8, 20, 110);
 
@@ -60,13 +62,13 @@ function setup() {
     console.log("stage.children: " + game.stage.children);
 
     ball.interactive = true;
-    ball.press = () => {
+    ball.on('press', () => {
         let colors = ["Gold", "Lavender", "Crimson", "DarkSeaGreen"];
         ball.fillStyle = colors[Alif.utils.randomInt(0, 3)];
         ball.strokeStyle = colors[Alif.utils.randomInt(0, 3)];
 
         game.add.sound("assets/bounce.wav").play();
-    };
+    });
 
     line = game.add.line("Yellow", 4, 162, 52, 220, 94);
     line.angleA = 0;

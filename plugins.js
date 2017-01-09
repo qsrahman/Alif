@@ -1795,8 +1795,10 @@ Q.TWEEN = (function() {
     };
 })();
 
-Q.TWEEN.Tween = class {
+Q.TWEEN.Tween = class extends Q.Events {
     constructor(object) {
+        super();
+
         this._object = object;
         this._valuesStart = {};
         this._valuesEnd = {};
@@ -1861,6 +1863,7 @@ Q.TWEEN.Tween = class {
         }
         Q.TWEEN.remove(this);
         this._isPlaying = false;
+        this.emit('onStop');
         if (this._onStopCallback !== null) {
            this._onStopCallback.call(this._object);
         }
@@ -1918,6 +1921,7 @@ Q.TWEEN.Tween = class {
         if(time < this._startTime) return true;
 
         if (this._onStartCallbackFired === false) {
+            this.emit('onStart');
             if (this._onStartCallback !== null) {
                 this._onStartCallback.call(this._object);
             }
@@ -1951,6 +1955,7 @@ Q.TWEEN.Tween = class {
                 }
             }
         }
+        this.emit('onUpdate', value);
         if (this._onUpdateCallback !== null) {
             this._onUpdateCallback.call(this._object, value);
         }
@@ -1983,6 +1988,7 @@ Q.TWEEN.Tween = class {
                return true;
             }
             else {
+                this.emit('onComplete');
                 if (this._onCompleteCallback !== null) {
                     this._onCompleteCallback.call(this._object);
                 }

@@ -7,8 +7,41 @@ var root = this,
 Q.VERSION = '0.1.1';
 Q.PI_2 = 2 * Math.PI;
 
-Q.Game = class {
+Q.Events = class {
+    constructor() {
+        this._listeners = {};
+    }
+    on(event, fn, ctx) {
+        fn.ctx = ctx || this;
+        this._listeners[event] = this._listeners[event] || [];
+        if(this._listeners[event].indexOf(fn) === -1) {
+            this._listeners[event].push(fn);
+        }
+        return this;
+    }
+    off(event, fn) {
+        if(this._listeners[event]) {
+            let idx = this._listeners[event].indexOf(fn);
+            if(idx !== -1) {
+                this._listeners[event].splice(idx, 1);
+            }
+        }
+        return this;
+    }
+    emit(event, ...args) {
+        if(this._listeners[event]) {
+            this._listeners[event].forEach(fn => {
+                fn.apply(fn.ctx, args);
+            });
+        }
+        return this;
+    }
+};
+
+Q.Game = class extends Q.Events {
     constructor(width, height, setup, assetsToLoad, callback, parent) {
+        super();
+
         this.scale = 1;
         this.stage = null;
         this.renderer = null;
@@ -99,11 +132,11 @@ Q.Game = class {
         this.pointer = new Pointer(this);
 
         //initialize some often used keys
-        this.leftKey = new Q.Keyboard(37);
-        this.rightKey = new Q.Keyboard(39);
-        this.upKey = new Q.Keyboard(38);
-        this.downKey = new Q.Keyboard(40);
         this.spaceKey = new Q.Keyboard(32);
+        this.leftKey = new Q.Keyboard(37);
+        this.upKey = new Q.Keyboard(38);
+        this.rightKey = new Q.Keyboard(39);
+        this.downKey = new Q.Keyboard(40);
 
         this.addToDOM();
 
@@ -140,7 +173,7 @@ Q.Game = class {
         
         console.log.apply(console, args);
     }
-    preUpdate() {
+    _update() {
         //update all interactive objects
         let len = this.buttons.length;
         if (len > 0) {
@@ -192,7 +225,7 @@ Q.Game = class {
 
         this.then = now;
 
-        this.preUpdate();
+        this._update();
 
         while(this.accumulator > this.step) {
             // Run the code for each frame.
@@ -202,7 +235,9 @@ Q.Game = class {
         }
 
         // render all sprites on the stage.
+        this.emit('preRender', this.accumulator);
         this.renderer.render(this.stage, this.accumulator);
+        this.emit('postRender', this.accumulator);
     }
     // gameLoop(now) {
     //     requestAnimationFrame(this.gameLoop);
@@ -217,9 +252,11 @@ Q.Game = class {
     // }
     resume() {
         this.paused = false;
+        this.emit('resume')
     }
     pause() {
         this.paused = true;
+        this.emit('pause')
     }
     addToDOM() {
         let target;
@@ -393,8 +430,10 @@ class Renderer {
     }
 };
 
-Q.Container = class {
+Q.Container = class  extends Q.Events {
     constructor(game, ...sprites) {
+        super();
+
         this.game = game;
         this.position = new Q.Point();
         this.velocity = new Q.Point();
@@ -1367,6 +1406,7 @@ let Animation = {
         }
         else {
             this.reset();
+            this.emit('onComplete');
             if(this.onComplete) this.onComplete();
         }
     },
@@ -1544,6 +1584,7 @@ Q.MovieClip = class extends Q.Sprite {
         }
         else if(round >= this.frames.length) {
             this.gotoAndStop(this.frames.length - 1);
+            this.emit('onComplete');
             if (this.onComplete) this.onComplete();
         }
     }
@@ -2712,8 +2753,10 @@ Q.Factory = class {
     }
 };
 
-class Pointer {
+class Pointer  extends Q.Events {
     constructor(game, scale = 1) {
+        super();
+
         this.game = game;
 
         this.scale = scale;
@@ -2841,6 +2884,7 @@ class Pointer {
         this.downTime = Date.now();
 
         //Call the `press` method if it's been assigned
+        this.emit('press');
         if (this.press) this.press();
 
         event.preventDefault();
@@ -2861,6 +2905,7 @@ class Pointer {
         this.downTime = Date.now();
 
         //Call the `press` method if it's been assigned
+        this.emit('press');
         if (this.press) this.press();
 
         event.preventDefault();
@@ -2874,12 +2919,14 @@ class Pointer {
             this.tapped = true;
 
             //Call the `tap` method if it's been assigned
+            this.emit('tap');
             if (this.tap) this.tap(); 
         }
         this.isUp = true;
         this.isDown = false;
 
         //Call the `release` method if it's been assigned
+        this.emit('release');
         if (this.release) this.release();
 
         event.preventDefault();
@@ -2893,12 +2940,14 @@ class Pointer {
             this.tapped = true;
 
             //Call the `tap` method if it's been assigned
+            this.emit('tap');
             if (this.tap) this.tap(); 
         }
         this.isUp = true;
         this.isDown = false;
 
         //Call the `release` method if it's been assigned
+        this.emit('release');
         if (this.release) this.release();
 
         event.preventDefault();
@@ -3078,6 +3127,7 @@ let Interaction = {
         //the sprite hasn't already been pressed
         if (this.state === 'down') {
             if (!this.pressed) {
+                this.emit('press');
                 if (this.press) this.press();
                 this.pressed = true;
                 this.action = 'pressed';
@@ -3088,16 +3138,21 @@ let Interaction = {
         //the sprite has been pressed
         if (this.state === 'over') {
             if (this.pressed) {
+                this.emit('release');
                 if (this.release) this.release();
                 this.pressed = false;
                 this.action = 'released';
                 //If the pointer was tapped and the user assigned 
                 //a `tap` method, call the `tap` method
-                if (pointer.tapped && this.tap) this.tap();
+                if (pointer.tapped) {
+                    this.emit('tap');
+                    if(this.tap) this.tap();
+                }
             }
 
             //Run the `over` method if it has been assigned
             if (!this.hoverOver) {
+                this.emit('over');
                 if (this.over) this.over();
                 this.hoverOver = true;
             }
@@ -3108,6 +3163,7 @@ let Interaction = {
         //already been pressed, then run the `release` method.
         if (this.state === 'up') {
             if (this.pressed) {
+                this.emit('release');
                 if (this.release) this.release();
                 this.pressed = false;
                 this.action = 'released';
@@ -3115,6 +3171,7 @@ let Interaction = {
 
             //Run the `out` method if it has been assigned
             if (this.hoverOver) {
+                this.emit('out');
                 if (this.out) this.out();
                 this.hoverOver = false;
             }
@@ -3122,8 +3179,10 @@ let Interaction = {
     }
 };
 
-Q.Keyboard = class {
+Q.Keyboard = class  extends Q.Events {
     constructor(keyCode) {
+        super();
+
         this.code = keyCode;
         this.isDown = false;
         this.isUp = true;
@@ -3140,7 +3199,10 @@ Q.Keyboard = class {
     }
     downHandler(event) {
         if (event.keyCode === this.code) {
-            if (this.isUp && this.press) this.press();
+            if (this.isUp) {
+                this.emit('press');
+                if(this.press) this.press();
+            }
             this.isDown = true;
             this.isUp = false;
         }
@@ -3149,7 +3211,10 @@ Q.Keyboard = class {
     }
     upHandler(event) {
         if (event.keyCode === this.code) {
-            if (this.isDown && this.release) this.release();
+            if (this.isDown) {
+                this.emit('release');
+                if(this.release) this.release();
+            }
             this.isDown = false;
             this.isUp = true;
         }
