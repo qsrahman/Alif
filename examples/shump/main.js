@@ -35,27 +35,27 @@ function setup() {
 
     createEnemies(8);
 
-    game.leftKey.press = () => {
+    game.leftKey.on('press', () => {
         player.vx = -8;
         player.vy = 0;
-    };
-    game.leftKey.release = () => {
+    });
+    game.leftKey.on('release', () => {
         if(!game.rightKey.isDown && player.vy === 0) {
             player.vx = 0;
         }
-    };
+    });
 
-    game.rightKey.press = () => {
+    game.rightKey.on('press', () => {
         player.vx = 8;
         player.vy = 0;
-    };
-    game.rightKey.release = () => {
+    });
+    game.rightKey.on('release', () => {
         if(!game.leftKey.isDown && player.vy === 0) {
             player.vx = 0;
         }
-    };
+    });
 
-    game.spaceKey.press = () => {
+    game.spaceKey.on('press', () => {
         //Shoot the bullet.
         Alif.shoot(
             player,  //The shooter
@@ -73,7 +73,7 @@ function setup() {
             }
         );
         //shootSound.play();
-    };
+    });
 
     message = game.add.text('', {font:'30px Arial', fill:'red'});
     message.visible = false;
@@ -134,10 +134,10 @@ function createExplosion(x, y, size) {
     explosion.loop = false;
     explosion.gotoAndPlay(0);
 
-    explosion.onComplete = () => {
+    explosion.on('complete', () => {
         game.stage.removeChild(explosion);
         explosions.splice(explosions.indexOf(explosion), 1);
-    }
+    });
 
     explosions.push(explosion);
 

@@ -16,7 +16,7 @@ function setup() {
     wand.anchor.set(0.5);
     fairy.addChild(wand);
 
-    game.pointer.press = () => {
+    game.pointer.on('press', () => {
         //Shoot the bullet.
         Alif.shoot(
             wand,   //The shooter
@@ -33,7 +33,7 @@ function setup() {
                 return game.add.sprite(Alif.frame('buttonFairy.png', 192, 0, 38, 38));
             }
         );
-    }
+    });
     game.state = play;
 }
 
@@ -53,7 +53,6 @@ function play(dt) {
         }
         return true;
     });
-    console.log(stars.length);
 }
 
 game = new Alif.Game(550, 400, setup, ['buttonFairy.png']);

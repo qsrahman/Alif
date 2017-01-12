@@ -86,42 +86,42 @@ function setup() {
     timerMessage.x = 330;
     timerMessage.y = 10;
 
-    game.leftKey.press = () => {
+    game.leftKey.on('press', () => {
         alien.vx = -4;
         alien.vy = 0;
-    };
-    game.leftKey.release = () => {
+    });
+    game.leftKey.on('release', () => {
         if (!game.rightKey.isDown && alien.vy === 0) {
             alien.vx = 0;
         }
-    };
-    game.rightKey.press = () => {
+    });
+    game.rightKey.on('press', () => {
         alien.vx = 4;
         alien.vy = 0;
-    };
-    game.rightKey.release = () => {
+    });
+    game.rightKey.on('release', () => {
         if (!game.leftKey.isDown && alien.vy === 0) {
             alien.vx = 0;
         }
-    };
-    game.upKey.press = () => {
+    });
+    game.upKey.on('press', () => {
         alien.vx = 0;
         alien.vy = -4;
-    };
-    game.upKey.release = () => {
+    });
+    game.upKey.on('release', () => {
         if (!game.downKey.isDown && alien.vx === 0) {
             alien.vy = 0;
         }
-    };
-    game.downKey.press = () => {
+    });
+    game.downKey.on('press', () => {
         alien.vx = 0;
         alien.vy = 4;
-    };
-    game.downKey.release = () => {
+    });
+    game.downKey.on('release', () => {
         if (!game.upKey.isDown && alien.vx === 0) {
             alien.vy = 0;
         }
-    };
+    });
 
     boundry = {
         x: 64, 

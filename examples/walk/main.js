@@ -24,50 +24,50 @@ function setup() {
         walkRight: [28, 35]
     };
 
-    game.leftKey.press = () => {
+    game.leftKey.on('press', () => {
         elf.playSequence(elf.states.walkLeft);
         elf.vx = -1;
         elf.vy = 0;
-    };
-    game.leftKey.release = () => {
+    });
+    game.leftKey.on('release', () => {
         if (!game.rightKey.isDown && elf.vy === 0) {
             elf.show(elf.states.left);
             elf.vx = 0;
         }
-    };
-    game.rightKey.press = () => {
+    });
+    game.rightKey.on('press', () => {
         elf.playSequence(elf.states.walkRight);
         elf.vx = 1;
         elf.vy = 0;
-    };
-    game.rightKey.release = () => {
+    });
+    game.rightKey.on('release', () => {
         if (!game.leftKey.isDown && elf.vy === 0) {
             elf.show(elf.states.right);
             elf.vx = 0;
         }
-    };
-    game.upKey.press = () => {
+    });
+    game.upKey.on('press', () => {
         elf.playSequence(elf.states.walkUp);
         elf.vx = 0;
         elf.vy = -1;
-    };
-    game.upKey.release = () => {
+    });
+    game.upKey.on('release', () => {
         if (!game.downKey.isDown && elf.vx === 0) {
             elf.show(elf.states.up);
             elf.vy = 0;
         }
-    };
-    game.downKey.press = () => {
+    });
+    game.downKey.on('press', () => {
         elf.playSequence(elf.states.walkDown);
         elf.vx = 0;
         elf.vy = 1;
-    };
-    game.downKey.release = () => {
+    });
+    game.downKey.on('release', () => {
         if (!game.upKey.isDown && elf.vx === 0) {
             elf.show(elf.states.down);
             elf.vy = 0;
         }
-    };
+    });
 
     game.state = play;
 }

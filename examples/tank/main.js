@@ -20,20 +20,20 @@ function setup() {
     tank.moveForward = false;
     tank.speed = 0;
 
-    game.leftKey.press = () => tank.vr = -0.1;
-    game.leftKey.release = () => {
+    game.leftKey.on('press', () => tank.vr = -0.1);
+    game.leftKey.on('release', () => {
         if (!game.rightKey.isDown) tank.vr = 0;
-    }
+    });
 
-    game.rightKey.press = () => tank.vr = 0.1;
-    game.rightKey.release = () => {
+    game.rightKey.on('press', () => tank.vr = 0.1);
+    game.rightKey.on('release', () => {
         if (!game.leftKey.isDown) tank.vr = 0;
-    }
+    });
 
-    game.upKey.press = () => tank.moveForward = true;
-    game.upKey.release = () => tank.moveForward = false;
+    game.upKey.on('press', () => tank.moveForward = true);
+    game.upKey.on('release', () => tank.moveForward = false);
 
-    game.spaceKey.press = () => {
+    game.spaceKey.on('press', () => {
         Alif.shoot(
             tank,
             tank.rotation,
@@ -44,7 +44,7 @@ function setup() {
             bullets,
             () => game.add.circle(8, '0xFF0000')
         );
-    };
+    });
 
     message = game.add.text('', {font:'12px Arial', fill: 'black'}, 8, 8);
 

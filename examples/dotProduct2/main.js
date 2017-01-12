@@ -20,18 +20,18 @@ function setup() {
     message = game.add.text('', {font: '16px Futura', fill: 'white'});
     message.position.set(16);
 
-    game.leftKey.press = () => ship.vr = -0.1;
-    game.leftKey.release = () => {
+    game.leftKey.on('press', () => ship.vr = -0.1);
+    game.leftKey.on('release', () => {
         if(!game.rightKey.isDown) ship.vr = 0;
-    }
+    });
 
-    game.rightKey.press = () => ship.vr = 0.1;
-    game.rightKey.release = () => {
+    game.rightKey.on('press', () => ship.vr = 0.1);
+    game.rightKey.on('release', () => {
         if(!game.leftKey.isDown) ship.vr = 0;
-    }
+    });
 
-    game.upKey.press = () => ship.moveForward = true;
-    game.upKey.release = () => ship.moveForward = false;
+    game.upKey.on('press', () => ship.moveForward = true);
+    game.upKey.on('release', () => ship.moveForward = false);
 
     game.state = play;
 }

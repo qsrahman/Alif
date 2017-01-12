@@ -86,9 +86,9 @@ function setup() {
     //Make the particle stream start playing when the game starts
     dust.play();
 
-    game.pointer.tap = () => {
+    game.pointer.on('tap', () => {
         fairy.vy += 1.5;
-    };
+    });
 
     bounds = {x: 0, y: 0, width: w, height: h};
 

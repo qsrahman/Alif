@@ -195,12 +195,13 @@ function setup() {
 
     //pause the game for a while...
     game.paused = true;
-    game.spaceKey.press = () => {
+    let spress = () => {
         music.volume = 0.3;
         music.play();
-        game.spaceKey.press = null;
+        game.spaceKey.off('press', spress);
         game.paused = false;
-    }
+    };
+    game.spaceKey.on('press', spress);
 
     //Change the state to `play`
     game.state = play;

@@ -38,14 +38,14 @@ function setup() {
         animal.show(1);
         animal.name = el.text;
         animal.sound = game.add.sound(el.audio);
-        animal.press = () => {
+        animal.on('press', () => {
             animal.play();
             animal.sound.play();
             Alif.wait(2000).then(() => {
                 animal.stop();
                 animal.show(1);
             });
-        };
+        });
         animals.push(animal);
     });
 
@@ -57,12 +57,12 @@ function setup() {
     leftArrow.anchor.set(0.5);
     leftArrow.scale.x = -1;
     leftArrow.interactive = true;
-    leftArrow.press = () => switchAnimal(-1);
+    leftArrow.on('press', () => switchAnimal(-1));
 
     rightArrow = game.add.sprite('assets/arrow.png', w - 60, h/2);    
     rightArrow.anchor.set(0.5);
     rightArrow.interactive = true;
-    rightArrow.press = () => switchAnimal(1);
+    rightArrow.on('press', () => switchAnimal(1));
 
     currentAnimal = animals[i];
     currentAnimal.x = w / 2;
@@ -100,7 +100,7 @@ function switchAnimal(direction) {
     }
 
     let t = game.add.tween(newAnimal).to({x: w / 2}, 1000);
-    t.onComplete(() => {
+    t.on('complete', () => {
         isMoving = false;
         animalText.visible = true;
     });

@@ -3,7 +3,7 @@
 (function(Q) {
 'use strict';
 
-var Q = Q || {};
+// var Q = Q || {};
 
 Q.Vector = class {
     constructor(x = 0, y = 0) {

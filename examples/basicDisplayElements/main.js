@@ -15,11 +15,10 @@ function setup() {
     box.rotation = 0.5;
     box.vr = 0.01;
 
-    // box.over = () => {
     box.on('over', () => {
         box.vr = -0.01;
     });
-    // box.out = () => {
+
     box.on('out', () => {
         box.vr = 0.01;
     });

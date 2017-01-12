@@ -36,11 +36,11 @@ function setup() {
     // box.width = 100;
     // box.height = 100;
 
-    game.leftKey.press = () => moveLeft = true;
-    game.leftKey.release = () => moveLeft = false;
+    game.leftKey.on('press', () => moveLeft = true);
+    game.leftKey.on('release', () => moveLeft = false);
 
-    game.rightKey.press = () => moveRight = true;
-    game.rightKey.release = () => moveRight = false;
+    game.rightKey.on('press', () => moveRight = true);
+    game.rightKey.on('release', () => moveRight = false);
 
     // game.upKey.press = () => moveUp = true;
     // game.upKey.release = () => moveUp = false;
@@ -48,8 +48,8 @@ function setup() {
     // game.downKey.press = () => moveDown = true;
     // game.downKey.release = () => moveDown = false;
 
-    game.spaceKey.press = () => jump = true;
-    game.spaceKey.release = () => jump = false;
+    game.spaceKey.on('press', () => jump = true);
+    game.spaceKey.on('release', () => jump = false);
 
     boundry = {
         x: 0, 

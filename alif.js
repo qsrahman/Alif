@@ -66,7 +66,7 @@ Q.Game = class extends Q.Events {
         this.assetFilePaths = assetsToLoad || null;
 
         this._FPS = 60;
-        this.then = null;
+        this.then = 0;
         this.step = 1 / this._FPS;
         this.accumulator = 0;
         this.elapsedms = 0;
@@ -81,7 +81,7 @@ Q.Game = class extends Q.Events {
         return this._FPS;
     }
     set FPS(vlaue) {
-        this.then = null;
+        this.then = 0;
         this.accumulator = 0;
         this.step = 1 / value;
         this._FPS = value;
@@ -116,11 +116,11 @@ Q.Game = class extends Q.Events {
 
         //stage will be the parent of all objects
         this.stage = new Q.Container(this);
-        this.stage.parent = {
-            worldTransform: new Q.Matrix(),
-            worldAlpha: 1, 
-            children: []
-        };
+        // this.stage.parent = {
+        //     worldTransform: new Q.Matrix(),
+        //     worldAlpha: 1, 
+        //     children: []
+        // };
 
         //initialize renderer
         this.renderer = new Renderer(this, this.width, this.height);
@@ -217,7 +217,7 @@ Q.Game = class extends Q.Events {
         requestAnimationFrame(this.gameLoop);
 
         // calculate time taken by one frame
-        this.elapsedms = (now - this.then || now);
+        this.elapsedms = (now - this.then);
         this.elapsedsec = this.elapsedms * 0.001;
 
         // duration capped at 1.0 second
@@ -320,8 +320,8 @@ class Renderer {
 
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        container.updateTransform();
-        container.worldTransform.setTransform(ctx);
+        // container.updateTransform();
+        // container.worldTransform.setTransform(ctx);
 
         for (let i = 0, j = container.children.length; i < j; ++i) {
             renderChild(container.children[i]);
@@ -622,7 +622,6 @@ Q.Container = class  extends Q.Events {
     }
     set interactive(value) {
         if(this._interactive === value) return;
-
         if (value === true) {
             Object.assign(this, Interaction);
             this.game.buttons.push(this);
@@ -662,6 +661,7 @@ Q.Container = class  extends Q.Events {
         child.parent = this;
         // child.layer = this.children.length;
         this.children.push(child);
+        child.emit('added');
     }
     add(...sprites) {
         if (sprites.length > 1) {
@@ -679,6 +679,7 @@ Q.Container = class  extends Q.Events {
         if(index !== -1) {
             child.parent = null;
             this.children.splice(index, 1);
+            child.emit('removed');
         }
         else {
             throw new Error(child + ' is not a child of ' + this);
@@ -991,7 +992,6 @@ Q.Sprite = class extends Q.Container {
         this._currentFrame = 0;
         this.playing = false;
         this.loop = true;
-        this.onComplete = null;
 
         this.texture = source;
 
@@ -1280,21 +1280,7 @@ Q.Sprite = class extends Q.Container {
                 this._texture.frame.y = this.frames[frameNumber][1];
             }
             //b. Frames made from texture atlas frames.
-            //If each frame isn't an array, and it has a sub-object called `frame`,
-            //then the frame must be a texture atlas id name.
-            //In that case, get the source position from the atlas's `frame` object.
-            // else if (Q.Assets.cache[this.frames[frameNumber]].frame) {
-            //     this._texture = Q.Assets.cache[this.frames[frameNumber]];
-            //     this._texture.frame.x = this.frames[frameNumber].frame.x;
-            //     this._texture.frame.y = this.frames[frameNumber].frame.y;
-            //     this._texture.frame.w = this.frames[frameNumber].frame.w;
-            //     this._texture.frame.h = this.frames[frameNumber].frame.h;
-            //     this.width = this.frames[frameNumber].frame.w;
-            //     this.height = this.frames[frameNumber].frame.h;
-            // }
             //c. Frames made from individual image objects.
-            //If neither of the above are true, then each frame must be
-            //an individual Image object
             else {
                 this._texture = Q.Assets.cache[this.frames[frameNumber]];
                 // this.width = this._texture.frame.w;
@@ -1406,8 +1392,7 @@ let Animation = {
         }
         else {
             this.reset();
-            this.emit('onComplete');
-            if(this.onComplete) this.onComplete();
+            this.emit('complete');
         }
     },
     reset() {
@@ -1545,6 +1530,9 @@ Q.MovieClip = class extends Q.Sprite {
         this.game = game;
         this.animationSpeed = 1;
     }
+    get totalFrames() {
+        return this.frames.length;
+    }
     stop() {
         this.playing = false;
     }
@@ -1584,8 +1572,7 @@ Q.MovieClip = class extends Q.Sprite {
         }
         else if(round >= this.frames.length) {
             this.gotoAndStop(this.frames.length - 1);
-            this.emit('onComplete');
-            if (this.onComplete) this.onComplete();
+            this.emit('complete');
         }
     }
 };
@@ -2418,6 +2405,9 @@ Q.Factory = class {
 
         return sprite;
     }
+    tween(object) {
+        return new Q.TWEEN.Tween(object);
+    }
     rectangle(
         width = 32, height = 32,  
         fillStyle = 0xFF3300, 
@@ -2738,9 +2728,7 @@ Q.Factory = class {
         return o;
     }
     keyboard(keyCode) {
-        let obj = new Q.Keyboard(keyCode);
-        
-        return obj;
+        return new Q.Keyboard(keyCode);
     }
     image(imageFileName) {
         return Q.Assets.cache[imageFileName];
@@ -2760,7 +2748,7 @@ class Pointer  extends Q.Events {
         this.game = game;
 
         this.scale = scale;
-        this.element = game.canvas;
+        this.element =  game.canvas;
 
         this._x = 0,
         this._y = 0,
@@ -2775,11 +2763,6 @@ class Pointer  extends Q.Events {
         //Properties to help measure the time between up and down states
         this.downTime = 0,
         this.elapsedTime = 0,
-
-        //Optional `press`,`release` and `tap` methods
-        this.press = undefined,
-        this.release = undefined,
-        this.tap = undefined,
 
         //A `dragSprite` property to help with drag and drop
         this.dragSprite = null,
@@ -2885,7 +2868,6 @@ class Pointer  extends Q.Events {
 
         //Call the `press` method if it's been assigned
         this.emit('press');
-        if (this.press) this.press();
 
         event.preventDefault();
     }
@@ -2906,7 +2888,6 @@ class Pointer  extends Q.Events {
 
         //Call the `press` method if it's been assigned
         this.emit('press');
-        if (this.press) this.press();
 
         event.preventDefault();
     }
@@ -2920,14 +2901,12 @@ class Pointer  extends Q.Events {
 
             //Call the `tap` method if it's been assigned
             this.emit('tap');
-            if (this.tap) this.tap(); 
         }
         this.isUp = true;
         this.isDown = false;
 
         //Call the `release` method if it's been assigned
         this.emit('release');
-        if (this.release) this.release();
 
         event.preventDefault();
     }
@@ -2941,14 +2920,12 @@ class Pointer  extends Q.Events {
 
             //Call the `tap` method if it's been assigned
             this.emit('tap');
-            if (this.tap) this.tap(); 
         }
         this.isUp = true;
         this.isDown = false;
 
         //Call the `release` method if it's been assigned
         this.emit('release');
-        if (this.release) this.release();
 
         event.preventDefault();
     }
@@ -3060,11 +3037,6 @@ class Pointer  extends Q.Events {
 }
 
 let Interaction = {
-    press: null,
-    release: null,
-    over: null,
-    out: null,
-    tap: null,
     state: 'up',
     action: '',
     pressed: false,
@@ -3128,7 +3100,6 @@ let Interaction = {
         if (this.state === 'down') {
             if (!this.pressed) {
                 this.emit('press');
-                if (this.press) this.press();
                 this.pressed = true;
                 this.action = 'pressed';
             }
@@ -3139,21 +3110,18 @@ let Interaction = {
         if (this.state === 'over') {
             if (this.pressed) {
                 this.emit('release');
-                if (this.release) this.release();
                 this.pressed = false;
                 this.action = 'released';
                 //If the pointer was tapped and the user assigned 
                 //a `tap` method, call the `tap` method
                 if (pointer.tapped) {
                     this.emit('tap');
-                    if(this.tap) this.tap();
                 }
             }
 
             //Run the `over` method if it has been assigned
             if (!this.hoverOver) {
                 this.emit('over');
-                if (this.over) this.over();
                 this.hoverOver = true;
             }
         }
@@ -3164,7 +3132,6 @@ let Interaction = {
         if (this.state === 'up') {
             if (this.pressed) {
                 this.emit('release');
-                if (this.release) this.release();
                 this.pressed = false;
                 this.action = 'released';
             }
@@ -3172,7 +3139,6 @@ let Interaction = {
             //Run the `out` method if it has been assigned
             if (this.hoverOver) {
                 this.emit('out');
-                if (this.out) this.out();
                 this.hoverOver = false;
             }
         }
@@ -3186,8 +3152,6 @@ Q.Keyboard = class  extends Q.Events {
         this.code = keyCode;
         this.isDown = false;
         this.isUp = true;
-        this.press = undefined;
-        this.release = undefined;
         
         //Attach event listeners
         window.addEventListener(
@@ -3201,7 +3165,6 @@ Q.Keyboard = class  extends Q.Events {
         if (event.keyCode === this.code) {
             if (this.isUp) {
                 this.emit('press');
-                if(this.press) this.press();
             }
             this.isDown = true;
             this.isUp = false;
@@ -3213,7 +3176,6 @@ Q.Keyboard = class  extends Q.Events {
         if (event.keyCode === this.code) {
             if (this.isDown) {
                 this.emit('release');
-                if(this.release) this.release();
             }
             this.isDown = false;
             this.isUp = true;
@@ -3639,6 +3601,443 @@ class Sound {
         this.panNode.pan.value = value;
     }
 }
+
+/**
+ * Tween.js - Licensed under the MIT license
+ * https://github.com/sole/tween.js
+ */
+Q.TWEEN = (function() {
+    let _tweens = [];
+
+    return {
+        REVISION: '14',
+        getAll() {
+            return _tweens;
+        },
+        removeAll() {
+            _tweens = [];
+        },
+        add(tween) {
+            _tweens.push(tween);
+        },
+        remove(tween) {
+            let i = _tweens.indexOf(tween);
+            if(i !== -1) {
+                _tweens.splice(i, 1);
+            }
+        },
+        update(time) {
+            if(_tweens.length === 0) return false;
+
+            let i = 0;
+            time = (time !== undefined) ? time : window.performance.now();
+
+            while(i < _tweens.length) {
+                if(_tweens[i].update(time)) {
+                    i++;
+                }
+                else {
+                    _tweens.splice(i, 1);
+                }
+            }
+            return true;
+        }
+    };
+})();
+
+Q.TWEEN.Tween = class extends Q.Events {
+    constructor(object) {
+        super();
+
+        this._object = object;
+        this._valuesStart = {};
+        this._valuesEnd = {};
+        this._valuesStartRepeat = {};
+        this._duration = 1000;
+        this._repeat = 0;
+        this._yoyo = false;
+        this._isPlaying = false;
+        this._reversed = false;
+        this._delayTime = 0;
+        this._startTime = null;
+        this._easingFunction = Q.TWEEN.Easing.Linear.None;
+        this._interpolationFunction = Q.TWEEN.Interpolation.Linear;
+        this._chainetimeweens = [];
+        this._onStartEventFired = false;
+
+        // Set all starting values present on the target object
+        for (let field in object) {
+            this._valuesStart[field] = parseFloat(object[field], 10);
+        }
+    }
+    to(properties, duration = 1000) {
+        this._duration = duration;
+        this._valuesEnd = properties;
+        return this;
+    }
+    start(time) {
+        Q.TWEEN.add(this);
+
+        this._isPlaying = true;
+        this._onStartEventFired = false;
+
+        this._startTime = (time !== undefined) ? time : window.performance.now();
+        this._startTime += this._delayTime;
+
+        for (let property in this._valuesEnd) {
+            // check if an Array was provided as property value
+            if (this._valuesEnd[property] instanceof Array) {
+                if (this._valuesEnd[property].length === 0) {
+                    continue;
+                }
+                // create a local copy of the Array with the start value at the front
+                this._valuesEnd[property] = [this._object[property]].concat(this._valuesEnd[property]);
+            }
+            //if(this._valuesStart[property] === undefined) continue;
+            this._valuesStart[property] = this._object[property];
+            if((this._valuesStart[property] instanceof Array) === false) {
+                // Ensures we're using numbers, not strings
+                this._valuesStart[property] *= 1.0;
+            }
+            this._valuesStartRepeat[property] = this._valuesStart[property] || 0;
+        }
+        return this;
+    }
+    stop() {
+        if (!this._isPlaying) {
+            return this;
+        }
+        Q.TWEEN.remove(this);
+        this._isPlaying = false;
+        this.emit('stop');
+        this.stopChainetimeweens();
+        return this;
+    }
+    stopChainetimeweens() {
+        for (let i = 0, numChainetimeweens = this._chainetimeweens.length; i < numChainetimeweens; i++) {
+            this._chainetimeweens[i].stop();
+        }
+    }
+    delay(amount) {
+        this._delayTime = amount;
+        return this;
+    }
+    repeat(times = Infinity) {
+        this._repeat = times;
+        return this;
+    }
+    yoyo(yoyo) {
+        this._yoyo = yoyo;
+        return this;
+    }
+    easing (easing) {
+        this._easingFunction = easing;
+        return this;
+    }
+    interpolation (interpolation) {
+        this._interpolationFunction = interpolation;
+        return this;
+    }
+    chain () {
+        this._chainetimeweens = arguments;
+        return this;
+    }
+    update (time) {
+        let property, elapsed, value;
+
+        if(time < this._startTime) return true;
+
+        if (this._onStartEventFired === false) {
+            this.emit('start');
+            this._onStartEventFired = true;
+        }
+        elapsed = (time - this._startTime) / this._duration;
+        elapsed = elapsed > 1 ? 1 : elapsed;
+
+        value = this._easingFunction(elapsed);
+
+        for (property in this._valuesEnd) {
+            //if(this._valuesStart[property] === undefined) continue;
+
+            let start = this._valuesStart[property] || 0;
+            let end = this._valuesEnd[property];
+
+            if (end instanceof Array) {
+                this._object[property] = this._interpolationFunction(end, value);
+            }
+            else {
+                // Parses relative end values with start as base (e.g.: +10, -3)
+                if (typeof(end) === "string") {
+                    if(end.charAt(0) === '+' || end.charAt(0) === '-')
+                        end = start + parseFloat(end, 10);
+                    else
+                        end = parseFloat(end, 10);
+                }
+                // protect against non numeric properties.
+                if (typeof(end) === "number") {
+                    this._object[property] = start + (end - start) * value;
+                }
+            }
+        }
+        this.emit('update', value);
+
+        if (elapsed == 1) {
+            if (this._repeat > 0) {
+                if(isFinite(this._repeat)) {
+                    this._repeat--;
+                }
+                // reassign starting values, restart by making startTime = now
+                for(property in this._valuesStartRepeat) {
+                    if (typeof(this._valuesEnd[ property]) === "string") {
+                        this._valuesStartRepeat[property] = this._valuesStartRepeat[property] + parseFloat(this._valuesEnd[property], 10);
+                    }
+
+                    if (this._yoyo) {
+                        let tmp = this._valuesStartRepeat[property];
+                        this._valuesStartRepeat[property] = this._valuesEnd[property];
+                        this._valuesEnd[ property ] = tmp;
+                    }
+
+                    this._valuesStart[ property ] = this._valuesStartRepeat[ property ];
+                }
+
+                if (this._yoyo) {
+                    this._reversed = !this._reversed;
+                }
+                this._startTime = time + this._delayTime;
+
+               return true;
+            }
+            else {
+                this.emit('complete');
+
+                for (let i = 0, numChainetimeweens = this._chainetimeweens.length; i < numChainetimeweens; i++) {
+                    this._chainetimeweens[i].start(this._startTime + this._duration);
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+};
+
+Q.TWEEN.Easing = {
+    Linear: {
+        None(k) {
+            return k;
+        }
+    },
+    Quadratic: {
+        In(k) {
+            return k * k;
+        },
+        Out(k) {
+            return k * (2 - k);
+        },
+        InOut(k) {
+            if ((k *= 2) < 1) return 0.5 * k * k;
+            return -0.5 * (--k * (k - 2) - 1);
+        }
+    },
+    Cubic: {
+        In(k) {
+            return k * k * k;
+        },
+        Out(k) {
+            return --k * k * k + 1;
+        },
+        InOut(k) {
+            if ((k *= 2) < 1) return 0.5 * k * k * k;
+            return 0.5 * ((k -= 2) * k * k + 2);
+        }
+    },
+    Quartic: {
+        In(k) {
+            return k * k * k * k;
+        },
+        Out(k) {
+            return 1 - (--k * k * k * k);
+        },
+        InOut(k) {
+            if ((k *= 2) < 1) return 0.5 * k * k * k * k;
+            return - 0.5 * ((k -= 2) * k * k * k - 2);
+        }
+    },
+    Quintic: {
+        In(k) {
+            return k * k * k * k * k;
+        },
+        Out(k) {
+            return --k * k * k * k * k + 1;
+        },
+        InOut(k) {
+            if ((k *= 2) < 1) return 0.5 * k * k * k * k * k;
+            return 0.5 * ((k -= 2) * k * k * k * k + 2);
+        }
+    },
+    SmoothStep: {
+        Simple(k) {
+            return k * k * (3 - 2 * k);
+        },
+        Squared(k) {
+            return Math.pow((k * k * (3 - 2 * k)), 2);
+        },
+        Cubed(k) {
+            return Math.pow((k * k * (3 - 2 * k)), 3);
+        }
+    },
+    Sinusoidal: {
+        In(k) {
+            return 1 - Math.cos(k * Math.PI / 2);
+        },
+        Out(k) {
+            return Math.sin(k * Math.PI / 2);
+        },
+        InOut(k) {
+            return 0.5 * (1 - Math.cos(Math.PI * k));
+        }
+    },
+    Exponential: {
+        In(k) {
+            return k === 0 ? 0 : Math.pow(1024, k - 1);
+        },
+        Out(k) {
+            return k === 1 ? 1 : 1 - Math.pow(2, - 10 * k);
+        },
+        InOut(k) {
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if ((k *= 2) < 1) return 0.5 * Math.pow(1024, k - 1);
+            return 0.5 * (- Math.pow(2, - 10 * (k - 1)) + 2);
+        }
+    },
+    Circular: {
+        In(k) {
+            return 1 - Math.sqrt(1 - k * k);
+        },
+        Out(k) {
+            return Math.sqrt(1 - (--k * k));
+        },
+        InOut(k) {
+            if ((k *= 2) < 1) return - 0.5 * (Math.sqrt(1 - k * k) - 1);
+            return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
+        }
+    },
+    Elastic: {
+        In(k) {
+            let s, a = 0.1, p = 0.4;
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if (!a || a < 1) { a = 1; s = p / 4; }
+            else s = p * Math.asin(1 / a) / (2 * Math.PI);
+            return - (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
+        },
+        Out(k) {
+            let s, a = 0.1, p = 0.4;
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if (!a || a < 1) { a = 1; s = p / 4; }
+            else s = p * Math.asin(1 / a) / (2 * Math.PI);
+            return (a * Math.pow(2, - 10 * k) * Math.sin((k - s) * (2 * Math.PI) / p) + 1);
+        },
+        InOut(k) {
+            let s, a = 0.1, p = 0.4;
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if (!a || a < 1) { a = 1; s = p / 4; }
+            else s = p * Math.asin(1 / a) / (2 * Math.PI);
+            if ((k *= 2) < 1) return - 0.5 * (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
+            return a * Math.pow(2, -10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
+        }
+    },
+    Back: {
+        In(k) {
+            let s = 1.70158;
+            return k * k * ((s + 1) * k - s);
+        },
+        Out(k) {
+            let s = 1.70158;
+            return --k * k * ((s + 1) * k + s) + 1;
+        },
+        InOut(k) {
+            let s = 1.70158 * 1.525;
+            if ((k *= 2) < 1) return 0.5 * (k * k * ((s + 1) * k - s));
+            return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
+        }
+    },
+    Bounce: {
+        In(k) {
+            return 1 - Q.TWEEN.Easing.Bounce.Out(1 - k);
+        },
+        Out(k) {
+            if (k < (1 / 2.75)) {
+                return 7.5625 * k * k;
+            } else if (k < (2 / 2.75)) {
+                return 7.5625 * (k -= (1.5 / 2.75)) * k + 0.75;
+            } else if (k < (2.5 / 2.75)) {
+                return 7.5625 * (k -= (2.25 / 2.75)) * k + 0.9375;
+            } else {
+                return 7.5625 * (k -= (2.625 / 2.75)) * k + 0.984375;
+            }
+        },
+        InOut(k) {
+            if (k < 0.5) return Q.TWEEN.Easing.Bounce.In(k * 2) * 0.5;
+            return Q.TWEEN.Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
+        }
+    }
+};
+
+Q.TWEEN.Interpolation = {
+    Linear(v, k) {
+        let m = v.length - 1, f = m * k, i = Math.floor(f), fn = Q.TWEEN.Interpolation.Utils.Linear;
+
+        if (k < 0) return fn(v[ 0 ], v[ 1 ], f);
+        if (k > 1) return fn(v[ m ], v[ m - 1 ], m - f);
+        return fn(v[ i ], v[ i + 1 > m ? m : i + 1 ], f - i);
+    },
+    Bezier(v, k) {
+        let b = 0, n = v.length - 1, pw = Math.pow, bn = Q.TWEEN.Interpolation.Utils.Bernstein, i;
+
+        for (i = 0; i <= n; i++) {
+            b += pw(1 - k, n - i) * pw(k, i) * v[ i ] * bn(n, i);
+        }
+        return b;
+    },
+    CatmullRom(v, k) {
+        let m = v.length - 1, f = m * k, i = Math.floor(f), fn = Q.TWEEN.Interpolation.Utils.CatmullRom;
+
+        if (v[ 0 ] === v[ m ]) {
+            if (k < 0) i = Math.floor(f = m * (1 + k));
+            return fn(v[ (i - 1 + m) % m ], v[ i ], v[ (i + 1) % m ], v[ (i + 2) % m ], f - i);
+        } else {
+            if (k < 0) return v[ 0 ] - (fn(v[ 0 ], v[ 0 ], v[ 1 ], v[ 1 ], -f) - v[ 0 ]);
+            if (k > 1) return v[ m ] - (fn(v[ m ], v[ m ], v[ m - 1 ], v[ m - 1 ], f - m) - v[ m ]);
+            return fn(v[ i ? i - 1 : 0 ], v[ i ], v[ m < i + 1 ? m : i + 1 ], v[ m < i + 2 ? m : i + 2 ], f - i);
+        }
+    },
+    Utils: {
+        Linear(p0, p1, t) {
+            return (p1 - p0) * t + p0;
+        },
+        Bernstein(n , i) {
+            let fc = Q.TWEEN.Interpolation.Utils.Factorial;
+            return fc(n) / fc(i) / fc(n - i);
+        },
+        Factorial: (function () {
+            let a = [ 1 ];
+            return function (n) {
+                let s = 1, i;
+                if (a[ n ]) return a[ n ];
+                for (i = n; i > 1; i--) s *= i;
+                return a[ n ] = s;
+            };
+        })(),
+        CatmullRom(p0, p1, p2, p3, t) {
+            let v0 = (p2 - p0) * 0.5, v1 = (p3 - p1) * 0.5, t2 = t * t, t3 = t * t2;
+            return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (- 3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1;
+        }
+    }
+};
 
 Q.Point = class {
     constructor(x = 0, y = 0) {

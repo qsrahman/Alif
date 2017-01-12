@@ -30,7 +30,7 @@ function setup() {
         height: game.canvas.height
     };
 
-    square.press = () => {
+    square.on('press', () => {
         // Make sound
         click.play();
 
@@ -47,7 +47,7 @@ function setup() {
         // Give the square a random direction
         square.vx = Math.floor(Math.random() * 2) * 2 - 1;
         square.vy = Math.floor(Math.random() * 2) * 2 - 1;
-    }
+    });
 
     game.state = play;
 }

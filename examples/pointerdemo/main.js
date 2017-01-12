@@ -4,9 +4,9 @@ let game, output;
 
 function setup() {
     output = document.querySelector('p');
-    game.pointer.press = () => console.log('The pointer was pressed.');
-    game.pointer.release = () => console.log('The pointer was released.');
-    game.pointer.tap = () => console.log('The pointer was tapped.');
+    game.pointer.on('press', () => console.log('The pointer was pressed.'));
+    game.pointer.on('release', () => console.log('The pointer was released.'));
+    game.pointer.on('tap', () => console.log('The pointer was tapped.'));
 
     game.state = play;
 }

@@ -32,27 +32,27 @@ function setup() {
     explosionSound = game.add.sound('assets/explosion.mp3');
     explosionSound.pan = 0.5;
 
-    game.leftKey.press = () => {
+    game.leftKey.on('press', () => {
         cannon.vx = -5;
         cannon.vy = 0;
-    };
-    game.leftKey.release = () => {
+    });
+    game.leftKey.on('release', () => {
         if(!game.rightKey.isDown && cannon.vy === 0) {
             cannon.vx = 0;
         }
-    };
+    });
 
-    game.rightKey.press = () => {
+    game.rightKey.on('press', () => {
         cannon.vx = 5;
         cannon.vy = 0;
-    };
-    game.rightKey.release = () => {
+    });
+    game.rightKey.on('release', () => {
         if(!game.leftKey.isDown && cannon.vy === 0) {
             cannon.vx = 0;
         }
-    };
+    });
 
-    game.spaceKey.press = () => {
+    game.spaceKey.on('press', () => {
         //Shoot the bullet.
         Alif.shoot(
             cannon,  //The shooter
@@ -70,7 +70,7 @@ function setup() {
             }
         );
         shootSound.play();
-    };
+    });
 
     game.state = play;
 }

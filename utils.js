@@ -3,7 +3,7 @@
 (function(Q) {
 'use strict';
 
-var Q = Q || {};
+// var Q = Q || {};
 
 Q.utils = {    
     norm(value, min, max) {
