@@ -199,6 +199,8 @@ Q.Game = class extends Q.Events {
             Q.TWEEN.update(this.then);
     }
     update(dt = 1) {
+        if(this.world) this.world.step(dt);
+        
         //update all particles
         let len = this.particles.length
         if (len > 0) {
@@ -258,18 +260,24 @@ Q.Game = class extends Q.Events {
         this.paused = true;
         this.emit('pause')
     }
-    enablePhysics(game) {
-        if(game.world === null) {
-            game.world = new Q.World(game);
+    enablePhysics() {
+        if(this.world === null) {
+            this.world = new p2.World({gravity: [0, 0]});
         }
     }
     enableBody(sprite) {
         if(sprire.body === null) {
+            sprite.body = new p2.Body({
+                mass: 1,
+                position: [sprite.x, sprite.y],
+                damping: 0,
+                angularDamping: 0
+            });
             if(sprite.diameter) {
-                sprite.body = new Q.Circle(sprite);
+                sprite.body.addShape(new p2.Circle(sprite.radius));
             }
             else {
-                sprite.body = new Q.AABB(sprite);
+                sprite.body.addShape(new p2.Rectangle(sprite.width, sprite.height));
             }
             this.world.addBody(sprite.body);
         }
