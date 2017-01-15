@@ -13,28 +13,26 @@ Q.Events = class {
     }
     on(event, fn, ctx) {
         fn.ctx = ctx || this;
-        this._listeners[event] = this._listeners[event] || [];
+
+        if(!this._listeners[event])
+            this._listeners[event] = [];
+
         if(this._listeners[event].indexOf(fn) === -1) {
             this._listeners[event].push(fn);
         }
-        return this;
     }
     off(event, fn) {
-        if(this._listeners[event]) {
-            let idx = this._listeners[event].indexOf(fn);
-            if(idx !== -1) {
-                this._listeners[event].splice(idx, 1);
-            }
+        let idx = this._listeners[event].indexOf(fn);
+        if(idx !== -1) {
+            this._listeners[event].splice(idx, 1);
         }
-        return this;
     }
     emit(event, ...args) {
-        if(this._listeners[event]) {
+        if(this._listeners[event] && this._listeners[event].length) {
             this._listeners[event].forEach(fn => {
                 fn.apply(fn.ctx, args);
             });
         }
-        return this;
     }
 };
 
@@ -178,7 +176,7 @@ Q.Game = class extends Q.Events {
         let len = this.buttons.length;
         if (len > 0) {
             this.pointer.cursor = 'auto';
-            for(let i = 0; i < len; i++) {
+            for(let i = len - 1; i >= 0; i--) {
                 this.buttons[i].update(this.pointer);
                 // if (this.buttons[i].state === 'over' || 
                 //     this.buttons[i].state === 'down') {
@@ -245,7 +243,7 @@ Q.Game = class extends Q.Events {
     //     let dt = (now - this.then || now) * 0.06;
     //     this.then = now;
 
-    //     this.preUpdate();
+    //     this._update();
     //     this.update(dt);
         
     //     this.renderer.render(this.stage);
@@ -309,7 +307,7 @@ class Renderer {
         this.canvas.width = width;
         this.canvas.height = height;
         this.canvas.setAttribute('width', width);
-        this.canvas.setAttribute('height', height);
+        this.canvas.setAttribute('height', height);        
     }
     render(container, dt) {
         let ctx = this.canvas.ctx;
@@ -3099,7 +3097,7 @@ let Interaction = {
         //the sprite hasn't already been pressed
         if (this.state === 'down') {
             if (!this.pressed) {
-                this.emit('press');
+                this.emit('press', this);
                 this.pressed = true;
                 this.action = 'pressed';
             }
@@ -3109,19 +3107,19 @@ let Interaction = {
         //the sprite has been pressed
         if (this.state === 'over') {
             if (this.pressed) {
-                this.emit('release');
+                this.emit('release', this);
                 this.pressed = false;
                 this.action = 'released';
                 //If the pointer was tapped and the user assigned 
                 //a `tap` method, call the `tap` method
                 if (pointer.tapped) {
-                    this.emit('tap');
+                    this.emit('tap', this);
                 }
             }
 
             //Run the `over` method if it has been assigned
             if (!this.hoverOver) {
-                this.emit('over');
+                this.emit('over', this);
                 this.hoverOver = true;
             }
         }
@@ -3131,14 +3129,14 @@ let Interaction = {
         //already been pressed, then run the `release` method.
         if (this.state === 'up') {
             if (this.pressed) {
-                this.emit('release');
+                this.emit('release', this);
                 this.pressed = false;
                 this.action = 'released';
             }
 
             //Run the `out` method if it has been assigned
             if (this.hoverOver) {
-                this.emit('out');
+                this.emit('out', this);
                 this.hoverOver = false;
             }
         }
