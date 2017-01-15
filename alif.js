@@ -55,6 +55,8 @@ Q.Game = class extends Q.Events {
         this.buttons = [];
         this.particles = [];
 
+        this.world = null;
+
         this.dragAndDrop = false;
         this.draggableSprites = [];
 
@@ -255,6 +257,22 @@ Q.Game = class extends Q.Events {
     pause() {
         this.paused = true;
         this.emit('pause')
+    }
+    enablePhysics(game) {
+        if(game.world === null) {
+            game.world = new Q.World(game);
+        }
+    }
+    enableBody(sprite) {
+        if(sprire.body === null) {
+            if(sprite.diameter) {
+                sprite.body = new Q.Circle(sprite);
+            }
+            else {
+                sprite.body = new Q.AABB(sprite);
+            }
+            this.world.addBody(sprite.body);
+        }
     }
     addToDOM() {
         let target;
@@ -3599,6 +3617,100 @@ class Sound {
         this.panNode.pan.value = value;
     }
 }
+
+class World {
+    constructor(game, gravity) {
+        this.game = game;
+        width = game.canvas.width;
+        height = game.canvas.height;
+        this.gravity = gravity;
+        this.friction = 0.96;
+        
+        this.bodies = [];
+    }
+    addBody(body) {
+        let idx = this.bodies.indexOf(body);
+        if(idx === -1) {
+            this.bodies.push(body);
+            return true;
+        }
+        return false;
+    }
+    removeBody(body) {
+        let idx = this.bodies.indexOf(body);
+        if(idx !== -1) {
+            this.bodies.splice(idx, 1);
+            return true;
+        }
+        return false;
+    }
+    update(dt) {}
+}
+
+class Body {
+    constructor(shapeId, sprite) {
+        this.shapeId = shapeId;
+        this.sprite = sprite;
+        this.position = Q.Point(sprite.x, sprite.y);
+        this.velocity = Q.Point();
+        this.mass = 1;
+
+        this.id = ++Body.id;
+    }
+    get x() {
+        return this.position.x;
+    }
+    set x(value) {
+        this.position.x = value;
+    }
+    get y() {
+        return this.position.y;
+    }
+    set y(value) {
+        this.position.y = value;
+    }
+    get vx() {
+        return this.velocity.x;
+    }
+    set vx(value) {
+        this.velocity.x = value;
+    }
+    get vy() {
+        return this.velocity.y;
+    }
+    set vy(value) {
+        this.velocity.y = value;
+    }
+
+    update(dt) {
+
+    }
+}
+Body.id = 0;
+
+class AABB extends Body {
+    constructor(sprite) {
+        super(AABB.ShapeID, sprite);
+
+        this.width = sprite.width;
+        this.height = sprite.height;
+    }
+    update(dt) {
+
+    }
+}
+AABB.ShapeID = 0;
+
+class Circle extends Body {
+    constructor(sprite) {
+        super(AABB.ShapeID, sprite);
+        this.radius = sprite.radius;
+    }
+    update(dt) {
+
+    }
+}
+Circle.ShapeID = 1;
 
 /**
  * Tween.js - Licensed under the MIT license
