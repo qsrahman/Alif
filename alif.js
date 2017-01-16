@@ -260,25 +260,43 @@ Q.Game = class extends Q.Events {
         this.paused = true;
         this.emit('pause')
     }
-    enablePhysics() {
+    // enablePhysics() {
+    //     if(this.world === null) {
+    //         this.world = new p2.World({gravity: [0, 0]});
+    //     }
+    // }
+    // enableBody(sprite) {
+    //     if(sprire.body === null) {
+    //         sprite.body = new p2.Body({
+    //             mass: 1,
+    //             position: [sprite.x, sprite.y],
+    //             damping: 0,
+    //             angularDamping: 0
+    //         });
+    //         if(sprite.diameter) {
+    //             sprite.body.addShape(new p2.Circle(sprite.radius));
+    //         }
+    //         else {
+    //             sprite.body.addShape(new p2.Rectangle(sprite.width, sprite.height));
+    //         }
+    //         this.world.addBody(sprite.body);
+    //     }
+    // }
+    enablePhysics(game) {
         if(this.world === null) {
-            this.world = new p2.World({gravity: [0, 0]});
+            this.world = new Q.World(game);
         }
     }
     enableBody(sprite) {
-        if(sprire.body === null) {
-            sprite.body = new p2.Body({
-                mass: 1,
-                position: [sprite.x, sprite.y],
-                damping: 0,
-                angularDamping: 0
-            });
-            if(sprite.diameter) {
-                sprite.body.addShape(new p2.Circle(sprite.radius));
+        if(spritre.body === undefined) {
+            if(sprite.shapeId === Circle.ShapeID) {
+                sprite.circular = true;
+                sprite.body = new Q.Circle(sprite);
             }
             else {
-                sprite.body.addShape(new p2.Rectangle(sprite.width, sprite.height));
+                sprite.body = new Q.AABB(sprite);
             }
+
             this.world.addBody(sprite.body);
         }
     }
