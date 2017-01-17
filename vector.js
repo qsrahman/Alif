@@ -12,11 +12,11 @@ Q.Vector = class {
     }
 
     static create(x, y) {
-        return new Vector(x, y);
+        return new Q.Vector(x, y);
     }
 
     static fromAngle(angle, len = 1) {
-        return new Vector(len * Math.cos(angle), len * Math.sin(angle));
+        return new Q.Vector(len * Math.cos(angle), len * Math.sin(angle));
     }
 
     get angle() {
@@ -46,7 +46,7 @@ Q.Vector = class {
     }
 
     set(v, y) {
-        if(v instanceof Vector) {
+        if(v instanceof Q.Vector) {
             this.set(v.x, v.y);
         }
         else {
@@ -58,7 +58,7 @@ Q.Vector = class {
     }
 
     clone() {
-        return new Vector(this.x, this.y);
+        return new Q.Vector(this.x, this.y);
     }
 
     clear() {
@@ -68,7 +68,7 @@ Q.Vector = class {
     }
 
     add(v) {
-        return new Vector(this.x + v.x, this.y + v.x);
+        return new Q.Vector(this.x + v.x, this.y + v.x);
     }
 
     addTo(v) {
@@ -79,7 +79,7 @@ Q.Vector = class {
     }
 
     sub(v) {
-        return new Vector(this.x - v.x, this.y - v.y);
+        return new Q.Vector(this.x - v.x, this.y - v.y);
     }
 
     subFrom(v) {
@@ -90,7 +90,7 @@ Q.Vector = class {
     }
 
     mul(val) {
-        return new Vector(this.x * val, this.y * val);
+        return new Q.Vector(this.x * val, this.y * val);
     }
 
     mulBy(val) {
@@ -101,7 +101,7 @@ Q.Vector = class {
     }
 
     div(val) {
-        return new Vector(this.x / val, this.y / val);
+        return new Q.Vector(this.x / val, this.y / val);
     }
 
     divBy(val) {
@@ -112,7 +112,7 @@ Q.Vector = class {
     }
 
     negate() {
-        return new Vector(-this.x, -this.y);
+        return new Q.Vector(-this.x, -this.y);
     }
 
     normalize() {
@@ -185,12 +185,12 @@ Q.Vector = class {
 
     // left normal vector
     leftNormal() {
-        return new Vector(this.y, -this.x);
+        return new Q.Vector(this.y, -this.x);
     }
 
     // right normal vector
     rightNormal() {
-        return new Vector(-this.y, this.x);
+        return new Q.Vector(-this.y, this.x);
     }
 
     projection(v) {
@@ -207,7 +207,7 @@ Q.Vector = class {
 
     // return a new 2D unit vector from a random angle
     random2D() {
-        return Vector.fromAngle(Math.random() * 2 * Math.PI);
+        return Q.Vector.fromAngle(Math.random() * 2 * Math.PI);
     }
 
     limit(max) {
