@@ -1,6 +1,6 @@
 'use strict';
 
-let game, world, bubbles = [];
+let game, world;
 
 game = new Alif.Game(600, 460, setup, ['bubble.png']);
 
@@ -15,14 +15,13 @@ class Wall extends Alif.Graphics {
         this.position.set(x, y);
 
         //create body
-        this.body = new Alif.Body({
+        this.body = new Alif.AABB(this, {
             position: new Alif.Vector(x + width/2, y + height/2),
             fixed: true,
             collisionGroup: 0,
-            collideAgainst: 0
+            collideAgainst: [1]
         });
 
-        this.body.addShape(new Alif.AABB(width, height));
         world.addBody(this.body);
     }
 }
@@ -32,24 +31,17 @@ class Bubble extends Alif.Sprite {
         super(game, 'bubble.png', x, y);
 
         this.anchor.set(0.5);
-        this.body = new Alif.Body({
-            position: new Alif.Vector(x, y),
-            collisionGroup: 0,
-            collideAgainst: 0,
+        this.body = new Alif.Circle(this, {
+            collisionGroup: 1,
+            collideAgainst: [0, 1],
             velocity: new Alif.Vector(speedx, speedy),
             mass: 1
         });
     
-        this.circular = true;
-
-        this.body.addShape(new Alif.Circle(30));
         world.addBody(this.body);
     }
-    update(){
-        this.position.x = this.body.position.x;
-        this.position.y = this.body.position.y;
-    }
 }
+
 function setup() {
     game.renderer.backgroundColor = '#e1d4a7';
 
@@ -66,7 +58,6 @@ function setup() {
         let bubble1 = new Bubble(Math.random()*400 + 100, Math.random()*250 + 100, Math.random()*100 - 50, Math.random()*100 - 50);
         bubble1.body.restitution = 0.9;
         game.stage.addChild(bubble1);
-        bubbles.push(bubble1);
     }
 
     game.state = play;
@@ -74,7 +65,4 @@ function setup() {
 
 function play(dt) {
     world.update(dt);
-    bubbles.forEach(bubble => {
-        bubble.update();
-    });
 }

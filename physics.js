@@ -10,31 +10,46 @@ class World {
         this.collisionGroups = {};
     }
     addBody(body) {
-        body.world = this;
-        body._remove = false;
-
-        if (typeof body.collideAgainst === 'number') 
-            body.collideAgainst = [body.collideAgainst];
-
-        this.bodies.push(body);
-        this.addBodyCollision(body);
+        let idx = this.bodies.indexOf(body);
+        if(idx === -1) {
+            body.world = this;
+            body._remove = false;
+            this.bodies.push(body);
+            this.addBodyCollision(body);
+            return true;
+        }
+        return false;
     }
     removeBody(body) {
-        if (!body.world) return;
-        body.world = null;
-        body._remove = true;
+        if (!body.world) return false;
+
+        let idx = this.bodies.indexOf(body);
+        if(idx !== -1) {
+            body.world = null;
+            body._remove = true;
+            return true;
+        }
+        return false;
     }
     addBodyCollision(body) {
         if (typeof body.collisionGroup !== 'number') return;
-        this.collisionGroups[body.collisionGroup] = this.collisionGroups[body.collisionGroup] || [];
-        if (this.collisionGroups[body.collisionGroup].indexOf(body) !== -1) return;
-        this.collisionGroups[body.collisionGroup].push(body);
+
+        let group = body.collisionGroup;
+
+        this.collisionGroups[group] = this.collisionGroups[group] || [];
+
+        if (this.collisionGroups[group].indexOf(body) === -1)
+            this.collisionGroups[group].push(body);
     }
     removeBodyCollision(body) {
         if (typeof body.collisionGroup !== 'number') return;
-        if (!this.collisionGroups[body.collisionGroup]) return;
-        if (this.collisionGroups[body.collisionGroup].indexOf(body) === -1) return;
-        this.collisionGroups[body.collisionGroup].erase(body);
+
+        let group = body.collisionGroup;
+        
+        if (!this.collisionGroups[group]) return;
+
+        if (this.collisionGroups[group].indexOf(body) !== -1)
+            this.collisionGroups[group].erase(body);
     }
     collide(body) {
         let g, i, b, group;
@@ -46,7 +61,7 @@ class World {
             if (!group) continue;
 
             for (i = group.length - 1; i >= 0; i--) {
-                if (!group) break;
+                //if (!group) break;
                 b = group[i];
                 if (body !== b) {
                     if (this.solver.hitTest(body, b)) {
@@ -94,72 +109,31 @@ class CollisionSolver {
 
     }
     hitTest(a, b) {
-        if (a.shape.width && b.shape.width) {
+        if (a.width && b.width) {
             return !(
-                a.position.y + a.shape.height / 2 <= b.position.y - b.shape.height / 2 ||
-                a.position.y - a.shape.height / 2 >= b.position.y + b.shape.height / 2 ||
-                a.position.x - a.shape.width / 2 >= b.position.x + b.shape.width / 2 ||
-                a.position.x + a.shape.width / 2 <= b.position.x - b.shape.width / 2
+                a.position.y + a.height / 2 <= b.position.y - b.height / 2 ||
+                a.position.y - a.height / 2 >= b.position.y + b.height / 2 ||
+                a.position.x - a.width / 2 >= b.position.x + b.width / 2 ||
+                a.position.x + a.width / 2 <= b.position.x - b.width / 2
             );
         }
-        if (a.shape.radius && b.shape.radius) {
-            return (a.shape.radius + b.shape.radius > a.position.distance(b.position));
+        if (a.radius && b.radius) {
+            return (a.radius + b.radius > a.position.distance(b.position));
         }
-        if (a.shape.width && b.shape.radius || a.shape.radius && b.shape.width) {
-            let rect = a.shape.width ? a : b;
-            let circle = a.shape.radius ? a : b;
+        if (a.width && b.radius || a.radius && b.width) {
+            let rect = a.width ? a : b;
+            let circle = a.radius ? a : b;
 
-            let x = Math.max(rect.position.x - rect.shape.width / 2, Math.min(rect.position.x + rect.shape.width / 2, circle.position.x));
-            let y = Math.max(rect.position.y - rect.shape.height / 2, Math.min(rect.position.y + rect.shape.height / 2, circle.position.y));
+            let x = Math.max(rect.position.x - rect.width / 2, Math.min(rect.position.x + rect.width / 2, circle.position.x));
+            let y = Math.max(rect.position.y - rect.height / 2, Math.min(rect.position.y + rect.height / 2, circle.position.y));
 
             let dist = Math.pow(circle.position.x - x, 2) + Math.pow(circle.position.y - y, 2);
-            return dist < (circle.shape.radius * circle.shape.radius);
+
+            return dist < (circle.radius * circle.radius);
         }
         return false;
     }
     hitResponse(a, b) {
-        if (a.shape.width && b.shape.width) {
-            if (a.last.y + a.shape.height / 2 <= b.last.y - b.shape.height / 2) {
-                if (a.collide(b, 'DOWN')) {
-                    a.position.y = b.position.y - b.shape.height / 2 - a.shape.height / 2;
-                    return true;
-                }
-            }
-            else if (a.last.y - a.shape.height / 2 >= b.last.y + b.shape.height / 2) {
-                if (a.collide(b, 'UP')) {
-                    a.position.y = b.position.y + b.shape.height / 2 + a.shape.height / 2;
-                    return true;
-                }
-            }
-            else if (a.last.x + a.shape.width / 2 <= b.last.x - b.shape.width / 2) {
-                if (a.collide(b, 'RIGHT')) {
-                    a.position.x = b.position.x - b.shape.width / 2 - a.shape.width / 2;
-                    return true;
-                }
-            }
-            else if (a.last.x - a.shape.width / 2 >= b.last.x + b.shape.width / 2) {
-                if (a.collide(b, 'LEFT')) {
-                    a.position.x = b.position.x + b.shape.width / 2 + a.shape.width / 2;
-                    return true;
-                }
-            }
-            else {
-                // Inside
-                if (a.collide(b)) return true;
-            }
-        }
-        else if (a.shape.radius && b.shape.radius) {
-            var angle = b.position.angleBetween(a.position);
-            if (a.collide(b, angle)) {
-                var dist = a.shape.radius + b.shape.radius;
-                a.position.x = b.position.x + Math.cos(angle) * dist;
-                a.position.y = b.position.y + Math.sin(angle) * dist;
-
-                return true;
-            }
-        }
-    }
-    hitResponse0(a, b) {
         //Execute the collide function of body a to let the object know 
         //that a collision occured. The response of the function tells us 
         //wether we should perform a hit response.
@@ -185,17 +159,17 @@ class CollisionSolver {
                 let distanceBW = ball.position.sub(wall.position);
                 let distanceTouch = new Q.Vector();
                 
-                if (wall.shape instanceof AABB) 
-                    distanceTouch.addTo(wall.shape.width / 2, wall.shape.height / 2);
-                else if (wall.shape instanceof Circle) 
-                    distanceTouch.addTo(wall.shape.radius);
+                if (wall.shapeId === AABB.ShapeID) 
+                    distanceTouch.addTo(wall.width / 2, wall.height / 2);
+                else if (wall.shapeId === Circle.ShapeID) 
+                    distanceTouch.addTo(wall.radius);
                 else 
                     return true;
 
-                if (ball.shape instanceof AABB) 
-                    distanceTouch.addTo(ball.shape.width / 2, ball.shape.height / 2);
-                else if (ball.shape instanceof Circle) 
-                    distanceTouch.addTo(ball.shape.radius);
+                if (ball.shapeId === AABB.ShapeID) 
+                    distanceTouch.addTo(ball.width / 2, ball.height / 2);
+                else if (ball.shapeId === Circle.ShapeID) 
+                    distanceTouch.addTo(ball.radius);
                 else 
                     return true;
     
@@ -250,7 +224,7 @@ class CollisionSolver {
             }
     
             //circles
-            if (a.shape instanceof Circle && b.shape instanceof Circle) {
+            if (a.shapeId === Circle.ShapeID && b.shapeId === Circle.ShapeID) {
                 let posA = a.position.clone();
                 let velA = a.velocity.clone();
                 let posB = b.position.clone();
@@ -283,7 +257,7 @@ class CollisionSolver {
             let velocityAB = b.velocity.sub(a.velocity);
 
             //is distance decreasing? Then take some action
-            let dDistance = distanceAB.mult(velocityAB);
+            let dDistance = distanceAB.mul(velocityAB);
             
             if (dDistance.x < 0) {
                 //execute impuls
@@ -312,10 +286,10 @@ class CollisionSolver {
             distanceTouch = new Q.Vector(),
             overlap;
     
-        if (a.shape instanceof Circle && b.shape instanceof Circle) {
+        if (a.shapeId === Circle.ShapeID && b.shapeId === Circle.ShapeID) {
             // circle <=> circle
-            distanceTouch = a.shape.radius + b.shape.radius;
-            overlap = distanceBW.mult(1 - distanceBW.length / distanceTouch);
+            distanceTouch = a.radius + b.radius;
+            overlap = distanceBW.mul(1 - distanceBW.length / distanceTouch);
             a.position.x -= overlap.x / 2;
             a.position.y -= overlap.y / 2;
             b.position.x += overlap.x / 2;
@@ -325,17 +299,17 @@ class CollisionSolver {
         }
     
         // circle/square <=> circle/square
-        if (a.shape instanceof AABB) 
-            distanceTouch.add(a.shape.width / 2, a.shape.height / 2);
-        else if (a.shape instanceof Circle) 
-            distanceTouch.add(a.shape.radius);
+        if (a.shapeId === AABB.ShapeID) 
+            distanceTouch.add(a.width / 2, a.height / 2);
+        else if (a.shapeId === Circle.ShapeID) 
+            distanceTouch.add(a.radius);
         else 
             return;
 
-        if (b.shape instanceof AABB) 
-            distanceTouch.add(b.shape.width / 2, b.shape.height / 2);
-        else if (b.shape instanceof Circle) 
-            distanceTouch.add(b.shape.radius);
+        if (b.shapeId === AABB.ShapeID) 
+            distanceTouch.add(b.width / 2, b.height / 2);
+        else if (b.shapeId === Circle.ShapeID) 
+            distanceTouch.add(b.radius);
         else 
             return;
     
@@ -366,30 +340,33 @@ class CollisionSolver {
 }
 
 class Body {
-    constructor(properties) {
-        this.position = new Q.Vector();
+    constructor(shapeId, sprite, properties) {
+        this.shapeId = shapeId;
+        this.sprite = sprite;
+        this.position = new Q.Vector(sprite.x, sprite.y);
         this.velocity = new Q.Vector();
+        this.rotation = sprite.rotation;
         this.velocityLimit = new Q.Vector();
         this.last = new Q.Vector();
         this.force = new Q.Vector();
         this.mass = 0;
         this.damping = 0;
-        this.shape = null;
+        // this.shape = null;
         this.world = null;
         this.collisionGroup = null;
         this.collideAgainst = [];
         this.fixed = false;
-        this.gravityFactor = 1;
+        // this.gravityFactor = 1;
         this.restitution = 1;
 
         this._collides = [];
 
         Object.assign(this, properties);
     }
-    addShape(shape) {
-        this.shape = shape;
-        return this;
-    }
+    // addShape(shape) {
+    //     this.shape = shape;
+    //     return this;
+    // }
     collide() {
         return true;
     }
@@ -401,27 +378,30 @@ class Body {
 
         this.collisionGroup = group;        
         if (this.world) this.world.addBodyCollision(this);
+        return this;
     }
     setCollideAgainst() {
         this.collideAgainst.length = 0;
         for (let i = 0; i < arguments.length; i++) {
             this.collideAgainst.push(arguments[i]);
         }
+        return this;
     }
-    addTo(world) {
-        if (!this.world) return;
-
-        world.addBody(this);
-
+    addTo() {
+        if (!this.world) this.world.addBody(this);
         return this;
     }
     remove() {
         if (this.world) this.world.removeBody(this);
+        return this;
     }
     removeCollision() {
         if (this.world) this.world.removeBodyCollision(this);
+        return this;
     }
     update(dt) {
+        if(this.fixed) return;
+
         this.last.set(this.position);
 
         if (this.mass !== 0) {
@@ -445,6 +425,10 @@ class Body {
 
         this.position.x += this.velocity.x * dt;
         this.position.y += this.velocity.y * dt;
+
+        this.sprite.position.x = this.position.x;
+        this.sprite.position.y = this.position.y;
+        // this.sprite.rotation = this.rotation;
     }
     update0(dt) {
         if(this.fixed) return;
@@ -465,22 +449,30 @@ class Body {
         this.position.y += this.velocity.y * dt;
     }
 }
+Body.id = 0;
 
-class AABB {
-    constructor(width = 50, height = 50) {
-        this.width = width || this.width;
-        this.height = height || this.height;
+class AABB extends Body {
+    constructor(sprite, properties) {
+        super(AABB.ShapeID, sprite, properties);
+
+        this.width = this.width || sprite.width;
+        this.height = this.height || sprite.height;
     }
 }
+AABB.ShapeID = 0;
 
-class Circle {
-    constructor(radius = 50) {
-        this.radius = radius || this.radius;
+class Circle extends Body {
+    constructor(sprite, properties) {
+        super(Circle.ShapeID, sprite, properties);
+
+        sprite.circular = true;
+
+        this.radius = this.radius || sprite.radius;
     }
 }
+Circle.ShapeID = 1;
 
 Q.World = World;
-Q.Body = Body;
 Q.AABB = AABB;
 Q.Circle = Circle;
 

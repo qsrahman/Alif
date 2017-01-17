@@ -6,12 +6,14 @@ class World {
         this.game = game;
         this.gravity = Q.Point();
         this.bodies = [];
+        this.collisionGroups = {};
     }
     addBody(body) {
         let idx = this.bodies.indexOf(body);
         if(idx === -1) {
             body.world = this;
             this.bodies.push(body);
+            this.addBodyCollision(body);
             return true;
         }
         return false;
@@ -23,6 +25,29 @@ class World {
             return true;
         }
         return false;
+    }
+    addBodyCollision(body) {
+        if (typeof body.collisionGroup !== 'number') return;
+
+        let group = body.collisionGroup;
+
+        this.collisionGroups[group] = this.collisionGroups[group] || [];
+
+        if (this.collisionGroups[group].indexOf(body) === -1)
+            this.collisionGroups[group].push(body);
+    }
+    removeBodyCollision(body) {
+        if (typeof body.collisionGroup !== 'number') return;
+
+        let group = body.collisionGroup;
+        
+        if (!this.collisionGroups[group]) return;
+
+        if (this.collisionGroups[group].indexOf(body) !== -1)
+            this.collisionGroups[group].erase(body);
+    }
+    collide(body) {
+
     }
     update(dt) {
         for (let i = this.bodies.length - 1; i >= 0; i--) {
@@ -122,7 +147,28 @@ class Body {
 
         this.world = null;
 
+        this.collisionGroup = null;
+        this.collideAgainst = [];
+
         this.id = ++Body.id;
+    }
+    setCollisionGroup(group) {
+        if (this.world && typeof this.collisionGroup === 'number') 
+            this.world.removeBodyCollision(this);
+
+        this.collisionGroup = group;        
+        if (this.world) this.world.addBodyCollision(this);
+    }
+    setCollideAgainst(...args) {
+        this.collideAgainst.length = 0;
+        for (let i = 0; i < args.length; i++) {
+            this.collideAgainst.push(args[i]);
+        }
+    }
+    collide() {
+        return true;
+    }
+    afterCollide() {
     }
     update(dt) {
         if (this.mass !== 0) {
@@ -160,6 +206,7 @@ AABB.ShapeID = 0;
 class Circle extends Body {
     constructor(sprite) {
         super(Circle.ShapeID, sprite);
+        sprite.circular = true;
         this.radius = sprite.radius;
     }
 }

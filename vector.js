@@ -97,7 +97,7 @@ Q.Vector = class {
 
         return this;
     }
-    mult(v, y = v) {
+    mul(v, y = v) {
         let a, b;
 
         if(v instanceof Q.Vector) {
@@ -114,7 +114,7 @@ Q.Vector = class {
         //     this.y * (v instanceof Q.Vector) ? v.y : y
         // );
     }
-    multBy(v, y = v) {
+    mulBy(v, y = v) {
         this.x *= v instanceof Q.Vector ? v.x : v;
         this.y *= v instanceof Q.Vector ? v.y : y;
 
