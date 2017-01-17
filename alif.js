@@ -282,7 +282,7 @@ Q.Game = class extends Q.Events {
     //         this.world.addBody(sprite.body);
     //     }
     // }
-    enablePhysics(game) {
+    enablePhysics() {
         if(this.world === null) {
             this.world = new Q.World(game);
         }
