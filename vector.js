@@ -3,8 +3,6 @@
 (function(Q) {
 'use strict';
 
-// var Q = Q || {};
-
 Q.Vector = class {
     constructor(x = 0, y = 0) {
         this.x = x;
@@ -37,9 +35,14 @@ Q.Vector = class {
     get lengthSq() {
         return (this.x * this.x + this.y * this.y);
     }
-    set(v, y = v) {
-        this.x = v instanceof Q.Vector ? v.x : v;
-        this.y = v instanceof Q.Vector ? v.y : y;
+    set(v, y) {
+        if(v instanceof Q.Vector) {
+            this.set(v.x, v.y);
+        }
+        else {
+            this.x = v;
+            this.y = y;
+        }
 
         return this;
     }
@@ -51,95 +54,92 @@ Q.Vector = class {
 
         return this;
     }
-    add(v, y = v) {
-        let a, b;
+    add(v, y) {
+        let sum = new Q.Vector();
 
-        if(v instanceof Q.Vector) {
-            a = this.x + v.x;
-            b = this.y + v.y;
+        if(v instanceof Vector) {
+            sum.add(v.x, v.y);
         }
         else {
-            a = this.x + v;
-            b = this.y + y;
+            sum.x += v;
+            sum.y += y;
         }
-        return new Q.Vector(a, b);
-        // return new Q.Vector(
-        //     this.x + v instanceof Q.Vector ? v.x : v, 
-        //     this.y + v instanceof Q.Vector ? v.y : y
-        // );
+
+        return sum;        
     }
-    addTo(v, y = v) {
-        this.x += v instanceof Q.Vector ? v.x : v;
-        this.y += v instanceof Q.Vector ? v.y : y;
+    addTo(v, y) {
+        if(v instanceof Q.Vector) {
+            this.add(v.x, v.y);
+        }
+        else {
+            this.x += v;
+            this.y += y;
+        }
+
+        return this;        
+    }
+    sub(v, y) {
+        let d = new Q.Vector();
+
+        if(v instanceof Q.Vector) {
+            d.x = this.x - v.x;
+            d.y = this.y - v.y;
+        }
+        else {
+            d.x = this.x - v;
+            d.y = this.y - y;
+        }
+        return d;
+    }
+    subFrom(v, y) {
+        if(v instanceof Q.Vector) {
+            this.x -= v.x;
+            this.y -= v.y;
+        }
+        else {
+            this.x -= v;
+            this.y -= y;
+        }
 
         return this;
     }
-    sub(v, y = v) {
-        let a, b;
-
-        if(v instanceof Q.Vector) {
-            a = this.x - v.x;
-            b = this.y - v.y;
+    mul(val) {
+        if(val instanceof Q.Vector) {
+            return new Q.Vector(this.x * val.x, this.y * val.y);
         }
         else {
-            a = this.x - v;
-            b = this.y - y;
+            return new Q.Vector(this.x * val, this.y * val);
         }
-        return new Q.Vector(a, b);
-        // return new Q.Vector(
-        //     this.x - v instanceof Q.Vector ? v.x : v, 
-        //     this.y - v instanceof Q.Vector ? v.y : y
-        // );
     }
-    subFrom(v, y = v) {
-        this.x -= v instanceof Q.Vector ? v.x : v;
-        this.y -= v instanceof Q.Vector ? v.y : y;
+    mulBy(val) {
+        if(val instanceof Q.Vector) {
+            this.x *= val.x;
+            this.y *= val.y;            
+        }
+        else {
+            this.x *= val;
+            this.y *= val;
+        }
 
         return this;
     }
-    mul(v, y = v) {
-        let a, b;
-
-        if(v instanceof Q.Vector) {
-            a = this.x * v.x;
-            b = this.y * v.y;
+    div(val) {
+        if(val instanceof Q.Vector) {
+            return new Q.Vector(this.x / val.x, this.y / val.y);
         }
         else {
-            a = this.x * v;
-            b = this.y * y;
+            return new Q.Vector(this.x / val, this.y / val);
         }
-        return new Q.Vector(a, b);
-        // return new Q.Vector(
-        //     this.x * (v instanceof Q.Vector) ? v.x : v, 
-        //     this.y * (v instanceof Q.Vector) ? v.y : y
-        // );
     }
-    mulBy(v, y = v) {
-        this.x *= v instanceof Q.Vector ? v.x : v;
-        this.y *= v instanceof Q.Vector ? v.y : y;
-
-        return this;
-    }
-    div(v, y = v) {
-        let a, b;
-
-        if(v instanceof Q.Vector) {
-            a = this.x / v.x;
-            b = this.y / v.y;
+    divBy(val) {
+        if(val instanceof Q.Vector) {
+            this.x /= val.x;
+            this.y /= val.y;            
         }
         else {
-            a = this.x / v;
-            b = this.y / y;
+            this.x /= val;
+            this.y /= val;
         }
-        return new Q.Vector(a, b);
-        // return new Q.Vector(
-        //     this.x / v instanceof Q.Vector ? v.x : v, 
-        //     this.y / v instanceof Q.Vector ? v.y : y
-        // );
-    }
-    divBy(v, y = v) {
-        this.x /= v instanceof Q.Vector ? v.x : v;
-        this.y /= v instanceof Q.Vector ? v.y : y;
 
         return this;
     }

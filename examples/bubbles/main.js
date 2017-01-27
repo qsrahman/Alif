@@ -14,10 +14,13 @@ class Wall extends Alif.Graphics {
         this.endFill();
         this.position.set(x, y);
 
+        this.pivot.set(width/2, height/2);
+
         //create body
         this.body = new Alif.AABB(this, {
             position: new Alif.Vector(x + width/2, y + height/2),
-            fixed: true,
+            // position: new Alif.Vector(x, y),
+            //fixed: true,
             collisionGroup: 0,
             collideAgainst: [1]
         });
@@ -52,14 +55,21 @@ function setup() {
     let wallRight   = new Wall(580, 0, 20, 460);
     let wallTop     = new Wall(20, 0, 560, 20);
     let wallBottom  = new Wall(20, 440, 560, 20);
+
     game.stage.add(wallLeft, wallRight, wallTop, wallBottom);
     
-    for(let i=0; i<15; i++){
-        let bubble1 = new Bubble(Math.random()*400 + 100, Math.random()*250 + 100, Math.random()*100 - 50, Math.random()*100 - 50);
+    for(let i = 0; i < 16; i++){
+        let bubble1 = new Bubble(
+            Math.random()*400 + 100, // x
+            Math.random()*250 + 100, // y
+            Math.random()*100 - 50, // speedx
+            Math.random()*100 - 50  // speedy
+        );
+
         bubble1.body.restitution = 0.9;
         game.stage.addChild(bubble1);
     }
-
+    
     game.state = play;
 }
 

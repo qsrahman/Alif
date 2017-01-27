@@ -10,23 +10,21 @@ class World {
         this.collisionGroups = {};
     }
     addBody(body) {
-        let idx = this.bodies.indexOf(body);
-        if(idx === -1) {
+        if(!body.world) {
             body.world = this;
             body._remove = false;
             this.bodies.push(body);
             this.addBodyCollision(body);
+
             return true;
         }
         return false;
     }
     removeBody(body) {
-        if (!body.world) return false;
-
-        let idx = this.bodies.indexOf(body);
-        if(idx !== -1) {
+        if(body.world) {
             body.world = null;
             body._remove = true;
+
             return true;
         }
         return false;
@@ -52,7 +50,7 @@ class World {
             this.collisionGroups[group].erase(body);
     }
     collide(body) {
-        let g, i, b, group;
+        let g, i, group;
 
         for (g = 0; g < body.collideAgainst.length; g++) {
             body._collides.length = 0;
@@ -61,11 +59,9 @@ class World {
             if (!group) continue;
 
             for (i = group.length - 1; i >= 0; i--) {
-                //if (!group) break;
-                b = group[i];
-                if (body !== b) {
-                    if (this.solver.hitTest(body, b)) {
-                        body._collides.push(b);
+                if (body !== group[i]) {
+                    if (this.solver.hitTest(body, group[i])) {
+                        body._collides.push(group[i]);
                     }
                 }
             }
@@ -106,10 +102,9 @@ class World {
 
 class CollisionSolver {
     constructor() {
-
     }
     hitTest(a, b) {
-        if (a.width && b.width) {
+        if (a.shapeId === AABB.ShapeID && b.shapeId === AABB.ShapeID) {
             return !(
                 a.position.y + a.height / 2 <= b.position.y - b.height / 2 ||
                 a.position.y - a.height / 2 >= b.position.y + b.height / 2 ||
@@ -117,15 +112,18 @@ class CollisionSolver {
                 a.position.x + a.width / 2 <= b.position.x - b.width / 2
             );
         }
-        if (a.radius && b.radius) {
-            return (a.radius + b.radius > a.position.distance(b.position));
+        if (a.shapeId === Circle.ShapeID && b.shapeId === Circle.ShapeID) {
+            let rSum = a.radius + b.radius;
+            return (rSum * rSum > a.position.distanceSq(b.position));
         }
-        if (a.width && b.radius || a.radius && b.width) {
-            let rect = a.width ? a : b;
-            let circle = a.radius ? a : b;
+        if (a.shapeId === AABB.ShapeID && b.shapeId === Circle.ShapeID || 
+            a.shapeId === Circle.ShapeID && b.shapeId === AABB.ShapeID) {
+            
+            let aabb = a.shapeId === AABB.ShapeID ? a : b;
+            let circle = a.shapeId === Circle.ShapeID ? a : b;
 
-            let x = Math.max(rect.position.x - rect.width / 2, Math.min(rect.position.x + rect.width / 2, circle.position.x));
-            let y = Math.max(rect.position.y - rect.height / 2, Math.min(rect.position.y + rect.height / 2, circle.position.y));
+            let x = Math.max(aabb.position.x - aabb.width / 2, Math.min(aabb.position.x + aabb.width / 2, circle.position.x));
+            let y = Math.max(aabb.position.y - aabb.height / 2, Math.min(aabb.position.y + aabb.height / 2, circle.position.y));
 
             let dist = Math.pow(circle.position.x - x, 2) + Math.pow(circle.position.y - y, 2);
 
@@ -139,14 +137,16 @@ class CollisionSolver {
         //wether we should perform a hit response.
         if (a.collide(b)) {
             //Both wallShapes. No hitresponse need to be dealt with
-            if (a.fixed && b.fixed) return true;
+            //if (a.fixed && b.fixed) return true;
 
             let restitution = Math.sqrt(a.restitution * b.restitution) * 1.006;
             
-            if (a.fixed || b.fixed) {
+            // if (a.fixed || b.fixed) {
+            if (!a.mass || !b.mass) {
                 //body<=>wall collision. The speed of the non-wall body changes only.
                 let wall, ball;
-                if (a.fixed) {
+                // if (a.fixed) {
+                if (!a.mass) {
                     wall = a;
                     ball = b;
                 } 
@@ -162,14 +162,14 @@ class CollisionSolver {
                 if (wall.shapeId === AABB.ShapeID) 
                     distanceTouch.addTo(wall.width / 2, wall.height / 2);
                 else if (wall.shapeId === Circle.ShapeID) 
-                    distanceTouch.addTo(wall.radius);
+                    distanceTouch.addTo(wall.radius, wall.radius);
                 else 
                     return true;
 
                 if (ball.shapeId === AABB.ShapeID) 
                     distanceTouch.addTo(ball.width / 2, ball.height / 2);
                 else if (ball.shapeId === Circle.ShapeID) 
-                    distanceTouch.addTo(ball.radius);
+                    distanceTouch.addTo(ball.radius, ball.radius);
                 else 
                     return true;
     
@@ -213,15 +213,8 @@ class CollisionSolver {
     
             //Collision between two normal bodies
             //prepare masses
-            let a_mass = a.mass;
-            let b_mass = b.mass;
-
-            if (a_mass == 0) {
-                a_mass = 0.001;
-            }
-            if (b_mass == 0) {
-                b_mass = 0.001;
-            }
+            let a_mass = a.mass === 0 ? 0.001 : a.mass;
+            let b_mass = b.mass === 0 ? 0.001 : b.mass;
     
             //circles
             if (a.shapeId === Circle.ShapeID && b.shapeId === Circle.ShapeID) {
@@ -302,14 +295,14 @@ class CollisionSolver {
         if (a.shapeId === AABB.ShapeID) 
             distanceTouch.add(a.width / 2, a.height / 2);
         else if (a.shapeId === Circle.ShapeID) 
-            distanceTouch.add(a.radius);
+            distanceTouch.add(a.radius, a.radius);
         else 
             return;
 
         if (b.shapeId === AABB.ShapeID) 
             distanceTouch.add(b.width / 2, b.height / 2);
         else if (b.shapeId === Circle.ShapeID) 
-            distanceTouch.add(b.radius);
+            distanceTouch.add(b.radius, b.radius);
         else 
             return;
     
@@ -347,11 +340,10 @@ class Body {
         this.velocity = new Q.Vector();
         this.rotation = sprite.rotation;
         this.velocityLimit = new Q.Vector();
-        this.last = new Q.Vector();
+        this.last = new Q.Vector(sprite.x, sprite.y);
         this.force = new Q.Vector();
         this.mass = 0;
         this.damping = 0;
-        // this.shape = null;
         this.world = null;
         this.collisionGroup = null;
         this.collideAgainst = [];
@@ -359,15 +351,14 @@ class Body {
         // this.gravityFactor = 1;
         this.restitution = 1;
 
+        this.id = ++Body.id;
+
         this._collides = [];
 
         Object.assign(this, properties);
     }
-    // addShape(shape) {
-    //     this.shape = shape;
-    //     return this;
-    // }
     collide() {
+        console.log('hit');
         return true;
     }
     afterCollide() {
@@ -400,9 +391,9 @@ class Body {
         return this;
     }
     update(dt) {
-        if(this.fixed) return;
+        //if(this.fixed) return;
 
-        this.last.set(this.position);
+        //this.last.set(this.position);
 
         if (this.mass !== 0) {
             this.velocity.x += this.world.gravity.x * this.mass * dt;
@@ -429,24 +420,6 @@ class Body {
         this.sprite.position.x = this.position.x;
         this.sprite.position.y = this.position.y;
         // this.sprite.rotation = this.rotation;
-    }
-    update0(dt) {
-        if(this.fixed) return;
-
-        this.last.set(this.position);
-    
-        if (this.mass > 0 && this.gravityFactor > 0) {
-            this.velocity.x += this.world.gravity.x * this.gravityFactor * dt;
-            this.velocity.y += this.world.gravity.y * this.gravityFactor * dt;
-
-            if (this.velocityLimit.x > 0) 
-                this.velocity.x = Q.utils.clamp(this.velocity.x, -this.velocityLimit.x, this.velocityLimit.x);
-
-            if (this.velocityLimit.y > 0) 
-                this.velocity.y = Q.utils.clamp(this.velocity.y, -this.velocityLimit.y, this.velocityLimit.y);
-        }
-        this.position.x += this.velocity.x * dt;
-        this.position.y += this.velocity.y * dt;
     }
 }
 Body.id = 0;

@@ -284,17 +284,16 @@ Q.Game = class extends Q.Events {
     // }
     enablePhysics() {
         if(this.world === null) {
-            this.world = new Q.World(game);
+            this.world = new Q.World(0, 100);
         }
     }
     enableBody(sprite) {
-        if(spritre.body === undefined) {
-            if(sprite.shapeId === Circle.ShapeID) {
-                sprite.circular = true;
-                sprite.body = new Q.Circle(sprite);
+        if(sprite.body === undefined) {
+            if(sprite.shapeId === Q.Circle.ShapeID) {
+                sprite.body = new Q.Circle(sprite, {});
             }
             else {
-                sprite.body = new Q.AABB(sprite);
+                sprite.body = new Q.AABB(sprite, {});
             }
 
             this.world.addBody(sprite.body);
