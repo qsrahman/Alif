@@ -20,14 +20,10 @@ class P2RectWall extends Alif.Graphics {
             mass: 0 //This will make it a static body!
         });
         //and add shape
-        let shape = new p2.Rectangle(width, height);
+        let shape = new p2.Box({width, height});
     
         this.body.addShape(shape);
         world.addBody(this.body);
-    }
-    update(){
-        this.position.x = this.body.position[0];
-        this.position.y = this.body.position[1];
     }
 }
 
@@ -43,7 +39,7 @@ class Bubble extends Alif.Sprite {
             angularDamping: 0
         });
         //and add shape
-        let shape = new p2.Circle(30);   //radius=30
+        let shape = new p2.Circle({radius: 30});   //radius=30
     
         this.body.addShape(shape);
         world.addBody(this.body);
