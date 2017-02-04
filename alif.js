@@ -55,8 +55,6 @@ Q.Game = class extends Q.Events {
         this.buttons = [];
         this.particles = [];
 
-        this.world = null;
-
         this.dragAndDrop = false;
         this.draggableSprites = [];
 
@@ -259,45 +257,6 @@ Q.Game = class extends Q.Events {
     pause() {
         this.paused = true;
         this.emit('pause')
-    }
-    // enablePhysics() {
-    //     if(this.world === null) {
-    //         this.world = new p2.World({gravity: [0, 0]});
-    //     }
-    // }
-    // enableBody(sprite) {
-    //     if(sprire.body === null) {
-    //         sprite.body = new p2.Body({
-    //             mass: 1,
-    //             position: [sprite.x, sprite.y],
-    //             damping: 0,
-    //             angularDamping: 0
-    //         });
-    //         if(sprite.diameter) {
-    //             sprite.body.addShape(new p2.Circle(sprite.radius));
-    //         }
-    //         else {
-    //             sprite.body.addShape(new p2.Rectangle(sprite.width, sprite.height));
-    //         }
-    //         this.world.addBody(sprite.body);
-    //     }
-    // }
-    enablePhysics() {
-        if(this.world === null) {
-            this.world = new Q.World(0, 100);
-        }
-    }
-    enableBody(sprite) {
-        if(sprite.body === undefined) {
-            if(sprite.shapeId === Q.Circle.ShapeID) {
-                sprite.body = new Q.Circle(sprite, {});
-            }
-            else {
-                sprite.body = new Q.AABB(sprite, {});
-            }
-
-            this.world.addBody(sprite.body);
-        }
     }
     addToDOM() {
         let target;

@@ -55,21 +55,22 @@ Q.Vector = class {
         return this;
     }
     add(v, y) {
-        let sum = new Q.Vector();
+        let d = new Q.Vector();
 
-        if(v instanceof Vector) {
-            sum.add(v.x, v.y);
+        if(v instanceof Q.Vector) {
+            d.x = this.x + v.x;
+            d.y = this.y + v.y;
         }
         else {
-            sum.x += v;
-            sum.y += y;
+            d.x = this.x + v;
+            d.y = this.y + y;
         }
-
-        return sum;        
+        return d;
     }
     addTo(v, y) {
         if(v instanceof Q.Vector) {
-            this.add(v.x, v.y);
+            this.x += v.x;
+            this.y += v.y;
         }
         else {
             this.x += v;
@@ -104,17 +105,23 @@ Q.Vector = class {
         return this;
     }
     mul(val) {
+        let d = new Q.Vector();
+
         if(val instanceof Q.Vector) {
-            return new Q.Vector(this.x * val.x, this.y * val.y);
+            d.x = this.x * val.x;
+            d.y = this.y * val.y;
         }
         else {
-            return new Q.Vector(this.x * val, this.y * val);
+            d.x = this.x * val;
+            d.y = this.y * val;
         }
+
+        return d;
     }
     mulBy(val) {
         if(val instanceof Q.Vector) {
             this.x *= val.x;
-            this.y *= val.y;            
+            this.y *= val.y;
         }
         else {
             this.x *= val;
@@ -124,12 +131,18 @@ Q.Vector = class {
         return this;
     }
     div(val) {
+        let d = new Q.Vector();
+
         if(val instanceof Q.Vector) {
-            return new Q.Vector(this.x / val.x, this.y / val.y);
+            d.x = this.x / val.x;
+            d.y = this.y / val.y;
         }
         else {
-            return new Q.Vector(this.x / val, this.y / val);
+            d.x = this.x / val;
+            d.y = this.y / val;
         }
+
+        return d;
     }
     divBy(val) {
         if(val instanceof Q.Vector) {
@@ -190,7 +203,6 @@ Q.Vector = class {
 
         return Math.atan2(sin, cos);
     }
-
     rotateBy(angle) {
         let cos = Math.cos(angle),
             sin = Math.sin(angle),
@@ -240,11 +252,7 @@ Q.Vector = class {
         return this;
     }
     limit(max) {
-        if(max instanceof Q.Vector) {
-            this.x = Q.utils.clamp(this.x, -max.x, max.x);
-            this.y = Q.utils.clamp(this.y, -max.y, max.y);
-        }
-        else if(this.lengthSq > max*max) {
+        if(this.lengthSq > max*max) {
             this.normalize();
             this.mulBy(max);
         }
